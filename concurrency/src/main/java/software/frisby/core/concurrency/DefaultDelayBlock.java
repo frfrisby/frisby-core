@@ -191,11 +191,15 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             boolean exit = false;
             while (!exit) {
                 try {
-                    // If drain() was called before this thread started — workerThread was still null
-                    // so no interrupt was sent — we detect that case here: if draining is already
-                    // true and the queue is already empty, there is nothing left to do, and we must
-                    // exit without blocking on take().
-                    if (this.draining && this.queue.isEmpty()) {
+                    // If draining, flush any remaining items without blocking in take() —
+                    // this handles both the normal drain path (draining set while we were
+                    // processing) and the race where drain() was called before this thread
+                    // started (workerThread was null so no interrupt was sent at the time).
+                    if (this.draining) {
+                        if (!this.queue.isEmpty()) {
+                            flushRemaining();
+                        }
+
                         break;
                     }
 
@@ -211,21 +215,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
                     }
                 } catch (InterruptedException ex) {
                     if (this.draining) {
-                        // complete() was called — deliver all remaining items immediately,
-                        // disregarding any unexpired delays.  The interrupt flag is already
-                        // cleared on entry to this catch block; we do NOT re-interrupt until
-                        // the flush is complete so that postToTarget() and capacityGate
-                        // operations are unaffected.
-                        List<DelayedEntry<T>> remaining = new ArrayList<>(this.queue);
-                        this.queue.clear();
-
-                        // Deliver in ascending delay order — items closest to expiry first.
-                        remaining.sort(null);
-
-                        for (DelayedEntry<T> entry : remaining) {
-                            this.targetManager.postToTarget(entry.item());
-                            this.capacityGate.release();
-                        }
+                        flushRemaining();
                     }
 
                     Thread.currentThread().interrupt();
@@ -238,6 +228,26 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             // is guaranteed to observe isRunning() == false when it wakes.
             this.lifecycle.finish();
         }
+
+        private void flushRemaining() {
+            // Deliver all items still in the queue immediately, disregarding unexpired delays.
+            // Sorting by natural order (ascending remaining delay) delivers items closest to
+            // expiry first, which is the most intuitive ordering on drain.
+            // The interrupt flag is already cleared on entry from the catch block; for the
+            // direct (non-interrupt) path there is no interrupt to clear.  Either way we do
+            // NOT re-interrupt during the flush so that postToTarget() and capacityGate
+            // operations are unaffected.
+            List<DelayedEntry<T>> remaining = new ArrayList<>(this.queue);
+            this.queue.clear();
+
+            remaining.sort(null);
+
+            for (DelayedEntry<T> entry : remaining) {
+                this.targetManager.postToTarget(entry.item());
+                this.capacityGate.release();
+            }
+        }
+
 
         void put(DelayedEntry<T> item) throws InterruptedException {
             this.capacityGate.acquire();

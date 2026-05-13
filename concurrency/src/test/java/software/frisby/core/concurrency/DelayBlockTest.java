@@ -936,9 +936,9 @@ class DelayBlockTest {
             // A deferred executor holds the worker Runnable until after complete() is called.
             // This guarantees that drain() runs while workerThread is still null.
             //
-            // The null == t branch of drain() is taken deterministically, no interrupt is sent,
-            // and the worker detects draining via the top-of-loop guard in run() when it
-            // eventually starts, breaking immediately and resolving the completion future.
+            // drain() sets draining=true but cannot send an interrupt (workerThread is null).
+            // When the worker eventually starts it checks draining at the top of its loop,
+            // finds the queue empty, and breaks out cleanly without ever calling take().
             NamedExecutorService executor = newExecutor();
             CountDownLatch workerStart = new CountDownLatch(1);
 
