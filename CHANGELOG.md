@@ -9,7 +9,7 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
-## [1.0.0] — 2026-05-12
+## [1.0.0] — 2026-05-13
 
 ### Added
 
