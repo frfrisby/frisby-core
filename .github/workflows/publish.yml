@@ -32,6 +32,9 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
+      - name: Set release version (strip -SNAPSHOT suffix)
+        run: mvn --batch-mode --no-transfer-progress versions:set -DremoveSnapshot -DgenerateBackupPoms=false
+
       - name: Build, sign and publish
         run: mvn --batch-mode --no-transfer-progress -P release deploy
         env:
