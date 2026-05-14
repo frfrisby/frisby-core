@@ -55,7 +55,8 @@ Additional modules are planned. The BOM will track all of them.
 ## Installation
 
 Import the BOM in your project's `dependencyManagement` section, then declare dependencies
-without a version:
+without a version.  Replace `LATEST_VERSION` with the version shown in the Maven Central
+badge above:
 
 ```xml
 <dependencyManagement>
@@ -63,7 +64,7 @@ without a version:
         <dependency>
             <groupId>software.frisby.core</groupId>
             <artifactId>bom</artifactId>
-            <version>1.0.0</version>
+            <version>LATEST_VERSION</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
