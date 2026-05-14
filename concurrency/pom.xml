@@ -13,6 +13,7 @@
     <artifactId>concurrency</artifactId>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
+    <url>https://github.com/frfrisby/frisby-core</url>
 
     <properties>
         <sonar.language>java</sonar.language>
