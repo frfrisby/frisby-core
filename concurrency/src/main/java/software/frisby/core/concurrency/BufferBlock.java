@@ -78,6 +78,7 @@ public interface BufferBlock<T> extends Stage<T, T> {
      *
      * @return The current number of items queued in this block.
      */
+    @Override
     int size();
 
     /**

@@ -109,6 +109,7 @@ public interface GroupBlock<T, K> extends Stage<T, List<T>> {
      *
      * @return The current number of items queued in this block.
      */
+    @Override
     int size();
 
     /**
