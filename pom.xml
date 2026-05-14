@@ -50,6 +50,12 @@
         <sonar.projectKey>frfrisby_frisby-core</sonar.projectKey>
         <sonar.organization>frfrisby</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <!-- Ensure each Maven module gets a unique Sonar module key.
+             sonar.projectKey is inherited by all child modules, which causes a
+             "2 modules with the same key" error without this override.
+             Using project expressions here ensures each module is evaluated
+             with its own coordinates rather than inheriting the root value. -->
+        <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
     </properties>
 
     <modules>
