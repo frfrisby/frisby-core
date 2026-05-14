@@ -1549,10 +1549,7 @@ public final class StringSequences {
                 if (null == element) throw nullElement(name);
                 if (element.isBlank()) throw blankElement(name, index);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+                throwIfElementLengthOutOfRange(name, minItemLength, maxItemLength, element, index);
 
                 index++;
             }
@@ -1784,6 +1781,13 @@ public final class StringSequences {
         }
 
         return value;
+    }
+
+    private static void throwIfElementLengthOutOfRange(String name, int minItemLength, int maxItemLength, String element, int index) {
+        int codePoints = element.codePointCount(0, element.length());
+
+        if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
+        if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
     }
 
     private static NullValueException nullValue(String name) {
