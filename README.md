@@ -63,7 +63,7 @@ without a version:
         <dependency>
             <groupId>software.frisby.core</groupId>
             <artifactId>bom</artifactId>
-            <version>1.0.1</version><!-- {x-release-please-version} -->
+            <version>1.0.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
