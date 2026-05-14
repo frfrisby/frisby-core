@@ -47,6 +47,8 @@ import java.util.Map;
  * @see FieldGroup
  */
 public final class FieldGroups {
+    private static final String GROUP_ARGUMENT_NAME = "group";
+
     private FieldGroups() {
     }
 
@@ -65,7 +67,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 2);
 
         if (isProvided(v1) || isProvided(v2)) return;
@@ -85,7 +87,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 3);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3)) return;
@@ -106,7 +108,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 4);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4)) return;
@@ -128,7 +130,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5)) return;
@@ -152,7 +154,7 @@ public final class FieldGroups {
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                   Object v6) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 6);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5) ||
@@ -178,7 +180,7 @@ public final class FieldGroups {
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                   Object v6, Object v7) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 7);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5) ||
@@ -205,7 +207,7 @@ public final class FieldGroups {
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                   Object v6, Object v7, Object v8) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 8);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5) ||
@@ -233,7 +235,7 @@ public final class FieldGroups {
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                   Object v6, Object v7, Object v8, Object v9) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 9);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5) ||
@@ -262,7 +264,7 @@ public final class FieldGroups {
      */
     public static void atLeastOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                   Object v6, Object v7, Object v8, Object v9, Object v10) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 10);
 
         if (isProvided(v1) || isProvided(v2) || isProvided(v3) || isProvided(v4) || isProvided(v5) ||
@@ -285,7 +287,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      */
     public static void atLeastOne(FieldGroup group, Object... values) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, values.length);
 
         for (Object v : values) {
@@ -311,7 +313,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 2);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -336,7 +338,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 3);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -369,7 +371,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 4);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -405,7 +407,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -445,7 +447,7 @@ public final class FieldGroups {
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                Object v6) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 6);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -488,7 +490,7 @@ public final class FieldGroups {
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                Object v6, Object v7) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 7);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -534,7 +536,7 @@ public final class FieldGroups {
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                Object v6, Object v7, Object v8) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 8);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -583,7 +585,7 @@ public final class FieldGroups {
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                Object v6, Object v7, Object v8, Object v9) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 9);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -635,7 +637,7 @@ public final class FieldGroups {
      */
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                Object v6, Object v7, Object v8, Object v9, Object v10) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 10);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -683,7 +685,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void onlyOne(FieldGroup group, Object... values) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, values.length);
 
         int count = 0;
@@ -720,7 +722,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 2);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -741,7 +743,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 3);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -771,7 +773,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 4);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -804,7 +806,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -841,7 +843,7 @@ public final class FieldGroups {
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 6);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -881,7 +883,7 @@ public final class FieldGroups {
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 7);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -924,7 +926,7 @@ public final class FieldGroups {
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 8);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -970,7 +972,7 @@ public final class FieldGroups {
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8, Object v9) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 9);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -1019,7 +1021,7 @@ public final class FieldGroups {
      */
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8, Object v9, Object v10) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 10);
 
         int c1 = isProvided(v1) ? 1 : 0;
@@ -1064,7 +1066,7 @@ public final class FieldGroups {
      * @throws TooManyFieldsException        if more than one field is provided.
      */
     public static void atMostOne(FieldGroup group, Object... values) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, values.length);
 
         int count = 0;
@@ -1099,7 +1101,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if some but not all fields are provided.
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 2);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0);
@@ -1119,7 +1121,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if some but not all fields are provided.
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 3);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0);
@@ -1140,7 +1142,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if some but not all fields are provided.
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 4);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1163,7 +1165,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if some but not all fields are provided.
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1188,7 +1190,7 @@ public final class FieldGroups {
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 6);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1214,7 +1216,7 @@ public final class FieldGroups {
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 7);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1242,7 +1244,7 @@ public final class FieldGroups {
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 8);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1271,7 +1273,7 @@ public final class FieldGroups {
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8, Object v9) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 9);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1301,7 +1303,7 @@ public final class FieldGroups {
      */
     public static void noneOrAll(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5,
                                  Object v6, Object v7, Object v8, Object v9, Object v10) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 10);
 
         int count = (isProvided(v1) ? 1 : 0) + (isProvided(v2) ? 1 : 0) + (isProvided(v3) ? 1 : 0) +
@@ -1326,7 +1328,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if some but not all fields are provided.
      */
     public static void noneOrAll(FieldGroup group, Object... values) {
-        Throws.ifNull("group", group);
+        Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, values.length);
 
         int count = 0;

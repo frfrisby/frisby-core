@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
  * @see StringSequences
  */
 public final class TrimmedStrings {
+    private static final String VALUE_MUST_NOT_BE_NULL_MSG = "The '%s' value is invalid. The value must not be null.";
     private static final String MAX_LENGTH = "maxLength";
     private static final String MIN_LENGTH = "minLength";
     private static final String LENGTH = "length";
@@ -52,7 +53,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -82,7 +83,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -112,7 +113,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -146,7 +147,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -176,7 +177,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -205,7 +206,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
@@ -238,7 +239,7 @@ public final class TrimmedStrings {
         if (null == value) {
             throw new NullValueException(
                     String.format(
-                            "The '%s' value is invalid. The value must not be null.",
+                            VALUE_MUST_NOT_BE_NULL_MSG,
                             name
                     )
             );
