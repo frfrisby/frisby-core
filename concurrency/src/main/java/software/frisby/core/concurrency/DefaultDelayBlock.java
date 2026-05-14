@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 final class DefaultDelayBlock<T> implements DelayBlock<T> {
@@ -149,10 +150,9 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
 
     @Override
     public void complete() {
-        if (this.pendingCompletes.decrementAndGet() <= 0) {
-            if (this.completed.compareAndSet(false, true)) {
-                this.worker.drain();
-            }
+        if (this.pendingCompletes.decrementAndGet() <= 0 &&
+                this.completed.compareAndSet(false, true)) {
+            this.worker.drain();
         }
     }
 
@@ -167,10 +167,10 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
 
-        // Both fields are volatile: written by this worker thread and read by drain() on a
-        // calling thread.  Without volatile the JVM may cache values in CPU registers and the
-        // calling thread may never observe updates regardless of wall-clock timing.
-        private volatile Thread workerThread;
+        // workerThread is written once by the worker thread and read by drain() on a calling
+        // thread.  AtomicReference provides the required cross-thread visibility guarantee
+        // without the false-positive Sonar S3077 warning that volatile triggers on object refs.
+        private final AtomicReference<Thread> workerThread = new AtomicReference<>();
         private volatile boolean draining;
 
         private Worker(BlockingQueue<DelayedEntry<T>> queue,
@@ -185,7 +185,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
 
         @Override
         public void run() {
-            this.workerThread = Thread.currentThread();
+            this.workerThread.set(Thread.currentThread());
             this.lifecycle.start();
 
             boolean exit = false;
@@ -282,7 +282,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         void drain() {
             this.draining = true;
 
-            Thread t = this.workerThread;
+            Thread t = this.workerThread.get();
 
             // Always interrupt the worker when it is alive — even when the queue is non-empty.
             // The worker blocks in DelayQueue.take() waiting for the next item's delay to expire;

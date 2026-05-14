@@ -4,6 +4,7 @@ import software.frisby.core.validation.Values;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("ALL")
 final class TargetManager<T> {
@@ -17,7 +18,7 @@ final class TargetManager<T> {
 
     private final String blockName;
 
-    private volatile Link<T> linkedTarget;
+    private final AtomicReference<Link<T>> linkedTarget;
 
     TargetManager(Object source,
                   EventSource eventSource,
@@ -35,7 +36,7 @@ final class TargetManager<T> {
 
         this.blockName = eventSource.sourceName();
 
-        this.linkedTarget = null;
+        this.linkedTarget = new AtomicReference<>(null);
         this.targetLatch = new CountDownLatch(1);
     }
 
@@ -47,14 +48,20 @@ final class TargetManager<T> {
 
     void postToTarget(T item) {
         if (null != item) {
-            this.linkedTarget.post(item);
+            this.linkedTarget.get().post(item);
         }
     }
 
     void add(Target<T> target) {
         Values.notNull("target", target);
 
-        if (null != this.linkedTarget) {
+        if (source == target) {
+            throw new IllegalArgumentException("The 'target' value is invalid.  A block cannot be linked to itself.");
+        }
+
+        Link<T> newLink = new Link<>(this.deliveredManager, this.errorManager, target, this.eventSource);
+
+        if (!this.linkedTarget.compareAndSet(null, newLink)) {
             throw new IllegalStateException(
                     String.format(
                             "The '%s' block already has a linked target.  A single-target block may only be linked to one downstream target.",
@@ -63,11 +70,6 @@ final class TargetManager<T> {
             );
         }
 
-        if (source == target) {
-            throw new IllegalArgumentException("The 'target' value is invalid.  A block cannot be linked to itself.");
-        }
-
-        this.linkedTarget = new Link<>(this.deliveredManager, this.errorManager, target, this.eventSource);
         target.onLinked();
 
         this.targetLatch.countDown();
@@ -78,7 +80,7 @@ final class TargetManager<T> {
         // the first linkTo()).  A single volatile read of linkedTarget short-circuits the
         // CountDownLatch AQS machinery (Thread.interrupted() + state volatile-read + branch)
         // that await() incurs even when the latch is already open.
-        if (null != this.linkedTarget) {
+        if (null != this.linkedTarget.get()) {
             return;
         }
 
@@ -92,25 +94,31 @@ final class TargetManager<T> {
     }
 
     void complete() {
-        if (null != this.linkedTarget) {
-            this.linkedTarget.target.complete();
+        Link<T> link = this.linkedTarget.get();
+
+        if (null != link) {
+            link.target.complete();
         }
     }
 
     int inFlight() {
-        if (null == this.linkedTarget) {
+        Link<T> link = this.linkedTarget.get();
+
+        if (null == link) {
             return 0;
         }
 
-        return this.linkedTarget.target.inFlight();
+        return link.target.inFlight();
     }
 
     CompletableFuture<Void> completion() {
-        if (null == this.linkedTarget) {
+        Link<T> link = this.linkedTarget.get();
+
+        if (null == link) {
             return CompletableFuture.completedFuture(null);
         }
 
-        return this.linkedTarget.target.completion();
+        return link.target.completion();
     }
 
     private static final class Link<T> {
