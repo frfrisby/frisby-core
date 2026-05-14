@@ -217,9 +217,9 @@ public final class Maps {
     public static <K, V, M extends Map<K, V>> M optionalNotEmpty(String name, M value) {
         Throws.ifInvalidName(name);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullKeyOrValue(name, value);
+        if (null != value) {
+            throwIfEmptyOrContainsNullKeyOrValue(name, value);
+        }
 
         return value;
     }
@@ -247,11 +247,11 @@ public final class Maps {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullKeyOrValue(name, value);
 
-        throwIfEmptyOrContainsNullKeyOrValue(name, value);
-
-        if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+            if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+        }
 
         return value;
     }
@@ -279,11 +279,11 @@ public final class Maps {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullKeyOrValue(name, value);
 
-        throwIfEmptyOrContainsNullKeyOrValue(name, value);
-
-        if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+            if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+        }
 
         return value;
     }
@@ -315,12 +315,12 @@ public final class Maps {
         Throws.ifLessThanOne(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullKeyOrValue(name, value);
 
-        throwIfEmptyOrContainsNullKeyOrValue(name, value);
-
-        if (value.size() < minSize) throw tooFew(name, minSize, value.size());
-        if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+            if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+            if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+        }
 
         return value;
     }

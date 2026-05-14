@@ -1846,4 +1846,3 @@ public final class StringSequences {
         );
     }
 }
-

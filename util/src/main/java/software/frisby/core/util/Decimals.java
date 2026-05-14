@@ -1,10 +1,6 @@
 package software.frisby.core.util;
 
-import software.frisby.core.validation.EmptyValueException;
-import software.frisby.core.validation.NullValueException;
-import software.frisby.core.validation.Numbers;
-import software.frisby.core.validation.Strings;
-import software.frisby.core.validation.Values;
+import software.frisby.core.validation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,6 +29,8 @@ import java.math.RoundingMode;
  * @see RoundingMode
  */
 public final class Decimals {
+    private static final String VALUE_ARGUMENT_NAME = "value";
+
     private Decimals() {
     }
 
@@ -46,7 +44,7 @@ public final class Decimals {
      * @throws NullValueException if {@code value} is null.
      */
     public static String toString(BigDecimal value) {
-        Values.notNull("value", value);
+        Values.notNull(VALUE_ARGUMENT_NAME, value);
 
         return value.stripTrailingZeros()
                 .toPlainString();
@@ -62,7 +60,7 @@ public final class Decimals {
      * @param value The {@link BigDecimal} to convert; must not be null.
      * @param scale The maximum number of digits to the right of the decimal point.
      * @return A plain-string representation of {@code value} rounded to {@code scale}
-     *         decimal places with trailing zeros stripped.
+     * decimal places with trailing zeros stripped.
      * @throws NullValueException if {@code value} is null.
      */
     public static String toString(BigDecimal value, int scale) {
@@ -78,11 +76,11 @@ public final class Decimals {
      * @param scale        The maximum number of digits to the right of the decimal point.
      * @param roundingMode The rounding mode to apply; must not be null.
      * @return A plain-string representation of {@code value} rounded to {@code scale}
-     *         decimal places with trailing zeros stripped.
+     * decimal places with trailing zeros stripped.
      * @throws NullValueException if {@code value} or {@code roundingMode} is null.
      */
     public static String toString(BigDecimal value, int scale, RoundingMode roundingMode) {
-        Values.notNull("value", value);
+        Values.notNull(VALUE_ARGUMENT_NAME, value);
         Values.notNull("roundingMode", roundingMode);
 
         return value.setScale(scale, roundingMode)
@@ -95,12 +93,12 @@ public final class Decimals {
      *
      * @param value The string to parse; must not be null or empty.
      * @return A new {@link BigDecimal} created from {@code value} with trailing zeros
-     *         stripped.
+     * stripped.
      * @throws NullValueException  if {@code value} is null.
      * @throws EmptyValueException if {@code value} is empty.
      */
     public static BigDecimal parse(String value) {
-        Strings.notEmpty("value", value);
+        Strings.notEmpty(VALUE_ARGUMENT_NAME, value);
 
         return convertToDecimal(value);
     }
@@ -114,7 +112,7 @@ public final class Decimals {
      * @param value The string to parse; must not be null or empty.
      * @param scale The maximum number of digits to the right of the decimal point.
      * @return A new {@link BigDecimal} created from {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      * @throws NullValueException  if {@code value} is null.
      * @throws EmptyValueException if {@code value} is empty.
      */
@@ -130,12 +128,12 @@ public final class Decimals {
      * @param scale        The maximum number of digits to the right of the decimal point.
      * @param roundingMode The rounding mode to apply; must not be null.
      * @return A new {@link BigDecimal} created from {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      * @throws NullValueException  if {@code value} is null.
      * @throws EmptyValueException if {@code value} is empty.
      */
     public static BigDecimal parse(String value, int scale, RoundingMode roundingMode) {
-        Strings.notEmpty("value", value);
+        Strings.notEmpty(VALUE_ARGUMENT_NAME, value);
 
         return convertToDecimal(value, scale, roundingMode);
     }
@@ -155,7 +153,7 @@ public final class Decimals {
      *
      * @param value The value to convert.
      * @return A new {@link BigDecimal} representing {@code value} with trailing zeros
-     *         stripped.
+     * stripped.
      */
     public static BigDecimal of(float value) {
         return convertToDecimal(String.valueOf(value));
@@ -170,7 +168,7 @@ public final class Decimals {
      * @param value The value to convert.
      * @param scale The maximum number of digits to the right of the decimal point.
      * @return A new {@link BigDecimal} representing {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      */
     public static BigDecimal of(float value, int scale) {
         return of(value, scale, RoundingMode.DOWN);
@@ -184,7 +182,7 @@ public final class Decimals {
      * @param scale        The maximum number of digits to the right of the decimal point.
      * @param roundingMode The rounding mode to apply.
      * @return A new {@link BigDecimal} representing {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      */
     public static BigDecimal of(float value, int scale, RoundingMode roundingMode) {
         return convertToDecimal(String.valueOf(value), scale, roundingMode);
@@ -195,7 +193,7 @@ public final class Decimals {
      *
      * @param value The value to convert.
      * @return A new {@link BigDecimal} representing {@code value} with trailing zeros
-     *         stripped.
+     * stripped.
      */
     public static BigDecimal of(double value) {
         return convertToDecimal(String.valueOf(value));
@@ -210,7 +208,7 @@ public final class Decimals {
      * @param value The value to convert.
      * @param scale The maximum number of digits to the right of the decimal point.
      * @return A new {@link BigDecimal} representing {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      */
     public static BigDecimal of(double value, int scale) {
         return of(value, scale, RoundingMode.DOWN);
@@ -224,7 +222,7 @@ public final class Decimals {
      * @param scale        The maximum number of digits to the right of the decimal point.
      * @param roundingMode The rounding mode to apply.
      * @return A new {@link BigDecimal} representing {@code value}, rounded to
-     *         {@code scale} decimal places with trailing zeros stripped.
+     * {@code scale} decimal places with trailing zeros stripped.
      */
     public static BigDecimal of(double value, int scale, RoundingMode roundingMode) {
         return convertToDecimal(String.valueOf(value), scale, roundingMode);
