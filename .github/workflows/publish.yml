@@ -4,6 +4,9 @@ on:
   # Triggered automatically by release-please when it creates a GitHub Release.
   release:
     types: [ published ]
+  # Called directly from release-please.yml to work around the GitHub limitation
+  # that prevents GITHUB_TOKEN-created releases from triggering release events.
+  workflow_call:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -42,4 +45,3 @@ jobs:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-

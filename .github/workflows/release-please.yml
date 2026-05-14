@@ -28,3 +28,13 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+  publish:
+    name: Publish to Maven Central
+    needs: release-please
+    # Only run when release-please actually created a new release.
+    # The workflow_call trigger above handles the event-based path;
+    # this job handles it directly to work around the GITHUB_TOKEN limitation
+    # (releases created by GITHUB_TOKEN do not fire the release: published event).
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit

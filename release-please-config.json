@@ -9,12 +9,15 @@
     {
       "type": "generic",
       "path": "README.md",
-      "searchBy": "regex",
-      "data": "(<version>)[0-9]+\\.[0-9]+\\.[0-9]+(</version>)"
+      "data": [
+        {
+          "search": "(<version>)[0-9]+\\.[0-9]+\\.[0-9]+(</version>)",
+          "replace": "$1$VERSION$2"
+        }
+      ]
     }
   ],
   "packages": {
     ".": {}
   }
 }
-
