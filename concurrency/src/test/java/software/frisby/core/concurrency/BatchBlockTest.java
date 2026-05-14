@@ -284,6 +284,12 @@ class BatchBlockTest {
                     targetRelease.countDown();
 
                     assertTrue(cDelivered.await(5, TimeUnit.SECONDS));
+
+                    // Join the poster thread before reading cPostSucceeded — the worker can deliver
+                    // "c" (counting down cDelivered) before the poster thread has executed
+                    // cPostSucceeded.set(true), so reading the boolean before join() produces a race.
+                    poster.join(5_000);
+
                     assertTrue(cPostSucceeded.get());
                 } finally {
                     executor.shutdown();
