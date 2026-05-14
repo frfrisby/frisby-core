@@ -234,6 +234,17 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>flatten-maven-plugin</artifactId>
                     <version>1.5.0</version>
+                    <configuration>
+                        <updatePomFile>true</updatePomFile>
+                        <!--
+                            ossrh mode preserves (and inherits from the parent when absent)
+                            all elements required by Maven Central: name, description, url,
+                            licenses, developers, and scm.  Without this, the default flatten
+                            mode strips inherited metadata from child-module POMs and Central
+                            rejects the deployment.
+                        -->
+                        <flattenMode>ossrh</flattenMode>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -273,9 +284,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                </configuration>
                 <executions>
                     <execution>
                         <id>flatten</id>
