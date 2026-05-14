@@ -419,9 +419,9 @@ public final class Sequences {
     public static <T, C extends Collection<T>> C optionalNotEmpty(String name, C value) {
         Throws.ifInvalidName(name);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+        }
 
         return value;
     }
@@ -441,9 +441,9 @@ public final class Sequences {
     public static <T> T[] optionalNotEmpty(String name, T[] value) {
         Throws.ifInvalidName(name);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+        }
 
         return value;
     }
@@ -468,11 +468,11 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+            if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+        }
 
         return value;
     }
@@ -496,11 +496,11 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.length < minSize) throw tooFew(name, minSize, value.length);
+            if (value.length < minSize) throw tooFew(name, minSize, value.length);
+        }
 
         return value;
     }
@@ -525,11 +525,11 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+            if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+        }
 
         return value;
     }
@@ -553,11 +553,11 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
+            if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
+        }
 
         return value;
     }
@@ -586,12 +586,12 @@ public final class Sequences {
         Throws.ifLessThanOne(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.size() < minSize) throw tooFew(name, minSize, value.size());
-        if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+            if (value.size() < minSize) throw tooFew(name, minSize, value.size());
+            if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
+        }
 
         return value;
     }
@@ -619,12 +619,12 @@ public final class Sequences {
         Throws.ifLessThanOne(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
-        if (null == value) return null;
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
 
-        throwIfEmptyOrContainsNullElement(name, value);
-
-        if (value.length < minSize) throw tooFew(name, minSize, value.length);
-        if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
+            if (value.length < minSize) throw tooFew(name, minSize, value.length);
+            if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
+        }
 
         return value;
     }
@@ -647,10 +647,10 @@ public final class Sequences {
     public static <T, C extends Collection<T>> C optionalNoDuplicates(String name, C value) {
         Throws.ifInvalidName(name);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
-        throwIfContainsDuplicates(name, value);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsDuplicates(name, value);
+        }
 
         return value;
     }
@@ -672,10 +672,10 @@ public final class Sequences {
     public static <T> T[] optionalNoDuplicates(String name, T[] value) {
         Throws.ifInvalidName(name);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
-        throwIfContainsDuplicates(name, value);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsDuplicates(name, value);
+        }
 
         return value;
     }
@@ -700,10 +700,10 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
-        throwIfContainsDuplicateKeys(name, value, keyExtractor);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsDuplicateKeys(name, value, keyExtractor);
+        }
 
         return value;
     }
@@ -727,10 +727,10 @@ public final class Sequences {
         Throws.ifInvalidName(name);
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
 
-        if (null == value) return null;
-
-        throwIfEmptyOrContainsNullElement(name, value);
-        throwIfContainsDuplicateKeys(name, value, keyExtractor);
+        if (null != value) {
+            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsDuplicateKeys(name, value, keyExtractor);
+        }
 
         return value;
     }
