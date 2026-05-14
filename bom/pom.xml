@@ -8,6 +8,7 @@
 		<version>1.0.1</version>
     </parent>
 
+    
     <artifactId>bom</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
