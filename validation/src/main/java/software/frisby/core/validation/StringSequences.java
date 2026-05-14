@@ -764,10 +764,7 @@ public final class StringSequences {
             for (String element : value) {
                 if (null == element) throw nullElement(name);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+                throwIfElementLengthOutOfRange(name, minItemLength, maxItemLength, element, index);
 
                 index++;
             }
@@ -806,10 +803,7 @@ public final class StringSequences {
             for (String element : value) {
                 if (null == element) throw nullElement(name);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+                throwIfElementLengthOutOfRange(name, minItemLength, maxItemLength, element, index);
 
                 index++;
             }
@@ -1591,10 +1585,7 @@ public final class StringSequences {
                 if (null == element) throw nullElement(name);
                 if (element.isBlank()) throw blankElement(name, index);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+                throwIfElementLengthOutOfRange(name, minItemLength, maxItemLength, element, index);
 
                 index++;
             }
@@ -1726,10 +1717,7 @@ public final class StringSequences {
                 if (null == element) throw nullElement(name);
                 if (element.isBlank()) throw blankElement(name, index);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
-                if (!pattern.matcher(element).matches()) throw elementFailsPattern(name, index, element);
+                throwIfElementLengthOutOfRangeOrNotMatches(name, maxItemLength, pattern, element, index);
 
                 index++;
             }
@@ -1771,10 +1759,7 @@ public final class StringSequences {
                 if (null == element) throw nullElement(name);
                 if (element.isBlank()) throw blankElement(name, index);
 
-                int codePoints = element.codePointCount(0, element.length());
-
-                if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
-                if (!pattern.matcher(element).matches()) throw elementFailsPattern(name, index, element);
+                throwIfElementLengthOutOfRangeOrNotMatches(name, maxItemLength, pattern, element, index);
 
                 index++;
             }
@@ -1788,6 +1773,13 @@ public final class StringSequences {
 
         if (codePoints < minItemLength) throw elementTooShort(name, minItemLength, index, codePoints);
         if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+    }
+
+    private static void throwIfElementLengthOutOfRangeOrNotMatches(String name, int maxItemLength, Pattern pattern, String element, int index) {
+        int codePoints = element.codePointCount(0, element.length());
+
+        if (codePoints > maxItemLength) throw elementTooLong(name, maxItemLength, index, codePoints);
+        if (!pattern.matcher(element).matches()) throw elementFailsPattern(name, index, element);
     }
 
     private static NullValueException nullValue(String name) {
