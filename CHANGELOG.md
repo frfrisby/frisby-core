@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.3](https://github.com/frfrisby/frisby-core/compare/v1.0.2...v1.0.3) (2026-05-15)
+
+
+### Bug Fixes
+
+* Upgrade central-publishing-maven-plugin to 0.10.0 to resolve multi-module deployment conflict. ([#23](https://github.com/frfrisby/frisby-core/issues/23)) ([d6e2f8e](https://github.com/frfrisby/frisby-core/commit/d6e2f8e5007066cdae6dbf29d694271460955792))
+
 ## [1.0.2](https://github.com/frfrisby/frisby-core/compare/v1.0.1...v1.0.2) (2026-05-15)
 
 
