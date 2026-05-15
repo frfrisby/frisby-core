@@ -57,11 +57,20 @@ jobs:
           BEARER=$(printf '%s:%s' "$MAVEN_CENTRAL_USERNAME" "$MAVEN_CENTRAL_TOKEN" | base64 | tr -d '\n')
 
           echo "Uploading bundle to Central Portal..."
-          DEPLOYMENT_ID=$(curl --silent --fail --show-error \
+          # Capture response body and HTTP status separately so errors are visible.
+          HTTP_STATUS=$(curl --silent --show-error --output upload-response.txt \
+            --write-out "%{http_code}" \
             --request POST \
             --header "Authorization: Bearer $BEARER" \
             --form "bundle=@central-bundle.zip" \
             "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC&name=frisby-core")
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Response: $(cat upload-response.txt)"
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Upload failed."
+            exit 1
+          fi
+          DEPLOYMENT_ID=$(cat upload-response.txt)
           echo "Deployment ID: $DEPLOYMENT_ID"
 
           echo "Polling for validated or published state (max 30 min)..."
@@ -69,11 +78,13 @@ jobs:
           ELAPSED=0
           INTERVAL=15
           while [ $ELAPSED -lt $MAX_WAIT ]; do
-            RESPONSE=$(curl --silent --fail \
+            HTTP_STATUS=$(curl --silent --show-error --output status-response.txt \
+              --write-out "%{http_code}" \
               --header "Authorization: Bearer $BEARER" \
               "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID")
+            RESPONSE=$(cat status-response.txt)
             STATE=$(echo "$RESPONSE" | grep -o '"deploymentState":"[^"]*"' | cut -d'"' -f4)
-            echo "  State: ${STATE:-unknown} (${ELAPSED}s elapsed)"
+            echo "  State: ${STATE:-unknown} (HTTP $HTTP_STATUS, ${ELAPSED}s elapsed)"
             case "$STATE" in
               VALIDATED|PUBLISHED)
                 echo "Deployment $STATE — done."
