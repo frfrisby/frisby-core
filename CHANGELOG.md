@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.11](https://github.com/frfrisby/frisby-core/compare/v1.0.10...v1.0.11) (2026-05-15)
+
+
+### Bug Fixes
+
+* Require CI, SonarCloud, and CodeQL to pass before creating a release. ([#48](https://github.com/frfrisby/frisby-core/issues/48)) ([b1c7e00](https://github.com/frfrisby/frisby-core/commit/b1c7e0089a292cade818ee02e3729bd1e4cb03bc))
+
 ## [1.0.10](https://github.com/frfrisby/frisby-core/compare/v1.0.9...v1.0.10) (2026-05-15)
 
 
