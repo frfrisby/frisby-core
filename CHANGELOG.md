@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.10](https://github.com/frfrisby/frisby-core/compare/v1.0.9...v1.0.10) (2026-05-15)
+
+
+### Bug Fixes
+
+* Remove status polling — exit on 201 upload confirmation. ([#45](https://github.com/frfrisby/frisby-core/issues/45)) ([a2fb7a8](https://github.com/frfrisby/frisby-core/commit/a2fb7a8cb4cd013ac691d592f73a353811b084b3))
+
 ## [1.0.9](https://github.com/frfrisby/frisby-core/compare/v1.0.8...v1.0.9) (2026-05-15)
 
 
