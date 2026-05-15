@@ -122,12 +122,12 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
 
     @Override
     public Source<T> toSource() {
-        return toBlock();
+        return toBufferBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        return toBlock();
+        return toBufferBlock();
     }
 
     @Override
@@ -135,7 +135,7 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
         this.executor = executor;
     }
 
-    private BufferBlock<T> toBlock() {
+    private BufferBlock<T> toBufferBlock() {
         if (null == this.block) {
             BufferBlockBuilder<T> builder = BufferBlock.<T>builder()
                     .executor(executor)

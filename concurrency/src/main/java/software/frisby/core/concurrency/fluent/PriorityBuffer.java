@@ -136,12 +136,12 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
 
     @Override
     public Source<T> toSource() {
-        return toBlock();
+        return toPriorityBufferBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        return toBlock();
+        return toPriorityBufferBlock();
     }
 
     @Override
@@ -149,7 +149,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
         this.executor = executor;
     }
 
-    private PriorityBufferBlock<T> toBlock() {
+    private PriorityBufferBlock<T> toPriorityBufferBlock() {
         if (null == this.block) {
             PriorityBufferBlockBuilder<T> builder = PriorityBufferBlock.<T>builder()
                     .comparator(comparator)

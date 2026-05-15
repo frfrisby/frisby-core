@@ -207,12 +207,12 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
 
     @Override
     public Source<List<T>> toSource() {
-        return toBlock();
+        return toGroupBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        return toBlock();
+        return toGroupBlock();
     }
 
     @Override
@@ -220,7 +220,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
         this.executor = executor;
     }
 
-    private GroupBlock<T, K> toBlock() {
+    private GroupBlock<T, K> toGroupBlock() {
         if (null == block) {
             GroupBlockBuilder<T, K> builder = GroupBlock.<T, K>builder()
                     .groupingFunction(groupingFunction)

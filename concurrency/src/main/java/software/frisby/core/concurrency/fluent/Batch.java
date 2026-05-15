@@ -140,12 +140,12 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
 
     @Override
     public Source<List<T>> toSource() {
-        return toBlock();
+        return toBatchBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        return toBlock();
+        return toBatchBlock();
     }
 
     @Override
@@ -153,7 +153,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
         this.executor = executor;
     }
 
-    private BatchBlock<T> toBlock() {
+    private BatchBlock<T> toBatchBlock() {
         if (null == this.block) {
             BatchBlockBuilder<T> builder = BatchBlock.<T>builder()
                     .executor(executor)

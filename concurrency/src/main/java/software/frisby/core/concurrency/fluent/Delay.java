@@ -154,12 +154,12 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
 
     @Override
     public Source<T> toSource() {
-        return toBlock();
+        return toDelayBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        return toBlock();
+        return toDelayBlock();
     }
 
     @Override
@@ -167,7 +167,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
         this.executor = executor;
     }
 
-    private DelayBlock<T> toBlock() {
+    private DelayBlock<T> toDelayBlock() {
         if (null == this.block) {
             DelayBlockBuilder<T> builder = DelayBlock.<T>builder()
                     .executor(executor)
