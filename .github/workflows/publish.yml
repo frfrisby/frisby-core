@@ -1,11 +1,10 @@
 name: Publish to Maven Central
 
 on:
-  # Triggered automatically by release-please when it creates a GitHub Release.
-  release:
-    types: [ published ]
-  # Called directly from release-please.yml to work around the GitHub limitation
-  # that prevents GITHUB_TOKEN-created releases from triggering release events.
+  # Called directly from release-please.yml once a GitHub Release is created.
+  # A separate `release: published` trigger is intentionally omitted: because
+  # release-please uses a PAT, the release it creates fires a real release event,
+  # which would cause this workflow to run twice simultaneously.
   workflow_call:
 
 env:
