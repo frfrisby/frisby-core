@@ -112,6 +112,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      * @param ignoredOutputType The output element type class; used for inference only.
      * @return A new {@code Transform<List<T>, List<R>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> Transform<List<T>, List<R>> ofLists(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of(
                 new GenericType<>() {

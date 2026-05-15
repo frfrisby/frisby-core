@@ -180,10 +180,10 @@ public final class Chain<H, O> {
 
             current.target.toTarget();
 
-            Chain<H, ?> prev = current.previous;
+            Chain<H, ?> previousChain = current.previous;
 
-            if (null != prev) {
-                prev.link();
+            if (null != previousChain) {
+                previousChain.link();
             }
 
             current = current.next;

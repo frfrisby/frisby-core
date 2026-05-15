@@ -90,10 +90,9 @@ public abstract class GenericType<T> {
             return c;
         }
 
-        if (type instanceof ParameterizedType parameterizedType) {
-            if (parameterizedType.getRawType() instanceof Class<?> c) {
-                return c;
-            }
+        if (type instanceof ParameterizedType parameterizedType &&
+                parameterizedType.getRawType() instanceof Class<?> c) {
+            return c;
         }
 
         if (type instanceof GenericArrayType array) {

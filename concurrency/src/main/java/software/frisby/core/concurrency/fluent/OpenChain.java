@@ -146,10 +146,10 @@ public final class OpenChain<H, I, O> {
 
             current.target.toTarget();
 
-            OpenChain<H, ?, ?> previous = current.previous;
+            OpenChain<H, ?, ?> previousChain = current.previous;
 
-            if (null != previous) {
-                previous.link();
+            if (null != previousChain) {
+                previousChain.link();
             }
 
             last = current;
@@ -177,9 +177,9 @@ public final class OpenChain<H, I, O> {
     void link() {
         // Only called from build() on non-terminal nodes; source is always non-null.
         Source src = this.source.toSource();
-        Target target = this.next.target.toTarget();
+        Target nextTarget = this.next.target.toTarget();
 
-        src.linkTo(target);
+        src.linkTo(nextTarget);
     }
 
     private void throwIfBuilt() {
