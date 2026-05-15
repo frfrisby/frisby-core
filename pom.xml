@@ -371,11 +371,9 @@
                                                     no manual intervention required in the Central Portal UI.
                                 waitUntil         — wait for "validated" state only (faster than waiting for
                                                     full propagation to search index, which is asynchronous).
-                                waitMaxTime       — cap the polling wait at 600 seconds (10 minutes).
                             -->
                             <autoPublish>true</autoPublish>
                             <waitUntil>validated</waitUntil>
-                            <waitMaxTime>600</waitMaxTime>
                         </configuration>
                     </plugin>
                 </plugins>
