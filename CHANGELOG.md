@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.5](https://github.com/frfrisby/frisby-core/compare/v1.0.4...v1.0.5) (2026-05-15)
+
+
+### Bug Fixes
+
+* Replace central-publishing-maven-plugin with direct REST API upload to avoid multi-module deployment conflicts. ([#29](https://github.com/frfrisby/frisby-core/issues/29)) ([09847c6](https://github.com/frfrisby/frisby-core/commit/09847c63f30126e35339b5474367bffa4d7c0697))
+
 ## [1.0.4](https://github.com/frfrisby/frisby-core/compare/v1.0.3...v1.0.4) (2026-05-15)
 
 
