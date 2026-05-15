@@ -70,7 +70,7 @@ jobs:
             echo "Upload failed."
             exit 1
           fi
-          DEPLOYMENT_ID=$(cat upload-response.txt)
+          DEPLOYMENT_ID=$(cat upload-response.txt | tr -d '[:space:]')
           echo "Deployment ID: $DEPLOYMENT_ID"
 
           echo "Polling for validated or published state (max 30 min)..."
