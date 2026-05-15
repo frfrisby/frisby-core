@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.6](https://github.com/frfrisby/frisby-core/compare/v1.0.5...v1.0.6) (2026-05-15)
+
+
+### Bug Fixes
+
+* Remove duplicate release trigger that fired publish twice when using PAT. ([#33](https://github.com/frfrisby/frisby-core/issues/33)) ([b5ff705](https://github.com/frfrisby/frisby-core/commit/b5ff7056b00d17f96ca975636d098d0f42d68154))
+
 ## [1.0.5](https://github.com/frfrisby/frisby-core/compare/v1.0.4...v1.0.5) (2026-05-15)
 
 
