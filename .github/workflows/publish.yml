@@ -15,7 +15,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -39,8 +39,21 @@ jobs:
       - name: Set release version (strip -SNAPSHOT suffix)
         run: mvn --batch-mode --no-transfer-progress versions:set -DremoveSnapshot -DgenerateBackupPoms=false
 
-      - name: Build, sign and publish
-        run: mvn --batch-mode --no-transfer-progress -P release deploy
+      - name: Build, sign and stage all modules
+        # -DskipPublishing=true stages every module's artifacts into the shared
+        # target/central-staging directory without uploading anything to Central Portal.
+        # Running publish per-module would create overlapping deployments because the
+        # staging directory accumulates artifacts across the reactor build.
+        run: mvn --batch-mode --no-transfer-progress -P release deploy -DskipPublishing=true
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Publish staged bundle to Maven Central
+        # --non-recursive runs only on the root module, uploading the single combined
+        # bundle that was accumulated in target/central-staging by the step above.
+        run: mvn --batch-mode --no-transfer-progress -P release central-publishing:publish --non-recursive
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
