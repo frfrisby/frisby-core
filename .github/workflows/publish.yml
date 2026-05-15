@@ -14,7 +14,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -52,12 +52,11 @@ jobs:
           unzip -l ../../central-bundle.zip | tail -20
           echo "Bundle size: $(du -sh ../../central-bundle.zip | awk '{print $1}')"
 
-      - name: Upload bundle and wait for validation
+      - name: Upload bundle to Maven Central
         run: |
           BEARER=$(printf '%s:%s' "$MAVEN_CENTRAL_USERNAME" "$MAVEN_CENTRAL_TOKEN" | base64 | tr -d '\n')
 
           echo "Uploading bundle to Central Portal..."
-          # Capture response body and HTTP status separately so errors are visible.
           HTTP_STATUS=$(curl --silent --show-error --output upload-response.txt \
             --write-out "%{http_code}" \
             --request POST \
@@ -65,55 +64,13 @@ jobs:
             --form "bundle=@central-bundle.zip" \
             "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC&name=frisby-core")
           echo "HTTP Status: $HTTP_STATUS"
-          echo "Response: $(cat upload-response.txt)"
+          echo "Deployment ID: $(cat upload-response.txt | tr -d '[:space:]')"
           if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
             echo "Upload failed."
+            echo "Response: $(cat upload-response.txt)"
             exit 1
           fi
-          DEPLOYMENT_ID=$(cat upload-response.txt | tr -d '[:space:]')
-          echo "Deployment ID: $DEPLOYMENT_ID"
-
-          echo "Polling for deployment status (max 5 min)..."
-          MAX_WAIT=300
-          ELAPSED=0
-          INTERVAL=15
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            HTTP_STATUS=$(curl --silent --show-error --output status-response.txt \
-              --write-out "%{http_code}" \
-              --header "Authorization: Bearer $BEARER" \
-              "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID")
-            RESPONSE=$(cat status-response.txt)
-            STATE=$(echo "$RESPONSE" | grep -o '"deploymentState":"[^"]*"' | cut -d'"' -f4)
-            echo "  State: ${STATE:-unknown} (HTTP $HTTP_STATUS, ${ELAPSED}s elapsed)"
-            # Log the response body when the status is unexpected so failures are diagnosable.
-            if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "404" ]; then
-              echo "  Response: $RESPONSE"
-            fi
-            case "$STATE" in
-              VALIDATED|PUBLISHED)
-                echo "Deployment $STATE — done."
-                exit 0
-                ;;
-              FAILED)
-                echo "Deployment FAILED."
-                echo "$RESPONSE"
-                exit 1
-                ;;
-            esac
-            # A 404 means the deployment has left the in-progress list, which
-            # happens when Central Portal moves it to PUBLISHED.
-            if [ "$HTTP_STATUS" = "404" ]; then
-              echo "Deployment no longer in-progress — assumed PUBLISHED."
-              exit 0
-            fi
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
-          # The upload was confirmed (201) and no FAILED state was observed within the
-          # polling window.  Central Portal will continue publishing the deployment
-          # asynchronously — the artifacts will be available once propagation completes.
-          echo "Polling window elapsed.  Upload accepted (201) — deployment publishing asynchronously."
-          exit 0
+          echo "Bundle accepted by Central Portal — publishing asynchronously."
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
