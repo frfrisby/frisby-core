@@ -362,13 +362,20 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.7.0</version>
+                        <version>0.10.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
+                            <!--
+                                autoPublish=true  — publish automatically once Central validates the bundle;
+                                                    no manual intervention required in the Central Portal UI.
+                                waitUntil         — wait for "validated" state only (faster than waiting for
+                                                    full propagation to search index, which is asynchronous).
+                                waitMaxTime       — cap the polling wait at 600 seconds (10 minutes).
+                            -->
                             <autoPublish>true</autoPublish>
                             <waitUntil>validated</waitUntil>
-                            <waitUntilTimeout>600</waitUntilTimeout>
+                            <waitMaxTime>600</waitMaxTime>
                         </configuration>
                     </plugin>
                 </plugins>
