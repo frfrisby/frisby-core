@@ -188,18 +188,17 @@ final class CompletableQueue<T> {
     }
 
     void complete() {
-        if (this.pendingCompletes.decrementAndGet() <= 0) {
-            if (this.completed.compareAndSet(false, true)) {
-                this.lock.lock();
-                try {
-                    if (this.queue.isEmpty()) {
-                        this.completionFuture.complete(null);
-                    }
-
-                    this.notEmpty.signal();
-                } finally {
-                    this.lock.unlock();
+        if (this.pendingCompletes.decrementAndGet() <= 0 &&
+                this.completed.compareAndSet(false, true)) {
+            this.lock.lock();
+            try {
+                if (this.queue.isEmpty()) {
+                    this.completionFuture.complete(null);
                 }
+
+                this.notEmpty.signal();
+            } finally {
+                this.lock.unlock();
             }
         }
     }

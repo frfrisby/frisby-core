@@ -106,15 +106,14 @@ final class DefaultBufferBlock<T> implements BufferBlock<T> {
 
     @Override
     public void complete() {
-        if (this.pendingCompletes.decrementAndGet() <= 0) {
-            if (this.completed.compareAndSet(false, true)) {
-                this.buffer.complete()
-                        .thenRun(() -> {
-                            this.targetManager.complete();
-                            this.targetManager.completion()
-                                    .thenAccept(v -> this.completionFuture.complete(null));
-                        });
-            }
+        if (this.pendingCompletes.decrementAndGet() <= 0 &&
+                this.completed.compareAndSet(false, true)) {
+            this.buffer.complete()
+                    .thenRun(() -> {
+                        this.targetManager.complete();
+                        this.targetManager.completion()
+                                .thenAccept(v -> this.completionFuture.complete(null));
+                    });
         }
     }
 

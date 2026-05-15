@@ -109,12 +109,10 @@ final class SyncCompletionGuard {
      * <p>Maps directly to the block's own {@code complete()} implementation.
      */
     void complete() {
-        if (this.pendingCompletes.decrementAndGet() <= 0) {
-            if (this.completed.compareAndSet(false, true)) {
-                if (this.inFlight.get() == 0) {
-                    signalDownstream();
-                }
-            }
+        if (this.pendingCompletes.decrementAndGet() <= 0 &&
+                this.completed.compareAndSet(false, true) &&
+                this.inFlight.get() == 0) {
+            signalDownstream();
         }
     }
 

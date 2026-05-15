@@ -285,10 +285,12 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             Thread t = this.workerThread.get();
 
             // Always interrupt the worker when it is alive — even when the queue is non-empty.
+            //
             // The worker blocks in DelayQueue.take() waiting for the next item's delay to expire;
             // without the interrupt it would sit there for the full remaining delay before it
             // could detect the draining flag.  The InterruptedException handler delivers all
             // remaining items immediately, bypassing unexpired delays.
+
             if (null != t) {
                 t.interrupt();
             }
