@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.4](https://github.com/frfrisby/frisby-core/compare/v1.0.3...v1.0.4) (2026-05-15)
+
+
+### Bug Fixes
+
+* Publish all modules as a single Central Portal deployment bundle. ([#26](https://github.com/frfrisby/frisby-core/issues/26)) ([950ebdd](https://github.com/frfrisby/frisby-core/commit/950ebddea780742386f1644e490dd55081135888))
+
 ## [1.0.3](https://github.com/frfrisby/frisby-core/compare/v1.0.2...v1.0.3) (2026-05-15)
 
 
