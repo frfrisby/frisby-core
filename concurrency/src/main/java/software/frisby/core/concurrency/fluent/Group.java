@@ -68,6 +68,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
      * @param ignoredKeyType  The key type class; used for inference only.
      * @return A new {@code Group} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, K> Group<T, K> of(Class<T> ignoredItemType, Class<K> ignoredKeyType) {
         return of();
     }

@@ -76,6 +76,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output type class; used for inference only.
      * @return A new {@code OpenRouter} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<T, R> of(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of();
     }
@@ -103,6 +104,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output generic type token; used for inference only.
      * @return A new {@code OpenRouter} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<T, R> of(GenericType<T> ignoredInputType, GenericType<R> ignoredOutputType) {
         return of();
     }
@@ -131,6 +133,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output element type class; used for inference only.
      * @return A new {@code OpenRouter}{@code <List<T>, List<R>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<List<T>, List<R>> ofLists(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of(
                 new GenericType<>() {

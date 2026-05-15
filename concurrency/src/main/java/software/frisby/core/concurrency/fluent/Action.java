@@ -53,6 +53,7 @@ public final class Action<T> implements PipelineTarget<T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Action} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Action<T> of(Class<T> ignored) {
         return of();
     }
@@ -79,6 +80,7 @@ public final class Action<T> implements PipelineTarget<T> {
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Action<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Action<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

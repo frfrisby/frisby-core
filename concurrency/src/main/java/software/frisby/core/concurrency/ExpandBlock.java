@@ -46,6 +46,7 @@ public interface ExpandBlock<T> extends Stage<List<T>, T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link ExpandBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> ExpandBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

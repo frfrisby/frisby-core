@@ -60,6 +60,7 @@ public final class Broadcast<T> implements PipelineTarget<T>, ObservableBlockBui
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Broadcast} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Broadcast<T> of(Class<T> ignored) {
         return of();
     }
@@ -86,6 +87,7 @@ public final class Broadcast<T> implements PipelineTarget<T>, ObservableBlockBui
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Broadcast<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Broadcast<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

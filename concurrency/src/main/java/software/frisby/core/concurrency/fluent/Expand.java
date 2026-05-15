@@ -51,6 +51,7 @@ public final class Expand<T> implements PipelineStage<List<T>, T>, ObservableBlo
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Expand} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Expand<T> of(Class<T> ignored) {
         return of();
     }

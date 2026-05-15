@@ -60,6 +60,7 @@ public interface GroupBlock<T, K> extends Stage<T, List<T>> {
      * @param ignoredKeyType  The key type class; used for inference only.
      * @return A new {@link GroupBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T, K> GroupBlockBuilder<T, K> builder(Class<T> ignoredItemType, Class<K> ignoredKeyType) {
         return builder();
     }

@@ -55,6 +55,7 @@ public interface BatchBlock<T> extends Stage<T, List<T>> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link BatchBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> BatchBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

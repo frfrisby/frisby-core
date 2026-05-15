@@ -43,6 +43,7 @@ public interface BranchBlock<T> extends Target<T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link BranchBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> BranchBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

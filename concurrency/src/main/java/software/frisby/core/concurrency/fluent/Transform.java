@@ -25,7 +25,7 @@ import java.util.function.Function;
  * @param <R> The output type produced by this stage.
  */
 public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlockBuilder<T, R, Transform<T, R>> {
-    private Function<T, R> transform;
+    private Function<T, R> transformFunction;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<R> itemDeliveredHandler;
 
@@ -55,6 +55,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      * @param ignoredOutputType The output type class; used for inference only.
      * @return A new {@code Transform} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> Transform<T, R> of(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of();
     }
@@ -143,7 +144,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      * @throws software.frisby.core.validation.NullValueException if {@code transform} is null.
      */
     public Transform<T, R> transform(Function<T, R> transform) {
-        this.transform = transform;
+        this.transformFunction = transform;
         return this;
     }
 
@@ -172,7 +173,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
     private TransformBlock<T, R> toBlock() {
         if (null == this.block) {
             this.block = TransformBlock.<T, R>builder()
-                    .transform(transform)
+                    .transform(transformFunction)
                     .itemPostedHandler(itemPostedHandler)
                     .itemDeliveredHandler(itemDeliveredHandler)
                     .build();

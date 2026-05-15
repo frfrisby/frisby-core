@@ -60,6 +60,7 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Branch} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Branch<T> of(Class<T> ignored) {
         return of();
     }
@@ -86,6 +87,7 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Branch<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Branch<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

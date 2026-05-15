@@ -52,6 +52,7 @@ public interface SourceBlock<T> extends Source<T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link SourceBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> SourceBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

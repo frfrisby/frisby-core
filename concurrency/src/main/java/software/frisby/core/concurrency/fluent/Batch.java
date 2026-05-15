@@ -60,6 +60,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Batch} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Batch<T> of(Class<T> ignored) {
         return of();
     }

@@ -49,6 +49,7 @@ public interface TransformBlock<T, R> extends Stage<T, R> {
      * @param ignoredOutputType The output type class; used for inference only.
      * @return A new {@link TransformBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T, R> TransformBlockBuilder<T, R> builder(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return builder();
     }

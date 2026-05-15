@@ -55,6 +55,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      * @param ignored The item type class; used for inference only.
      * @return A new {@code PriorityBuffer} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> PriorityBuffer<T> of(Class<T> ignored) {
         return of();
     }
@@ -82,6 +83,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      * @param ignored The element type class; used for inference only.
      * @return A new {@code PriorityBuffer<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> PriorityBuffer<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

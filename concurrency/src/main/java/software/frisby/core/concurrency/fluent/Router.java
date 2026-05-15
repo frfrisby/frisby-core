@@ -65,6 +65,7 @@ public final class Router<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Router} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Router<T> of(Class<T> ignored) {
         return of();
     }
@@ -91,6 +92,7 @@ public final class Router<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Router<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Router<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

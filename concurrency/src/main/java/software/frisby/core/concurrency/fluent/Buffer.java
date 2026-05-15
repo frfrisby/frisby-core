@@ -55,6 +55,7 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Buffer} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Buffer<T> of(Class<T> ignored) {
         return of();
     }
@@ -81,6 +82,7 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Buffer<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Buffer<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });

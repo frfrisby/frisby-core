@@ -26,7 +26,7 @@ import java.util.function.Function;
  * @see Buffer
  */
 public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, AsyncObservableBlockBuilder<T, T, Delay<T>> {
-    private Duration delay;
+    private Duration fixedDelay;
     private Function<T, Duration> delayFunction;
     private Integer capacity;
     private Executor executor;
@@ -57,6 +57,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Delay} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Delay<T> of(Class<T> ignored) {
         return of();
     }
@@ -83,6 +84,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Delay<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Delay<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });
@@ -98,7 +100,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code delay} is not positive.
      */
     public Delay<T> delay(Duration delay) {
-        this.delay = delay;
+        this.fixedDelay = delay;
         return this;
     }
 
@@ -176,7 +178,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
             if (null != delayFunction) {
                 builder.delay(delayFunction);
             } else {
-                builder.delay(delay);
+                builder.delay(fixedDelay);
             }
 
             if (null != capacity) {

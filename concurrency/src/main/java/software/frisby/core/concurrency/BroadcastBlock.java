@@ -60,6 +60,7 @@ public interface BroadcastBlock<T> extends Target<T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link BroadcastBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> BroadcastBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }
