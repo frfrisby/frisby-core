@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.7](https://github.com/frfrisby/frisby-core/compare/v1.0.6...v1.0.7) (2026-05-15)
+
+
+### Bug Fixes
+
+* Improve Central Portal upload error logging to expose API response body. ([#36](https://github.com/frfrisby/frisby-core/issues/36)) ([3a2a665](https://github.com/frfrisby/frisby-core/commit/3a2a66529ae7d9b3612b1f624a3b1092cdfdd1bf))
+
 ## [1.0.6](https://github.com/frfrisby/frisby-core/compare/v1.0.5...v1.0.6) (2026-05-15)
 
 
