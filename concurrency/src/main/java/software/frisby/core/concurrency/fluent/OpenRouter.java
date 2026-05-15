@@ -76,6 +76,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output type class; used for inference only.
      * @return A new {@code OpenRouter} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<T, R> of(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of();
     }
@@ -103,6 +104,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output generic type token; used for inference only.
      * @return A new {@code OpenRouter} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<T, R> of(GenericType<T> ignoredInputType, GenericType<R> ignoredOutputType) {
         return of();
     }
@@ -131,6 +133,7 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
      * @param ignoredOutputType The output element type class; used for inference only.
      * @return A new {@code OpenRouter}{@code <List<T>, List<R>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T, R> OpenRouter<List<T>, List<R>> ofLists(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return of(
                 new GenericType<>() {
@@ -252,58 +255,54 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
 
     @Override
     public Source<R> toSource() {
-        if (null == this.routerInfo) {
-            this.routerInfo = buildRouterInfo();
-        }
-
-        return this.routerInfo.source();
+        return toRouterInfo().source();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.routerInfo) {
-            this.routerInfo = buildRouterInfo();
-        }
-
-        return this.routerInfo.block();
+        return toRouterInfo().block();
     }
 
-    private RouterInfo<T, R> buildRouterInfo() {
-        RouterBlockBuilder<T> builder = RouterBlock.<T>builder()
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler);
+    private RouterInfo<T, R> toRouterInfo() {
+        if (null == this.routerInfo) {
+            RouterBlockBuilder<T> builder = RouterBlock.<T>builder()
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler);
 
-        if (useRoundRobin) {
-            builder.roundRobin();
+            if (useRoundRobin) {
+                builder.roundRobin();
+            }
+
+            if (useBalanced) {
+                builder.balanced();
+            }
+
+            if (null != stickyKeyExtractor) {
+                builder.sticky(stickyKeyExtractor);
+            }
+
+            if (null != routingFunction) {
+                builder.routingFunction(routingFunction);
+            }
+
+            List<Target<T>> targetList = new ArrayList<>();
+            List<Source<R>> sourceList = new ArrayList<>();
+
+            for (int i = 0; i < routes; i++) {
+                OpenPipeline<T, R> pipeline = factory.get();
+
+                targetList.add(pipeline);
+                sourceList.add(pipeline);
+            }
+
+            RouterBlock<T> block = builder
+                    .targets(targetList)
+                    .build();
+
+            this.routerInfo = new RouterInfo<>(new RouterSource<>(sourceList), block);
         }
 
-        if (useBalanced) {
-            builder.balanced();
-        }
-
-        if (null != stickyKeyExtractor) {
-            builder.sticky(stickyKeyExtractor);
-        }
-
-        if (null != routingFunction) {
-            builder.routingFunction(routingFunction);
-        }
-
-        List<Target<T>> targetList = new ArrayList<>();
-        List<Source<R>> sourceList = new ArrayList<>();
-
-        for (int i = 0; i < routes; i++) {
-            OpenPipeline<T, R> pipeline = factory.get();
-
-            targetList.add(pipeline);
-            sourceList.add(pipeline);
-        }
-
-        RouterBlock<T> block = builder
-                .targets(targetList)
-                .build();
-
-        return new RouterInfo<>(new RouterSource<>(sourceList), block);
+        return this.routerInfo;
     }
 
     private static final class RouterInfo<I, O> {

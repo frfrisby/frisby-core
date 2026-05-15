@@ -55,6 +55,7 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Buffer} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Buffer<T> of(Class<T> ignored) {
         return of();
     }
@@ -81,6 +82,7 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Buffer<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Buffer<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });
@@ -120,20 +122,12 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBufferBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return block;
+        return toBufferBlock();
     }
 
     @Override
@@ -141,17 +135,21 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
         this.executor = executor;
     }
 
-    private BufferBlock<T> toBlock() {
-        BufferBlockBuilder<T> builder = BufferBlock.<T>builder()
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+    private BufferBlock<T> toBufferBlock() {
+        if (null == this.block) {
+            BufferBlockBuilder<T> builder = BufferBlock.<T>builder()
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 }

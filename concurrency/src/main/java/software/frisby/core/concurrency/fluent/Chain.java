@@ -180,10 +180,10 @@ public final class Chain<H, O> {
 
             current.target.toTarget();
 
-            Chain<H, ?> previous = current.previous;
+            Chain<H, ?> prev = current.previous;
 
-            if (null != previous) {
-                previous.link();
+            if (null != prev) {
+                prev.link();
             }
 
             current = current.next;
@@ -198,9 +198,9 @@ public final class Chain<H, O> {
     void link() {
         // Only called from buildPipeline() on non-terminal nodes; source is always non-null.
         Source src = this.source.toSource();
-        Target target = this.next.target.toTarget();
+        Target nextTarget = this.next.target.toTarget();
 
-        src.linkTo(target);
+        src.linkTo(nextTarget);
     }
 
     private void throwIfBuilt() {

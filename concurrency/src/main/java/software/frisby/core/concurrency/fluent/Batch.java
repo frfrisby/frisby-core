@@ -60,6 +60,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Batch} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Batch<T> of(Class<T> ignored) {
         return of();
     }
@@ -139,20 +140,12 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
 
     @Override
     public Source<List<T>> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBatchBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBatchBlock();
     }
 
     @Override
@@ -160,25 +153,29 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
         this.executor = executor;
     }
 
-    private BatchBlock<T> toBlock() {
-        BatchBlockBuilder<T> builder = BatchBlock.<T>builder()
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+    private BatchBlock<T> toBatchBlock() {
+        if (null == this.block) {
+            BatchBlockBuilder<T> builder = BatchBlock.<T>builder()
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            if (null != batchSize) {
+                builder.batchSize(batchSize);
+            }
+
+            if (null != timeout) {
+                builder.timeout(timeout);
+            }
+
+            this.block = builder.build();
         }
 
-        if (null != batchSize) {
-            builder.batchSize(batchSize);
-        }
-
-        if (null != timeout) {
-            builder.timeout(timeout);
-        }
-
-        return builder.build();
+        return this.block;
     }
 }

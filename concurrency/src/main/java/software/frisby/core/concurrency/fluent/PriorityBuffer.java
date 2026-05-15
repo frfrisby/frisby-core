@@ -55,6 +55,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      * @param ignored The item type class; used for inference only.
      * @return A new {@code PriorityBuffer} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> PriorityBuffer<T> of(Class<T> ignored) {
         return of();
     }
@@ -82,6 +83,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      * @param ignored The element type class; used for inference only.
      * @return A new {@code PriorityBuffer<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> PriorityBuffer<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });
@@ -134,20 +136,12 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toPriorityBufferBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return block;
+        return toPriorityBufferBlock();
     }
 
     @Override
@@ -155,18 +149,22 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
         this.executor = executor;
     }
 
-    private PriorityBufferBlock<T> toBlock() {
-        PriorityBufferBlockBuilder<T> builder = PriorityBufferBlock.<T>builder()
-                .comparator(comparator)
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+    private PriorityBufferBlock<T> toPriorityBufferBlock() {
+        if (null == this.block) {
+            PriorityBufferBlockBuilder<T> builder = PriorityBufferBlock.<T>builder()
+                    .comparator(comparator)
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 }

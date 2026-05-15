@@ -41,6 +41,7 @@ public interface ActionBlock<T> extends Target<T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link ActionBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> ActionBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

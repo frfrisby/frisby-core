@@ -48,6 +48,7 @@ public interface BufferBlock<T> extends Stage<T, T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link BufferBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> BufferBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

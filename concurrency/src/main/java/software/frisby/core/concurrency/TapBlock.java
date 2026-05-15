@@ -41,6 +41,7 @@ public interface TapBlock<T> extends Stage<T, T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link TapBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> TapBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

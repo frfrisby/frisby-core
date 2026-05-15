@@ -10,8 +10,6 @@ import java.util.function.Predicate;
 
 @SuppressWarnings("ALL")
 final class DefaultBranchBlock<T> implements BranchBlock<T> {
-    private static final int OTHERWISE_BRANCH_ID = 0;
-
     private final List<Filter<T>> filterList;
     private final Target<T> otherwiseTarget;
     private final ItemPostedManager<T> postedManager;

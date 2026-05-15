@@ -59,7 +59,7 @@ final class TargetManager<T> {
             throw new IllegalArgumentException("The 'target' value is invalid.  A block cannot be linked to itself.");
         }
 
-        Link<T> newLink = new Link<>(this.deliveredManager, this.errorManager, target, this.eventSource);
+        Link<T> newLink = new Link<>(this.deliveredManager, this.errorManager, target);
 
         if (!this.linkedTarget.compareAndSet(null, newLink)) {
             throw new IllegalStateException(
@@ -123,19 +123,15 @@ final class TargetManager<T> {
 
     private static final class Link<T> {
         private final Target<T> target;
-        private final EventSource eventSource;
-
         private final ItemDeliveredManager<T> deliveredManager;
         private final ErrorOccurredManager<T> errorManager;
 
         private Link(ItemDeliveredManager<T> deliveredManager,
                      ErrorOccurredManager<T> errorManager,
-                     Target<T> target,
-                     EventSource eventSource) {
+                     Target<T> target) {
             this.deliveredManager = deliveredManager;
             this.errorManager = errorManager;
             this.target = target;
-            this.eventSource = eventSource;
         }
 
         void post(T item) {

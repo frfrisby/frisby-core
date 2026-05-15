@@ -95,6 +95,7 @@ public interface DelayBlock<T> extends Stage<T, T> {
      * @param ignored The item type class; used for inference only.
      * @return A new {@link DelayBlockBuilder} instance.
      */
+    @SuppressWarnings("java:S1172")
     static <T> DelayBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }

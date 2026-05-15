@@ -63,6 +63,7 @@ public final class Tap<T> implements PipelineStage<T, T>, ObservableBlockBuilder
      * @param ignored The item type class; used for inference only.
      * @return A new {@code Tap<T>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Tap<T> of(Class<T> ignored) {
         return of();
     }
@@ -77,6 +78,7 @@ public final class Tap<T> implements PipelineStage<T, T>, ObservableBlockBuilder
      * @param ignored The generic type token; used for inference only.
      * @return A new {@code Tap<T>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Tap<T> of(GenericType<T> ignored) {
         return of();
     }
@@ -89,6 +91,7 @@ public final class Tap<T> implements PipelineStage<T, T>, ObservableBlockBuilder
      * @param ignored The element type class; used for inference only.
      * @return A new {@code Tap<List<T>>} instance.
      */
+    @SuppressWarnings("java:S1172")
     public static <T> Tap<List<T>> ofLists(Class<T> ignored) {
         return of(new GenericType<>() {
         });
@@ -123,28 +126,24 @@ public final class Tap<T> implements PipelineStage<T, T>, ObservableBlockBuilder
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private TapBlock<T> toBlock() {
-        return TapBlock.<T>builder()
-                .consumer(consumer)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .build();
+        if (null == this.block) {
+            this.block = TapBlock.<T>builder()
+                    .consumer(consumer)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .build();
+        }
+
+        return this.block;
     }
 }
 
