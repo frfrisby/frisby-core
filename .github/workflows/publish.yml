@@ -96,6 +96,12 @@ jobs:
                 exit 1
                 ;;
             esac
+            # A 404 means the deployment has left the in-progress list, which
+            # happens when Central Portal moves it to PUBLISHED.
+            if [ "$HTTP_STATUS" = "404" ]; then
+              echo "Deployment no longer in-progress — assumed PUBLISHED."
+              exit 0
+            fi
             sleep $INTERVAL
             ELAPSED=$((ELAPSED + INTERVAL))
           done
