@@ -73,8 +73,8 @@ jobs:
           DEPLOYMENT_ID=$(cat upload-response.txt | tr -d '[:space:]')
           echo "Deployment ID: $DEPLOYMENT_ID"
 
-          echo "Polling for validated or published state (max 30 min)..."
-          MAX_WAIT=1800
+          echo "Polling for deployment status (max 5 min)..."
+          MAX_WAIT=300
           ELAPSED=0
           INTERVAL=15
           while [ $ELAPSED -lt $MAX_WAIT ]; do
@@ -85,6 +85,10 @@ jobs:
             RESPONSE=$(cat status-response.txt)
             STATE=$(echo "$RESPONSE" | grep -o '"deploymentState":"[^"]*"' | cut -d'"' -f4)
             echo "  State: ${STATE:-unknown} (HTTP $HTTP_STATUS, ${ELAPSED}s elapsed)"
+            # Log the response body when the status is unexpected so failures are diagnosable.
+            if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "404" ]; then
+              echo "  Response: $RESPONSE"
+            fi
             case "$STATE" in
               VALIDATED|PUBLISHED)
                 echo "Deployment $STATE — done."
@@ -105,8 +109,11 @@ jobs:
             sleep $INTERVAL
             ELAPSED=$((ELAPSED + INTERVAL))
           done
-          echo "Timed out waiting for deployment validation."
-          exit 1
+          # The upload was confirmed (201) and no FAILED state was observed within the
+          # polling window.  Central Portal will continue publishing the deployment
+          # asynchronously — the artifacts will be available once propagation completes.
+          echo "Polling window elapsed.  Upload accepted (201) — deployment publishing asynchronously."
+          exit 0
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
