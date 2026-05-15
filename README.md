@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/frfrisby/frisby-core/actions/workflows/ci.yml/badge.svg)](https://github.com/frfrisby/frisby-core/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/frfrisby/frisby-core/actions/workflows/codeql.yml/badge.svg)](https://github.com/frfrisby/frisby-core/actions/workflows/codeql.yml)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=frfrisby_frisby-core&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=frfrisby_frisby-core)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=frfrisby_frisby-core&metric=coverage)](https://sonarcloud.io/summary/new_code?id=frfrisby_frisby-core)
-[![Maven Central](https://img.shields.io/maven-central/v/software.frisby.core/validation)](https://central.sonatype.com/artifact/software.frisby.core/validation)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=frfrisby_frisby-core&metric=alert_status)](https://sonarcloud.io/project/overview?id=frfrisby_frisby-core)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=frfrisby_frisby-core&metric=coverage)](https://sonarcloud.io/project/overview?id=frfrisby_frisby-core)
+[![Maven Central](https://img.shields.io/maven-central/v/software.frisby.core/bom)](https://central.sonatype.com/artifact/software.frisby.core/bom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A lightweight Java 17 library providing high-quality validation utilities and asynchronous
