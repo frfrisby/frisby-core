@@ -134,20 +134,12 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return block;
+        return toBlock();
     }
 
     @Override
@@ -156,17 +148,21 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
     }
 
     private PriorityBufferBlock<T> toBlock() {
-        PriorityBufferBlockBuilder<T> builder = PriorityBufferBlock.<T>builder()
-                .comparator(comparator)
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+        if (null == this.block) {
+            PriorityBufferBlockBuilder<T> builder = PriorityBufferBlock.<T>builder()
+                    .comparator(comparator)
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 }

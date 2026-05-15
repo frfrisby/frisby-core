@@ -110,17 +110,17 @@ public final class Action<T> implements PipelineTarget<T> {
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private ActionBlock<T> toBlock() {
-        return ActionBlock.<T>builder()
-                .itemPostedHandler(itemPostedHandler)
-                .action(consumer)
-                .build();
+        if (null == this.block) {
+            this.block = ActionBlock.<T>builder()
+                    .itemPostedHandler(itemPostedHandler)
+                    .action(consumer)
+                    .build();
+        }
+
+        return this.block;
     }
 }

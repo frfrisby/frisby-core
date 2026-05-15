@@ -120,20 +120,12 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return block;
+        return toBlock();
     }
 
     @Override
@@ -142,16 +134,20 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
     }
 
     private BufferBlock<T> toBlock() {
-        BufferBlockBuilder<T> builder = BufferBlock.<T>builder()
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+        if (null == this.block) {
+            BufferBlockBuilder<T> builder = BufferBlock.<T>builder()
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 }

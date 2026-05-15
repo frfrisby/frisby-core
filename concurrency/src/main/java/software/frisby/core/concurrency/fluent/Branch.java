@@ -149,24 +149,24 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private BranchBlock<T> toBlock() {
-        BranchBlockBuilder<T> builder = BranchBlock.<T>builder()
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .otherwise(otherwise);
+        if (null == this.block) {
+            BranchBlockBuilder<T> builder = BranchBlock.<T>builder()
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .otherwise(otherwise);
 
-        for (WhenCondition<T> condition : whenConditions) {
-            builder.when(condition.predicate(), condition.target());
+            for (WhenCondition<T> condition : whenConditions) {
+                builder.when(condition.predicate(), condition.target());
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 
     private record WhenCondition<T>(Predicate<T> predicate,

@@ -206,20 +206,12 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
 
     @Override
     public Source<List<T>> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
@@ -228,30 +220,34 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
     }
 
     private GroupBlock<T, K> toBlock() {
-        GroupBlockBuilder<T, K> builder = GroupBlock.<T, K>builder()
-                .groupingFunction(groupingFunction)
-                .groupObserver(observer)
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+        if (null == block) {
+            GroupBlockBuilder<T, K> builder = GroupBlock.<T, K>builder()
+                    .groupingFunction(groupingFunction)
+                    .groupObserver(observer)
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            if (null != maxGroupSize) {
+                builder.maxGroupSize(maxGroupSize);
+            }
+
+            if (null != timeout) {
+                builder.timeout(timeout);
+            }
+
+            if (null != idleTimeout) {
+                builder.idleTimeout(idleTimeout);
+            }
+
+            this.block = builder.build();
         }
 
-        if (null != maxGroupSize) {
-            builder.maxGroupSize(maxGroupSize);
-        }
-
-        if (null != timeout) {
-            builder.timeout(timeout);
-        }
-
-        if (null != idleTimeout) {
-            builder.idleTimeout(idleTimeout);
-        }
-
-        return builder.build();
+        return this.block;
     }
 }

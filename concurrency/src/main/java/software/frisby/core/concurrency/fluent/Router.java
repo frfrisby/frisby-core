@@ -196,42 +196,42 @@ public final class Router<T> implements PipelineTarget<T>, ObservableBlockBuilde
 
     @Override
     public Target<T> toTarget() {
+        return toBlock();
+    }
+
+    private RouterBlock<T> toBlock() {
         if (null == this.block) {
-            this.block = buildBlock();
+            RouterBlockBuilder<T> builder = RouterBlock.<T>builder()
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler);
+
+            if (useRoundRobin) {
+                builder.roundRobin();
+            }
+
+            if (useBalanced) {
+                builder.balanced();
+            }
+
+            if (null != stickyKeyExtractor) {
+                builder.sticky(stickyKeyExtractor);
+            }
+
+            if (null != routingFunction) {
+                builder.routingFunction(routingFunction);
+            }
+
+            List<Target<T>> targetList = new ArrayList<>();
+
+            for (int i = 0; i < routes; i++) {
+                targetList.add(factory.get());
+            }
+
+            this.block = builder
+                    .targets(targetList)
+                    .build();
         }
 
         return this.block;
-    }
-
-    private RouterBlock<T> buildBlock() {
-        RouterBlockBuilder<T> builder = RouterBlock.<T>builder()
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler);
-
-        if (useRoundRobin) {
-            builder.roundRobin();
-        }
-
-        if (useBalanced) {
-            builder.balanced();
-        }
-
-        if (null != stickyKeyExtractor) {
-            builder.sticky(stickyKeyExtractor);
-        }
-
-        if (null != routingFunction) {
-            builder.routingFunction(routingFunction);
-        }
-
-        List<Target<T>> targetList = new ArrayList<>();
-
-        for (int i = 0; i < routes; i++) {
-            targetList.add(factory.get());
-        }
-
-        return builder
-                .targets(targetList)
-                .build();
     }
 }

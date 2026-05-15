@@ -139,20 +139,12 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
 
     @Override
     public Source<List<T>> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
@@ -161,24 +153,28 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
     }
 
     private BatchBlock<T> toBlock() {
-        BatchBlockBuilder<T> builder = BatchBlock.<T>builder()
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+        if (null == this.block) {
+            BatchBlockBuilder<T> builder = BatchBlock.<T>builder()
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != capacity) {
-            builder.capacity(capacity);
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            if (null != batchSize) {
+                builder.batchSize(batchSize);
+            }
+
+            if (null != timeout) {
+                builder.timeout(timeout);
+            }
+
+            this.block = builder.build();
         }
 
-        if (null != batchSize) {
-            builder.batchSize(batchSize);
-        }
-
-        if (null != timeout) {
-            builder.timeout(timeout);
-        }
-
-        return builder.build();
+        return this.block;
     }
 }

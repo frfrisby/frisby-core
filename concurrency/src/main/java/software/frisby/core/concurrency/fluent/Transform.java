@@ -161,27 +161,23 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
 
     @Override
     public Source<R> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private TransformBlock<T, R> toBlock() {
-        return TransformBlock.<T, R>builder()
-                .transform(transform)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .build();
+        if (null == this.block) {
+            this.block = TransformBlock.<T, R>builder()
+                    .transform(transform)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .build();
+        }
+
+        return this.block;
     }
 }

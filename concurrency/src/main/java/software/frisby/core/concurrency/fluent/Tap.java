@@ -123,28 +123,24 @@ public final class Tap<T> implements PipelineStage<T, T>, ObservableBlockBuilder
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private TapBlock<T> toBlock() {
-        return TapBlock.<T>builder()
-                .consumer(consumer)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .build();
+        if (null == this.block) {
+            this.block = TapBlock.<T>builder()
+                    .consumer(consumer)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .build();
+        }
+
+        return this.block;
     }
 }
 

@@ -150,23 +150,23 @@ public final class Broadcast<T> implements PipelineTarget<T>, ObservableBlockBui
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     private BroadcastBlock<T> toBlock() {
-        BroadcastBlockBuilder<T> builder = BroadcastBlock.<T>builder()
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .cloningFunction(cloningFunction);
+        if (null == this.block) {
+            BroadcastBlockBuilder<T> builder = BroadcastBlock.<T>builder()
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .cloningFunction(cloningFunction);
 
-        for (Pipeline<T> target : targets) {
-            builder.target(target);
+            for (Pipeline<T> target : targets) {
+                builder.target(target);
+            }
+
+            this.block = builder.build();
         }
 
-        return builder.build();
+        return this.block;
     }
 }

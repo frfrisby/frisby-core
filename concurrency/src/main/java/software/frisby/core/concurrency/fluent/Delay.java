@@ -152,20 +152,12 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
 
     @Override
     public Source<T> toSource() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return this.block;
+        return toBlock();
     }
 
     @Override
     public Target<T> toTarget() {
-        if (null == this.block) {
-            this.block = toBlock();
-        }
-
-        return block;
+        return toBlock();
     }
 
     @Override
@@ -174,22 +166,26 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
     }
 
     private DelayBlock<T> toBlock() {
-        DelayBlockBuilder<T> builder = DelayBlock.<T>builder()
-                .executor(executor)
-                .itemPostedHandler(itemPostedHandler)
-                .itemDeliveredHandler(itemDeliveredHandler)
-                .errorOccurredHandler(errorOccurredHandler);
+        if (null == this.block) {
+            DelayBlockBuilder<T> builder = DelayBlock.<T>builder()
+                    .executor(executor)
+                    .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
+                    .errorOccurredHandler(errorOccurredHandler);
 
-        if (null != delayFunction) {
-            builder.delay(delayFunction);
-        } else {
-            builder.delay(delay);
+            if (null != delayFunction) {
+                builder.delay(delayFunction);
+            } else {
+                builder.delay(delay);
+            }
+
+            if (null != capacity) {
+                builder.capacity(capacity);
+            }
+
+            this.block = builder.build();
         }
 
-        if (null != capacity) {
-            builder.capacity(capacity);
-        }
-
-        return builder.build();
+        return this.block;
     }
 }
