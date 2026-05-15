@@ -21,17 +21,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 17 with Central Portal credentials
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
           cache: maven
-          # Writes a <server id="central"> entry into ~/.m2/settings.xml.
-          # central-publishing-maven-plugin picks this up via publishingServerId=central.
-          server-id: central
-          server-username: MAVEN_CENTRAL_USERNAME
-          server-password: MAVEN_CENTRAL_TOKEN
           # Imports the GPG key so maven-gpg-plugin can sign artifacts.
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
@@ -39,22 +34,63 @@ jobs:
       - name: Set release version (strip -SNAPSHOT suffix)
         run: mvn --batch-mode --no-transfer-progress versions:set -DremoveSnapshot -DgenerateBackupPoms=false
 
-      - name: Build, sign and stage all modules
-        # -DskipPublishing=true stages every module's artifacts into the shared
-        # target/central-staging directory without uploading anything to Central Portal.
-        # Running publish per-module would create overlapping deployments because the
-        # staging directory accumulates artifacts across the reactor build.
-        run: mvn --batch-mode --no-transfer-progress -P release deploy -DskipPublishing=true
+      - name: Build, sign and stage all modules to local directory
+        # Deploys every module's signed artifacts into a local Maven repository
+        # layout under target/maven-central-staging.  Using altDeploymentRepository
+        # bypasses central-publishing-maven-plugin entirely, which avoids the
+        # per-module bundle upload issue that causes overlapping deployments.
+        run: |
+          mvn --batch-mode --no-transfer-progress -P release deploy \
+            -DaltDeploymentRepository=local::file://$(pwd)/target/maven-central-staging
         env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Publish staged bundle to Maven Central
-        # --non-recursive runs only on the root module, uploading the single combined
-        # bundle that was accumulated in target/central-staging by the step above.
-        run: mvn --batch-mode --no-transfer-progress -P release central-publishing:publish --non-recursive
+      - name: Create Central Portal bundle ZIP
+        run: |
+          cd target/maven-central-staging
+          zip -r ../../central-bundle.zip .
+          echo "Bundle contents:"
+          unzip -l ../../central-bundle.zip | tail -20
+          echo "Bundle size: $(du -sh ../../central-bundle.zip | awk '{print $1}')"
+
+      - name: Upload bundle and wait for validation
+        run: |
+          BEARER=$(printf '%s:%s' "$MAVEN_CENTRAL_USERNAME" "$MAVEN_CENTRAL_TOKEN" | base64 | tr -d '\n')
+
+          echo "Uploading bundle to Central Portal..."
+          DEPLOYMENT_ID=$(curl --silent --fail --show-error \
+            --request POST \
+            --header "Authorization: Bearer $BEARER" \
+            --form "bundle=@central-bundle.zip" \
+            "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC&name=frisby-core")
+          echo "Deployment ID: $DEPLOYMENT_ID"
+
+          echo "Polling for validated or published state (max 30 min)..."
+          MAX_WAIT=1800
+          ELAPSED=0
+          INTERVAL=15
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            RESPONSE=$(curl --silent --fail \
+              --header "Authorization: Bearer $BEARER" \
+              "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID")
+            STATE=$(echo "$RESPONSE" | grep -o '"deploymentState":"[^"]*"' | cut -d'"' -f4)
+            echo "  State: ${STATE:-unknown} (${ELAPSED}s elapsed)"
+            case "$STATE" in
+              VALIDATED|PUBLISHED)
+                echo "Deployment $STATE — done."
+                exit 0
+                ;;
+              FAILED)
+                echo "Deployment FAILED."
+                echo "$RESPONSE"
+                exit 1
+                ;;
+            esac
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "Timed out waiting for deployment validation."
+          exit 1
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

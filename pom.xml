@@ -329,12 +329,7 @@
     <profiles>
         <profile>
             <!--
-                Activated by the publish workflow via: mvn -P release deploy
-                Requires GitHub Actions secrets:
-                  MAVEN_CENTRAL_USERNAME  — Central Portal token user
-                  MAVEN_CENTRAL_TOKEN     — Central Portal token password
-                  GPG_PRIVATE_KEY         — armored GPG private key
-                  GPG_PASSPHRASE          — passphrase for the GPG key
+                Activated by the 'publish.yml' workflow via: mvn -P release deploy
             -->
             <id>release</id>
             <build>
@@ -358,23 +353,6 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.10.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                            <!--
-                                autoPublish=true  — publish automatically once Central validates the bundle;
-                                                    no manual intervention required in the Central Portal UI.
-                                waitUntil         — wait for "validated" state only (faster than waiting for
-                                                    full propagation to search index, which is asynchronous).
-                            -->
-                            <autoPublish>true</autoPublish>
-                            <waitUntil>validated</waitUntil>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
