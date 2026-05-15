@@ -9,6 +9,15 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.0.2](https://github.com/frfrisby/frisby-core/compare/v1.0.1...v1.0.2) (2026-05-15)
+
+
+### Bug Fixes
+
+* Resolved java:S1066 code analysis warnings across the concurrence module. ([#21](https://github.com/frfrisby/frisby-core/issues/21)) ([68ba3e0](https://github.com/frfrisby/frisby-core/commit/68ba3e0404a5d7ab126ef2980d79f8da1ee62352))
+* Resolving minor code analysis warnings. ([#17](https://github.com/frfrisby/frisby-core/issues/17)) ([87b2e73](https://github.com/frfrisby/frisby-core/commit/87b2e739bbd11a8a8576acbaf25f82c3d722a607))
+* Restore publish workflow trigger and fix README version regex. ([#14](https://github.com/frfrisby/frisby-core/issues/14)) ([24eafc7](https://github.com/frfrisby/frisby-core/commit/24eafc7d4a7962a34dacf5a6c395d105a9f7b1f2))
+
 ## [1.0.1](https://github.com/frfrisby/frisby-core/compare/v1.0.0...v1.0.1) (2026-05-14)
 
 
