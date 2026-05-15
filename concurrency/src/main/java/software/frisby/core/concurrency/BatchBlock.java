@@ -101,6 +101,7 @@ public interface BatchBlock<T> extends Stage<T, List<T>> {
      *
      * @return The current number of items queued in this block.
      */
+    @Override
     int size();
 
     /**

@@ -125,6 +125,7 @@ public interface DelayBlock<T> extends Stage<T, T> {
      *
      * @return The current number of items in the delay queue.
      */
+    @Override
     int size();
 
     /**
