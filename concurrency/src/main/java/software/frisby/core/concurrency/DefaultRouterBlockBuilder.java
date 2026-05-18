@@ -5,6 +5,7 @@ import software.frisby.core.validation.Values;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 final class DefaultRouterBlockBuilder<T> implements RouterBlockBuilder<T> {
@@ -123,9 +124,12 @@ final class DefaultRouterBlockBuilder<T> implements RouterBlockBuilder<T> {
 
         List<Target<T>> builtTargets = List.copyOf(this.targets);
 
-        RoutingFunction<T> fn = this.useBalanced
-                ? balanced(builtTargets)
-                : (null == this.routingFunction ? RoutingFunction.roundRobin() : this.routingFunction);
+        RoutingFunction<T> fn;
+        if (this.useBalanced) {
+            fn = balanced(builtTargets);
+        } else {
+            fn = Objects.requireNonNullElseGet(this.routingFunction, RoutingFunction::roundRobin);
+        }
 
         return new DefaultRouterBlock<>(
                 builtTargets,

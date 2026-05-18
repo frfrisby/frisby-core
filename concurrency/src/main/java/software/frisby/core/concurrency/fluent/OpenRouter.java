@@ -305,24 +305,10 @@ public final class OpenRouter<T, R> implements PipelineStage<T, R>, ObservableBl
         return this.routerInfo;
     }
 
-    private static final class RouterInfo<I, O> {
-        private final RouterSource<O> source;
-        private final RouterBlock<I> block;
-
-        private RouterInfo(RouterSource<O> source, RouterBlock<I> block) {
+    private record RouterInfo<I, O>(RouterSource<O> source, RouterBlock<I> block) {
+        private RouterInfo {
             Values.notNull("source", source);
             Values.notNull("block", block);
-
-            this.source = source;
-            this.block = block;
-        }
-
-        RouterSource<O> source() {
-            return this.source;
-        }
-
-        RouterBlock<I> block() {
-            return this.block;
         }
     }
 
