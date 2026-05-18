@@ -4,7 +4,7 @@
 
     <groupId>software.frisby.core</groupId>
     <artifactId>frisby-core</artifactId>
-    <version>1.0.12-SNAPSHOT</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
     <description>

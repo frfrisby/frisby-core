@@ -9,6 +9,19 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.1.0](https://github.com/frfrisby/frisby-core/compare/v1.0.11...v1.1.0) (2026-05-18)
+
+
+### Features
+
+* Add Automatic-Module-Name to support JPMS automatic modules. ([#53](https://github.com/frfrisby/frisby-core/issues/53)) ([1fd199b](https://github.com/frfrisby/frisby-core/commit/1fd199bccfd437a06f528cf7fe28bbc96e808c3a))
+
+
+### Bug Fixes
+
+* Remove unused K type parameter from GroupBlock interface. ([#54](https://github.com/frfrisby/frisby-core/issues/54)) ([904ca51](https://github.com/frfrisby/frisby-core/commit/904ca51a784a16f2ab257dfedc528da0fb3fb78f))
+* Resolved several code analysis warnings. ([#51](https://github.com/frfrisby/frisby-core/issues/51)) ([d3b52bf](https://github.com/frfrisby/frisby-core/commit/d3b52bffff6e7fdb5287d82c8ed9c9b55288bc84))
+
 ## [1.0.11](https://github.com/frfrisby/frisby-core/compare/v1.0.10...v1.0.11) (2026-05-15)
 
 
