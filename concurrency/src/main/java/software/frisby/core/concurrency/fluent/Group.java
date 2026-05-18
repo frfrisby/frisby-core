@@ -42,7 +42,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<List<T>> itemDeliveredHandler;
 
-    private GroupBlock<T, K> block;
+    private GroupBlock<T> block;
 
     private Group() {
     }
@@ -220,7 +220,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
         this.executor = executor;
     }
 
-    private GroupBlock<T, K> toGroupBlock() {
+    private GroupBlock<T> toGroupBlock() {
         if (null == block) {
             GroupBlockBuilder<T, K> builder = GroupBlock.<T, K>builder()
                     .groupingFunction(groupingFunction)

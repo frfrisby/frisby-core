@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
+final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
     static final int DEFAULT_CAPACITY = 1024;
     static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
     static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofSeconds(5);
@@ -36,6 +36,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
     // the ArrayBlockingQueue.  This ordering ensures Numbers.positive fires before
     // ArrayBlockingQueue is constructed, so callers always receive the project-standard
     // exception type rather than IllegalArgumentException.
+    @SuppressWarnings("java:S107")
     DefaultGroupBlock(Function<T, K> groupingFunction,
                       Duration timeout,
                       Duration idleTimeout,
@@ -63,6 +64,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
 
     // Package-private constructor used in tests to inject a custom BlockingQueue
     // (e.g. MockInterruptedQueue) for deterministic coverage of interrupt paths.
+    @SuppressWarnings("java:S107")
     DefaultGroupBlock(BlockingQueue<T> queue,
                       Function<T, K> groupingFunction,
                       Duration timeout,
@@ -260,6 +262,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
         // flushExpiredGroups() fast path at O(1) per item in the common case.
         private long nextDeadline = Long.MAX_VALUE;
 
+        @SuppressWarnings("java:S107")
         private Worker(CompletableQueue<T> completableQueue,
                        Function<T, K> groupingFunction,
                        TargetManager<List<T>> targetManager,
@@ -289,6 +292,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
         }
 
         @Override
+        @SuppressWarnings("java:S135")
         public void run() {
             this.lifecycle.start();
 

@@ -46,6 +46,7 @@ import java.util.Map;
  *
  * @see FieldGroup
  */
+@SuppressWarnings({"java:S107", "java:S3776"})
 public final class FieldGroups {
     private static final String GROUP_ARGUMENT_NAME = "group";
 
@@ -183,6 +184,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 7 fields.
      * @throws MissingFieldException         if none of the fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void atLeastOne(FieldGroup group,
                                   Object v1,
                                   Object v2,
@@ -216,6 +218,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 8 fields.
      * @throws MissingFieldException         if none of the fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void atLeastOne(FieldGroup group,
                                   Object v1,
                                   Object v2,
@@ -251,6 +254,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 9 fields.
      * @throws MissingFieldException         if none of the fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void atLeastOne(FieldGroup group,
                                   Object v1,
                                   Object v2,
@@ -288,6 +292,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 10 fields.
      * @throws MissingFieldException         if none of the fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void atLeastOne(FieldGroup group,
                                   Object v1,
                                   Object v2,
@@ -441,6 +446,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings("java:S3776")
     public static void onlyOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
         Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
@@ -480,6 +486,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings("java:S3776")
     public static void onlyOne(FieldGroup group,
                                Object v1,
                                Object v2,
@@ -528,6 +535,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void onlyOne(FieldGroup group,
                                Object v1,
                                Object v2,
@@ -580,6 +588,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void onlyOne(FieldGroup group,
                                Object v1,
                                Object v2,
@@ -636,6 +645,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void onlyOne(FieldGroup group,
                                Object v1,
                                Object v2,
@@ -696,6 +706,7 @@ public final class FieldGroups {
      * @throws MissingFieldException         if none of the fields are provided.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void onlyOne(FieldGroup group,
                                Object v1,
                                Object v2,
@@ -875,6 +886,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 5 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings("java:S3776")
     public static void atMostOne(FieldGroup group, Object v1, Object v2, Object v3, Object v4, Object v5) {
         Throws.ifNull(GROUP_ARGUMENT_NAME, group);
         throwIfArityMismatch(group, 5);
@@ -911,6 +923,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 6 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings("java:S3776")
     public static void atMostOne(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -956,6 +969,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 7 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void atMostOne(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1005,6 +1019,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 8 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void atMostOne(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1058,6 +1073,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 9 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void atMostOne(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1115,6 +1131,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 10 fields.
      * @throws TooManyFieldsException        if more than one field is provided.
      */
+    @SuppressWarnings({"java:S3776", "java:S107"})
     public static void atMostOne(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1324,6 +1341,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 7 fields.
      * @throws MissingFieldException         if some but not all fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void noneOrAll(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1358,6 +1376,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 8 fields.
      * @throws MissingFieldException         if some but not all fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void noneOrAll(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1394,6 +1413,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 9 fields.
      * @throws MissingFieldException         if some but not all fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void noneOrAll(FieldGroup group,
                                  Object v1,
                                  Object v2,
@@ -1432,6 +1452,7 @@ public final class FieldGroups {
      * @throws IllegalConfigurationException if {@code group} does not define exactly 10 fields.
      * @throws MissingFieldException         if some but not all fields are provided.
      */
+    @SuppressWarnings("java:S107")
     public static void noneOrAll(FieldGroup group,
                                  Object v1,
                                  Object v2,

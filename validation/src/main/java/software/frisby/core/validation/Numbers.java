@@ -2613,6 +2613,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float min(String name, float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -2632,6 +2633,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float min(String name, Float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -2651,6 +2653,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float max(String name, float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -2670,6 +2673,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float max(String name, Float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -2689,6 +2693,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float minExclusive(String name, float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -2708,6 +2713,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float minExclusive(String name, Float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -2727,6 +2733,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float maxExclusive(String name, float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -2746,6 +2753,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float maxExclusive(String name, Float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -2767,6 +2775,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is less than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float range(String name, float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2790,6 +2799,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float range(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2813,6 +2823,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float exclusiveRange(String name, float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2836,6 +2847,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float exclusiveRange(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2859,6 +2871,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float rangeExclusiveMax(String name, float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2882,6 +2895,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float rangeExclusiveMax(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2905,6 +2919,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float rangeExclusiveMin(String name, float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2928,6 +2943,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static float rangeExclusiveMin(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -2949,6 +2965,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalMin(String name, Float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -2968,6 +2985,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalMax(String name, Float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -2987,6 +3005,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalMinExclusive(String name, Float value, float min) {
         Throws.ifInvalidName(name);
 
@@ -3006,6 +3025,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalMaxExclusive(String name, Float value, float max) {
         Throws.ifInvalidName(name);
 
@@ -3027,6 +3047,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is less than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalRange(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -3050,6 +3071,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalExclusiveRange(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -3073,6 +3095,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalRangeExclusiveMax(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -3096,6 +3119,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalRangeExclusiveMin(String name, Float value, float min, float max) {
         Throws.ifInvalidName(name);
 
@@ -3117,6 +3141,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static float positive(String name, float value) {
         Throws.ifInvalidName(name);
 
@@ -3136,6 +3161,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static float positive(String name, Float value) {
         Throws.ifInvalidName(name);
 
@@ -3156,6 +3182,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalPositive(String name, Float value) {
         Throws.ifInvalidName(name);
 
@@ -3175,6 +3202,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static float notNegative(String name, float value) {
         Throws.ifInvalidName(name);
 
@@ -3194,6 +3222,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static float notNegative(String name, Float value) {
         Throws.ifInvalidName(name);
 
@@ -3214,6 +3243,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static Float optionalNotNegative(String name, Float value) {
         Throws.ifInvalidName(name);
 
@@ -3250,6 +3280,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double min(String name, double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3269,6 +3300,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double min(String name, Double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3288,6 +3320,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double max(String name, double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3307,6 +3340,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double max(String name, Double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3326,6 +3360,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double minExclusive(String name, double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3345,6 +3380,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double minExclusive(String name, Double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3364,6 +3400,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double maxExclusive(String name, double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3383,6 +3420,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double maxExclusive(String name, Double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3404,6 +3442,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is less than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double range(String name, double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3427,6 +3466,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double range(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3450,6 +3490,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double exclusiveRange(String name, double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3473,6 +3514,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double exclusiveRange(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3496,6 +3538,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double rangeExclusiveMax(String name, double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3519,6 +3562,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double rangeExclusiveMax(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3542,6 +3586,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double rangeExclusiveMin(String name, double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3565,6 +3610,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static double rangeExclusiveMin(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3586,6 +3632,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalMin(String name, Double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3605,6 +3652,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalMax(String name, Double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3624,6 +3672,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalMinExclusive(String name, Double value, double min) {
         Throws.ifInvalidName(name);
 
@@ -3643,6 +3692,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalMaxExclusive(String name, Double value, double max) {
         Throws.ifInvalidName(name);
 
@@ -3664,6 +3714,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is less than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalRange(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3687,6 +3738,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalExclusiveRange(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3710,6 +3762,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalRangeExclusiveMax(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3733,6 +3786,7 @@ public final class Numbers {
      * @throws IllegalConfigurationException     if {@code max} is not strictly greater than {@code min}.
      * @throws NumericValueOutsideRangeException if {@code value} is outside the specified bound.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalRangeExclusiveMin(String name, Double value, double min, double max) {
         Throws.ifInvalidName(name);
 
@@ -3754,6 +3808,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static double positive(String name, double value) {
         Throws.ifInvalidName(name);
 
@@ -3773,6 +3828,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static double positive(String name, Double value) {
         Throws.ifInvalidName(name);
 
@@ -3793,6 +3849,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is not positive, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalPositive(String name, Double value) {
         Throws.ifInvalidName(name);
 
@@ -3812,6 +3869,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static double notNegative(String name, double value) {
         Throws.ifInvalidName(name);
 
@@ -3831,6 +3889,7 @@ public final class Numbers {
      * @throws NullValueException                if {@code value} is null.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static double notNegative(String name, Double value) {
         Throws.ifInvalidName(name);
 
@@ -3851,6 +3910,7 @@ public final class Numbers {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws NumericValueOutsideRangeException if {@code value} is negative, or is {@code NaN}.
      */
+    @SuppressWarnings("java:S1940")
     public static Double optionalNotNegative(String name, Double value) {
         Throws.ifInvalidName(name);
 
