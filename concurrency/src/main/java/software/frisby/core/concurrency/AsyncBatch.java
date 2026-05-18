@@ -149,6 +149,7 @@ final class AsyncBatch<T> {
         }
 
         @Override
+        @SuppressWarnings({"java:S135", "java:S3776"})
         public void run() {
             this.lifecycle.start();
 

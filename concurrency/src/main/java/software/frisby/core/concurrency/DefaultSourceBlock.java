@@ -187,7 +187,7 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
         }
 
         @Override
-        @SuppressWarnings("java:S1141")
+        @SuppressWarnings({"java:S1141", "java:S3776"})
         public void run() {
             this.lifecycle.start();
 
@@ -257,7 +257,7 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
         }
 
         @Override
-        @SuppressWarnings("java:S1141")
+        @SuppressWarnings({"java:S1141", "java:S3776"})
         public void run() {
             this.lifecycle.start();
 
