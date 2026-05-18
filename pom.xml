@@ -135,6 +135,17 @@
                                 <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                 <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                             </manifest>
+                            <manifestEntries>
+                                <!--
+                                    Declares a stable automatic module name so that consumers
+                                    building JPMS-modular applications can safely write
+                                    "requires software.frisby.core.<module>;" in their
+                                    module-info.java.  Without this, Java derives the name from
+                                    the JAR filename, which is unstable across versions and
+                                    tooling.
+                                -->
+                                <Automatic-Module-Name>${project.groupId}.${project.artifactId}</Automatic-Module-Name>
+                            </manifestEntries>
                         </archive>
                     </configuration>
                 </plugin>
