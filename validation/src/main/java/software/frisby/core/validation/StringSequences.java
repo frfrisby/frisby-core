@@ -1535,6 +1535,7 @@ public final class StringSequences {
      * @throws BlankValueException               if any element is blank.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
+    @SuppressWarnings("java:S3776")
     public static <C extends Collection<String>> C optionalNotBlankWithLength(String name, C value, int minItemLength, int maxItemLength) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
@@ -1580,6 +1581,7 @@ public final class StringSequences {
      * @throws BlankValueException               if any element is blank.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
+    @SuppressWarnings("java:S3776")
     public static String[] optionalNotBlankWithLength(String name, String[] value, int minItemLength, int maxItemLength) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
@@ -1715,6 +1717,7 @@ public final class StringSequences {
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      * @throws PatternMismatchException          if any element does not match {@code pattern}.
      */
+    @SuppressWarnings("java:S3776")
     public static <C extends Collection<String>> C optionalNotBlankWithMaxLengthAndMatches(String name, C value, int maxItemLength, Pattern pattern) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
@@ -1760,6 +1763,7 @@ public final class StringSequences {
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      * @throws PatternMismatchException          if any element does not match {@code pattern}.
      */
+    @SuppressWarnings("java:S3776")
     public static String[] optionalNotBlankWithMaxLengthAndMatches(String name, String[] value, int maxItemLength, Pattern pattern) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
