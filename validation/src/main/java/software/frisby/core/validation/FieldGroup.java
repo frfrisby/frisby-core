@@ -118,10 +118,8 @@ public final class FieldGroup {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof FieldGroup other)) return false;
-
-        return names.equals(other.names);
+        if (!(obj instanceof FieldGroup that)) return false;
+        return Objects.equals(names, that.names);
     }
 
     /**

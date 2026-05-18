@@ -389,9 +389,11 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
         }
 
         // Scans all active groups and publishes any whose max-timeout or idle-timeout has
-        // expired.  The fast path exits in O(1) when nextDeadline has not yet been reached;
-        // the full O(n) scan runs only when at least one group has expired.  The scan also
-        // recomputes nextDeadline in the same pass so no second traversal is needed.
+        // expired.
+        //
+        // The fast path exits in O(1) when nextDeadline has not yet been reached.  The full O(n) scan
+        // runs only when at least one group has expired.  The scan also recomputes nextDeadline in the
+        // same pass so no second traversal is needed.
         private void flushExpiredGroups() {
             long now = System.currentTimeMillis();
 
