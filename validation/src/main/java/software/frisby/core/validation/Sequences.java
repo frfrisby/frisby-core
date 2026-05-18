@@ -55,7 +55,6 @@ public final class Sequences {
     private static final String MAX_SIZE = "maxSize";
     private static final String KEY_EXTRACTOR = "keyExtractor";
 
-    
     private Sequences() {
     }
 

@@ -116,8 +116,8 @@ class FieldGroupTest {
 
         @Test
         void differentType_notEqual() {
-            //noinspection AssertBetweenInconvertibleTypes
-            assertNotEquals("a, b", FieldGroup.of("a", "b"));
+            boolean areEqual = FieldGroup.of("a", "b").equals("abc");
+            assertFalse(areEqual);
         }
     }
 
