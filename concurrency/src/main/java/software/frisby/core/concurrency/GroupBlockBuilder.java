@@ -94,5 +94,5 @@ public interface GroupBlockBuilder<T, K> extends AsyncObservableBlockBuilder<T, 
      * @return A new {@link GroupBlock} instance.
      * @throws software.frisby.core.validation.NullValueException if no executor or grouping function has been configured.
      */
-    GroupBlock<T, K> build();
+    GroupBlock<T> build();
 }

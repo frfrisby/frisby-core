@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  * of their timeout or idle-timeout state.</p>
  *
  * <pre>{@code
- * GroupBlock<Order, String> grouper = GroupBlock.<Order, String>builder()
+ * GroupBlock<Order> grouper = GroupBlock.<Order, String>builder()
  *         .groupingFunction(Order::customerId)
  *         .timeout(Duration.ofSeconds(10))
  *         .idleTimeout(Duration.ofSeconds(3))
@@ -33,12 +33,11 @@ import java.util.concurrent.CompletableFuture;
  * }</pre>
  *
  * @param <T> The type of items grouped by this block.
- * @param <K> The type of the key that uniquely identifies each group.
  * @see GroupBlockBuilder
  * @see GroupObserver
  * @see Retention
  */
-public interface GroupBlock<T, K> extends Stage<T, List<T>> {
+public interface GroupBlock<T> extends Stage<T, List<T>> {
     /**
      * Returns a new builder for constructing a {@link GroupBlock}.
      *

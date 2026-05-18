@@ -85,7 +85,7 @@ final class DefaultGroupBlockBuilder<T, K> implements GroupBlockBuilder<T, K> {
     }
 
     @Override
-    public GroupBlock<T, K> build() {
+    public GroupBlock<T> build() {
         return new DefaultGroupBlock<>(
                 this.groupingFunction,
                 this.timeout,

@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-final class DefaultGroupBlock<T, K> implements GroupBlock<T, K> {
+final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
     static final int DEFAULT_CAPACITY = 1024;
     static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
     static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofSeconds(5);

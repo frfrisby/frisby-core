@@ -117,7 +117,7 @@ class GroupBlockTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .executor(executor)
                         .build();
@@ -172,7 +172,7 @@ class GroupBlockTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .maxGroupSize(3)
                         .executor(executor)
@@ -196,7 +196,7 @@ class GroupBlockTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .executor(executor)
                         .build();
@@ -221,7 +221,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -239,7 +239,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -303,7 +303,7 @@ class GroupBlockTest {
                 AtomicReference<List<String>> received = new AtomicReference<>();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .timeout(Duration.ofSeconds(10))
@@ -334,7 +334,7 @@ class GroupBlockTest {
                 List<List<String>> received = new CopyOnWriteArrayList<>();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .timeout(Duration.ofSeconds(10))
@@ -382,7 +382,7 @@ class GroupBlockTest {
                 AtomicBoolean postBlocked = new AtomicBoolean(false);
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .maxGroupSize(1)
@@ -459,7 +459,7 @@ class GroupBlockTest {
                     // capacity(1) + maxGroupSize(1): the single permit is consumed when "a" is
                     // published and is not released until postToFirst() returns (i.e. until the
                     // blocking target is released).
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .capacity(1)
                             .maxGroupSize(1)
@@ -519,7 +519,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -540,7 +540,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -561,7 +561,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -579,7 +579,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -597,7 +597,7 @@ class GroupBlockTest {
                 NamedExecutorService executor = newExecutor();
 
                 try {
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .executor(executor)
                             .build();
@@ -665,7 +665,7 @@ class GroupBlockTest {
                     // capacity(1) + maxGroupSize(1): the single permit is consumed when "a" is
                     // published and is not released until postToFirst() returns (i.e. until the
                     // blocking target is released).
-                    GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                    GroupBlock<String> block = GroupBlock.<String, String>builder()
                             .groupingFunction(item -> item)
                             .capacity(1)
                             .maxGroupSize(1)
@@ -731,7 +731,7 @@ class GroupBlockTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .executor(executor)
                         .build();
@@ -763,7 +763,7 @@ class GroupBlockTest {
             CountDownLatch delivered = new CountDownLatch(1);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")  // all items share the same key
                         .executor(executor)
                         .build();
@@ -796,7 +796,7 @@ class GroupBlockTest {
 
             try {
                 // Key is the first character: "a" items → "a", "b" items → "b"
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item.substring(0, 1))
                         .executor(executor)
                         .build();
@@ -840,7 +840,7 @@ class GroupBlockTest {
             AtomicReference<List<String>> received = new AtomicReference<>();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .idleTimeout(Duration.ofMillis(150))
                         .timeout(Duration.ofSeconds(10))
@@ -877,7 +877,7 @@ class GroupBlockTest {
             AtomicInteger deliveredItemCount = new AtomicInteger(0);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item.substring(0, 1))
                         .timeout(Duration.ofSeconds(30))
                         .idleTimeout(Duration.ofSeconds(30))
@@ -908,7 +908,7 @@ class GroupBlockTest {
             AtomicInteger deliveredItemCount = new AtomicInteger(0);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .build();
@@ -987,7 +987,7 @@ class GroupBlockTest {
             AtomicInteger deliveredItemCount = new AtomicInteger(0);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .build();
@@ -1021,7 +1021,7 @@ class GroupBlockTest {
                 // maxGroupSize(1) causes each item to be published immediately as its own
                 // single-item group.  capacity(10) allows multiple items to be queued while
                 // the worker is busy delivering to the blocking target.
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .maxGroupSize(1)
                         .capacity(10)
@@ -1084,7 +1084,7 @@ class GroupBlockTest {
                 // After targetRelease is counted down the worker finishes delivering ["a1", "a2"],
                 // then processes "b1" (creates group "b") and "b2" (appends to group "b",
                 // reaching size 2 and triggering publishGroup).
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item.substring(0, 1))
                         .maxGroupSize(2)
                         .capacity(10)
@@ -1149,7 +1149,7 @@ class GroupBlockTest {
             List<List<String>> received = new CopyOnWriteArrayList<>();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .groupObserver(group -> Retention.RELEASE)
                         .capacity(10)
@@ -1211,7 +1211,7 @@ class GroupBlockTest {
             try {
                 // All items share the same key; observer always returns RELEASE.
                 // Each item is published as its own single-item group immediately.
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .groupObserver(group -> Retention.RELEASE)
@@ -1246,7 +1246,7 @@ class GroupBlockTest {
             try {
                 // All items share the same key; observer always returns HOLD.
                 // Expected: one flush with all items — [a, b].
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .groupObserver(group -> Retention.HOLD)
@@ -1279,7 +1279,7 @@ class GroupBlockTest {
             AtomicInteger deliveredItemCount = new AtomicInteger(0);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .groupObserver(group -> {
@@ -1330,7 +1330,7 @@ class GroupBlockTest {
             try {
                 // maxGroupSize(2): group should be published as soon as it has 2 items,
                 // without waiting for the idle or max timeout.
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .timeout(Duration.ofSeconds(30))
                         .idleTimeout(Duration.ofSeconds(30))
@@ -1364,7 +1364,7 @@ class GroupBlockTest {
             CountDownLatch bothBatches = new CountDownLatch(2);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .timeout(Duration.ofSeconds(30))
                         .idleTimeout(Duration.ofSeconds(30))
@@ -1406,7 +1406,7 @@ class GroupBlockTest {
             AtomicReference<String> postedItem = new AtomicReference<>();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .itemPostedHandler((source, item, wasAccepted) -> {
@@ -1432,7 +1432,7 @@ class GroupBlockTest {
             AtomicReference<List<String>> deliveredBatch = new AtomicReference<>();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .itemDeliveredHandler((source, target, batch) -> {
@@ -1462,7 +1462,7 @@ class GroupBlockTest {
             AtomicReference<Throwable> capturedError = new AtomicReference<>();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> "k")
                         .executor(executor)
                         .errorOccurredHandler((source, target, item, error) -> {
@@ -1504,7 +1504,7 @@ class GroupBlockTest {
             AtomicInteger batchesReceived = new AtomicInteger();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(s -> s)
                         .maxGroupSize(10)
                         .executor(executor)
@@ -1546,7 +1546,7 @@ class GroupBlockTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .executor(executor)
                         .build();
@@ -1564,7 +1564,7 @@ class GroupBlockTest {
             CountDownLatch targetRelease = new CountDownLatch(1);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .capacity(10)
                         .executor(executor)
@@ -1604,7 +1604,7 @@ class GroupBlockTest {
             CountDownLatch targetRelease = new CountDownLatch(1);
 
             try {
-                GroupBlock<String, String> block = GroupBlock.<String, String>builder()
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
                         .groupingFunction(item -> item)
                         .capacity(10)
                         .executor(executor)
