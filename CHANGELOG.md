@@ -102,7 +102,7 @@ Do not edit it manually — new entries are prepended automatically when a relea
 * Add explicit url to child module POMs to prevent ossrh flatten mode appending module name. ([47620a5](https://github.com/frfrisby/frisby-core/commit/47620a57d472c30c42bff516f6ff76aafcdeea90))
 * Use validated wait state for Maven Central publish to avoid 30-minute propagation timeout. ([b32c26b](https://github.com/frfrisby/frisby-core/commit/b32c26b3832b3301f4e0255ccbdc3019ff3b39bc))
 
-## [1.0.0] — 2026-05-13
+## 1.0.0 (2026-05-13)
 
 ### Added
 
