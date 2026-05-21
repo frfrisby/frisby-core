@@ -440,7 +440,8 @@ All methods throw `NullPointerException` if the `FieldGroup` argument is null.
 
 ## Exception Hierarchy
 
-All value-failure exceptions extend `IllegalArgumentException`. Catch specific types for
+All value-failure exceptions are in the **`software.frisby.core.validation`** package
+(no sub-package) and extend `IllegalArgumentException`. Catch specific types for
 precise error handling (e.g. mapping to HTTP 400 response bodies):
 
 ```java
