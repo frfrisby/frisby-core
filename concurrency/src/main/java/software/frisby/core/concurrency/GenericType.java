@@ -31,7 +31,6 @@ import java.util.Arrays;
  * (Eclipse Foundation, Apache License 2.0) and Jackson's
  * {@code com.fasterxml.jackson.core.type.TypeReference}.
  */
-@SuppressWarnings("GrazieInspectionRunner")
 public abstract class GenericType<T> {
     private final Type type;
     private final Class<T> rawType;
