@@ -9,6 +9,18 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.1.1](https://github.com/frfrisby/frisby-core/compare/v1.1.0...v1.1.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* Missing null guard in several of(GenericType) methods and add null-safety tests for all fluent GenericType overloads. ([d84b426](https://github.com/frfrisby/frisby-core/commit/d84b426862067cc2fa37b923e856ab647b89d7d6))
+
+
+### Documentation
+
+* Add per-method throws documentation to validation.md and create util.md. ([#56](https://github.com/frfrisby/frisby-core/issues/56)) ([7dc8e23](https://github.com/frfrisby/frisby-core/commit/7dc8e23ca4c8cec6d92e84001470ec708ade6c4c))
+
 ## [1.1.0](https://github.com/frfrisby/frisby-core/compare/v1.0.11...v1.1.0) (2026-05-18)
 
 
