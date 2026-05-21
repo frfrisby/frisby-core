@@ -73,7 +73,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      * @param <T>      The type of items to delay.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Delay} instance.
-     * @throws NullValueException   if {@code itemType} is null.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Delay<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
