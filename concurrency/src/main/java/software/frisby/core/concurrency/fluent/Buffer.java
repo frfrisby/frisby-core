@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -69,9 +71,11 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
      * @param <T>      The type of items to buffer.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Buffer} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Buffer<T> of(GenericType<T> itemType) {
-        return of(itemType.getRawType());
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType());
     }
 
     /**

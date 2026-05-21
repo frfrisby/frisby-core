@@ -4,6 +4,8 @@ import software.frisby.core.concurrency.ActionBlock;
 import software.frisby.core.concurrency.GenericType;
 import software.frisby.core.concurrency.ItemPostedHandler;
 import software.frisby.core.concurrency.Target;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -67,9 +69,11 @@ public final class Action<T> implements PipelineTarget<T> {
      * @param <T>      The type of items to consume.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Action} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Action<T> of(GenericType<T> itemType) {
-        return of(itemType.getRawType());
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType());
     }
 
     /**

@@ -3,6 +3,7 @@ package software.frisby.core.concurrency.fluent;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -319,6 +320,92 @@ class MiscCoverageTest {
         @Test
         void transformBlock_builder_withClassTokens_returnsBuilder() {
             assertNotNull(TransformBlock.builder(String.class, Integer.class));
+        }
+    }
+
+    // =========================================================================
+    // GenericType null-safety — of(GenericType) overloads that validate the token
+    // =========================================================================
+
+    @Nested
+    class GenericTypeNullSafetyTests {
+        @Test
+        void action_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Action.of((GenericType<String>) null));
+        }
+
+        @Test
+        void batch_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Batch.of((GenericType<String>) null));
+        }
+
+        @Test
+        void broadcast_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Broadcast.of((GenericType<String>) null));
+        }
+
+        @Test
+        void buffer_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Buffer.of((GenericType<String>) null));
+        }
+
+        @Test
+        void branch_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Branch.of((GenericType<String>) null));
+        }
+
+        @Test
+        void delay_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Delay.of((GenericType<String>) null));
+        }
+
+        @Test
+        void expand_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Expand.of((GenericType<String>) null));
+        }
+
+        @Test
+        void priorityBuffer_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> PriorityBuffer.of((GenericType<String>) null));
+        }
+
+        @Test
+        void router_of_nullGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Router.of((GenericType<String>) null));
+        }
+
+        @Test
+        void group_of_nullItemGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Group.of((GenericType<String>) null, String.class));
+        }
+
+        @Test
+        void group_of_nullItemGenericType_bothGeneric_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Group.of((GenericType<String>) null, new GenericType<String>() {
+            }));
+        }
+
+        @Test
+        void group_of_nullKeyGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Group.of(new GenericType<String>() {
+            }, (GenericType<String>) null));
+        }
+
+        @Test
+        void transform_of_nullInputGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Transform.of((GenericType<String>) null, new GenericType<Integer>() {
+            }));
+        }
+
+        @Test
+        void transform_of_nullOutputGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Transform.of(new GenericType<String>() {
+            }, (GenericType<Integer>) null));
+        }
+
+        @Test
+        void transform_of_nullPassthroughGenericType_throwsNullValueException() {
+            assertThrows(NullValueException.class, () -> Transform.of((GenericType<String>) null));
         }
     }
 }

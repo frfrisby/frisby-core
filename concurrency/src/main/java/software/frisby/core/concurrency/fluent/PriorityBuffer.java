@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.util.Comparator;
 import java.util.List;
@@ -69,9 +71,11 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      * @param <T>      The type of items to buffer.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code PriorityBuffer} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> PriorityBuffer<T> of(GenericType<T> itemType) {
-        return of(itemType.getRawType());
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType());
     }
 
     /**

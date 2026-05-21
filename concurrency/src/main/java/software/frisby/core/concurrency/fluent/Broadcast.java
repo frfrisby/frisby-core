@@ -1,6 +1,7 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.Sequences;
 import software.frisby.core.validation.Values;
 
@@ -74,9 +75,11 @@ public final class Broadcast<T> implements PipelineTarget<T>, ObservableBlockBui
      * @param <T>      The type of items to broadcast.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Broadcast} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Broadcast<T> of(GenericType<T> itemType) {
-        return of(itemType.getRawType());
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType());
     }
 
     /**

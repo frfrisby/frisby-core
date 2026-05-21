@@ -116,7 +116,7 @@ public abstract class GenericType<T> {
      *
      * @return The full {@link Type} represented by this token.
      */
-    public final Type getType() {
+    public final Type type() {
         return type;
     }
 
@@ -126,7 +126,7 @@ public abstract class GenericType<T> {
      *
      * @return The raw {@link Class} of the captured type.
      */
-    public final Class<T> getRawType() {
+    public final Class<T> rawType() {
         return rawType;
     }
 }

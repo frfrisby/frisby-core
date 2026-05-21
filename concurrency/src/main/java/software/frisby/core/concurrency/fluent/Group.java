@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
@@ -84,9 +86,11 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
      * @param itemType The item generic type token; used for inference only.
      * @param keyType  The key type class; used for inference only.
      * @return A new {@code Group} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T, K> Group<T, K> of(GenericType<T> itemType, Class<K> keyType) {
-        return of(itemType.getRawType(), keyType);
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType(), keyType);
     }
 
     /**
@@ -100,9 +104,13 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
      * @param itemType The item generic type token; used for inference only.
      * @param keyType  The key generic type token; used for inference only.
      * @return A new {@code Group} instance.
+     * @throws NullValueException if {@code itemType} or {@code keyType} are null.
      */
     public static <T, K> Group<T, K> of(GenericType<T> itemType, GenericType<K> keyType) {
-        return of(itemType.getRawType(), keyType.getRawType());
+        Values.notNull("itemType", itemType);
+        Values.notNull("keyType", keyType);
+
+        return of(itemType.rawType(), keyType.rawType());
     }
 
     /**

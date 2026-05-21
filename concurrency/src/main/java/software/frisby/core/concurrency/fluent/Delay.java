@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
@@ -71,9 +73,11 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      * @param <T>      The type of items to delay.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Delay} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Delay<T> of(GenericType<T> itemType) {
-        return of(itemType.getRawType());
+        Values.notNull("itemType", itemType);
+        return of(itemType.rawType());
     }
 
     /**
