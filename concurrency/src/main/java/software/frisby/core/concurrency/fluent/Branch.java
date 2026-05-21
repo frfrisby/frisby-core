@@ -78,7 +78,7 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
      */
     public static <T> Branch<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

@@ -71,7 +71,7 @@ public final class Expand<T> implements PipelineStage<List<T>, T>, ObservableBlo
      */
     public static <T> Expand<T> of(GenericType<T> elementType) {
         Values.notNull("elementType", elementType);
-        return of(elementType.getRawType());
+        return of(elementType.rawType());
     }
 
     @Override

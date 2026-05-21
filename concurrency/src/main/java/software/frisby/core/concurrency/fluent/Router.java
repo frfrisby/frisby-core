@@ -84,7 +84,7 @@ public final class Router<T> implements PipelineTarget<T>, ObservableBlockBuilde
      */
     public static <T> Router<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

@@ -77,7 +77,7 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
      */
     public static <T> Delay<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

@@ -90,7 +90,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
      */
     public static <T, K> Group<T, K> of(GenericType<T> itemType, Class<K> keyType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType(), keyType);
+        return of(itemType.rawType(), keyType);
     }
 
     /**
@@ -110,7 +110,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
         Values.notNull("itemType", itemType);
         Values.notNull("keyType", keyType);
 
-        return of(itemType.getRawType(), keyType.getRawType());
+        return of(itemType.rawType(), keyType.rawType());
     }
 
     /**

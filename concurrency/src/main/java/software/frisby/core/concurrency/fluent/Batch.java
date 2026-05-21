@@ -80,7 +80,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
      */
     public static <T> Batch<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

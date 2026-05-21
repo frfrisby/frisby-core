@@ -75,7 +75,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, ExecutorAwa
      */
     public static <T> PriorityBuffer<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

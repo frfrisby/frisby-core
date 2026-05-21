@@ -36,7 +36,7 @@ class GenericTypeTest {
             GenericType<String> token = new GenericType<>() {
             };
 
-            assertEquals(String.class, token.getRawType());
+            assertEquals(String.class, token.rawType());
         }
 
         @Test
@@ -44,7 +44,7 @@ class GenericTypeTest {
             GenericType<String> token = new GenericType<>() {
             };
 
-            assertEquals(String.class, token.getType());
+            assertEquals(String.class, token.type());
         }
 
         @Test
@@ -52,7 +52,7 @@ class GenericTypeTest {
             GenericType<List<String>> token = new GenericType<>() {
             };
 
-            assertEquals(List.class, token.getRawType());
+            assertEquals(List.class, token.rawType());
         }
 
         @Test
@@ -60,9 +60,9 @@ class GenericTypeTest {
             GenericType<List<String>> token = new GenericType<>() {
             };
 
-            assertInstanceOf(ParameterizedType.class, token.getType());
+            assertInstanceOf(ParameterizedType.class, token.type());
 
-            ParameterizedType pt = (ParameterizedType) token.getType();
+            ParameterizedType pt = (ParameterizedType) token.type();
 
             assertEquals(List.class, pt.getRawType());
             assertEquals(String.class, pt.getActualTypeArguments()[0]);
@@ -73,7 +73,7 @@ class GenericTypeTest {
             GenericType<Map<String, List<Integer>>> token = new GenericType<>() {
             };
 
-            assertEquals(Map.class, token.getRawType());
+            assertEquals(Map.class, token.rawType());
         }
 
         @Test
@@ -81,7 +81,7 @@ class GenericTypeTest {
             GenericType<List<String>[]> token = new GenericType<>() {
             };
 
-            assertEquals(List[].class, token.getRawType());
+            assertEquals(List[].class, token.rawType());
         }
 
         @Test
@@ -89,7 +89,7 @@ class GenericTypeTest {
             GenericType<List<String>[]> token = new GenericType<>() {
             };
 
-            assertInstanceOf(GenericArrayType.class, token.getType());
+            assertInstanceOf(GenericArrayType.class, token.type());
         }
     }
 
@@ -99,16 +99,16 @@ class GenericTypeTest {
         void namedSubclass_rawTypeIsListClass() {
             GenericType<List<String>> token = new StringListType();
 
-            assertEquals(List.class, token.getRawType());
+            assertEquals(List.class, token.rawType());
         }
 
         @Test
         void namedSubclass_getTypePreservesTypeArgument() {
             GenericType<List<String>> token = new StringListType();
 
-            assertInstanceOf(ParameterizedType.class, token.getType());
+            assertInstanceOf(ParameterizedType.class, token.type());
 
-            ParameterizedType pt = (ParameterizedType) token.getType();
+            ParameterizedType pt = (ParameterizedType) token.type();
 
             assertEquals(String.class, pt.getActualTypeArguments()[0]);
         }
@@ -117,16 +117,16 @@ class GenericTypeTest {
         void multiLevelInheritance_rawTypeIsListClass() {
             GenericType<List<String>> token = new MultiLevelStringList();
 
-            assertEquals(List.class, token.getRawType());
+            assertEquals(List.class, token.rawType());
         }
 
         @Test
         void multiLevelInheritance_getTypePreservesTypeArgument() {
             GenericType<List<String>> token = new MultiLevelStringList();
 
-            assertInstanceOf(ParameterizedType.class, token.getType());
+            assertInstanceOf(ParameterizedType.class, token.type());
 
-            ParameterizedType pt = (ParameterizedType) token.getType();
+            ParameterizedType pt = (ParameterizedType) token.type();
 
             assertEquals(String.class, pt.getActualTypeArguments()[0]);
         }

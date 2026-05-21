@@ -73,7 +73,7 @@ public final class Action<T> implements PipelineTarget<T> {
      */
     public static <T> Action<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**

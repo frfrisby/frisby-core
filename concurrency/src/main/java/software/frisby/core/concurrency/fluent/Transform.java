@@ -90,7 +90,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
     public static <T, R> Transform<T, R> of(GenericType<T> inputGenericType, GenericType<R> outputGenericType) {
         Values.notNull("inputGenericType", inputGenericType);
         Values.notNull("outputGenericType", outputGenericType);
-        return of(inputGenericType.getRawType(), outputGenericType.getRawType());
+        return of(inputGenericType.rawType(), outputGenericType.rawType());
     }
 
     /**
@@ -105,7 +105,7 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      */
     public static <T> Transform<T, T> of(GenericType<T> genericItemType) {
         Values.notNull("genericItemType", genericItemType);
-        return of(genericItemType.getRawType(), genericItemType.getRawType());
+        return of(genericItemType.rawType(), genericItemType.rawType());
     }
 
     /**

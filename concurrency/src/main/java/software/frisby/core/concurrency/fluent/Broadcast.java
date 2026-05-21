@@ -79,7 +79,7 @@ public final class Broadcast<T> implements PipelineTarget<T>, ObservableBlockBui
      */
     public static <T> Broadcast<T> of(GenericType<T> itemType) {
         Values.notNull("itemType", itemType);
-        return of(itemType.getRawType());
+        return of(itemType.rawType());
     }
 
     /**
