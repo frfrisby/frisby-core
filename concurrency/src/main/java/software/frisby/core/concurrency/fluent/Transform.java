@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.util.List;
 import java.util.function.Function;
@@ -83,8 +85,11 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      * @param inputGenericType  The input generic type token; used for inference only.
      * @param outputGenericType The output generic type token; used for inference only.
      * @return A new {@code Transform} instance.
+     * @throws NullValueException if {@code inputGenericType} or {@code outputGenericType} are null.
      */
     public static <T, R> Transform<T, R> of(GenericType<T> inputGenericType, GenericType<R> outputGenericType) {
+        Values.notNull("inputGenericType", inputGenericType);
+        Values.notNull("outputGenericType", outputGenericType);
         return of(inputGenericType.getRawType(), outputGenericType.getRawType());
     }
 
@@ -96,8 +101,10 @@ public final class Transform<T, R> implements PipelineStage<T, R>, ObservableBlo
      * @param <T>             The item type.
      * @param genericItemType The generic type token; used for inference only.
      * @return A new {@code Transform<T, T>} instance.
+     * @throws NullValueException if {@code genericItemType} is null.
      */
     public static <T> Transform<T, T> of(GenericType<T> genericItemType) {
+        Values.notNull("genericItemType", genericItemType);
         return of(genericItemType.getRawType(), genericItemType.getRawType());
     }
 

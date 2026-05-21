@@ -1,6 +1,7 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.Numbers;
 import software.frisby.core.validation.Values;
 
@@ -79,8 +80,10 @@ public final class Router<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param <T>      The type of items to route.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Router} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Router<T> of(GenericType<T> itemType) {
+        Values.notNull("itemType", itemType);
         return of(itemType.getRawType());
     }
 

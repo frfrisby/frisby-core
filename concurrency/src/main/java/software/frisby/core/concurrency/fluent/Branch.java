@@ -74,8 +74,10 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
      * @param <T>      The type of items to route.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Branch} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Branch<T> of(GenericType<T> itemType) {
+        Values.notNull("itemType", itemType);
         return of(itemType.getRawType());
     }
 

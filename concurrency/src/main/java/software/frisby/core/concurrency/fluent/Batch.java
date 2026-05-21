@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
@@ -74,8 +76,10 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
      * @param <T>      The type of items to batch.
      * @param itemType The generic type token; used for inference only.
      * @return A new {@code Batch} instance.
+     * @throws NullValueException if {@code itemType} is null.
      */
     public static <T> Batch<T> of(GenericType<T> itemType) {
+        Values.notNull("itemType", itemType);
         return of(itemType.getRawType());
     }
 

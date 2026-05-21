@@ -1,6 +1,8 @@
 package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.*;
+import software.frisby.core.validation.NullValueException;
+import software.frisby.core.validation.Values;
 
 import java.util.List;
 
@@ -65,8 +67,10 @@ public final class Expand<T> implements PipelineStage<List<T>, T>, ObservableBlo
      * @param <T>         The element type produced after expansion.
      * @param elementType The generic type token; used for inference only.
      * @return A new {@code Expand} instance.
+     * @throws NullValueException if {@code elementType} is null.
      */
     public static <T> Expand<T> of(GenericType<T> elementType) {
+        Values.notNull("elementType", elementType);
         return of(elementType.getRawType());
     }
 
