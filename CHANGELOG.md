@@ -15,7 +15,6 @@ Do not edit it manually — new entries are prepended automatically when a relea
 ### Features
 
 * **util:** add Uris and HttpUris URI utility classes ([#63](https://github.com/frfrisby/frisby-core/issues/63)) ([d3cab6a](https://github.com/frfrisby/frisby-core/commit/d3cab6ac5464a86ba9ef61246e17059a33d636c3))
-* **util:** add Uris and HttpUris utility classes ([d3cab6a](https://github.com/frfrisby/frisby-core/commit/d3cab6ac5464a86ba9ef61246e17059a33d636c3))
 
 
 ### Bug Fixes
