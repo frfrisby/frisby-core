@@ -32,17 +32,17 @@ String subtitle = Strings.optionalNotBlankWithMaxLength("subtitle", subtitle, 20
 
 Choose the validator class based on the **type** of the value being validated:
 
-| Value type | Class | Notes |
-|---|---|---|
-| Any single reference type | `Values` | Use for non-string, non-collection, non-map objects |
-| `String` | `Strings` / `TrimmedStrings` | `TrimmedStrings` trims whitespace before length checks and returns the trimmed value |
-| Numeric (`int`, `long`, `double`, `BigDecimal`, …) | `Numbers` | Primitive and boxed overloads for all 8 types |
-| `Duration` | `Durations` | |
-| `Period` | `Periods` | No min/max/range — `Period` has no natural total ordering |
-| `Instant`, `LocalDate`, `LocalDateTime`, etc. | `Instants`, `LocalDates`, `LocalDateTimes`, etc. | |
-| `Collection<T>` or `T[]` | `Sequences` | |
-| `Collection<String>` or `String[]` (validate each element) | `StringSequences` | Validates every string element within the collection; compose with `Sequences` size methods when a size bound is also needed |
-| `Map<K, V>` | `Maps` | |
+| Value type                                                 | Class                                            | Notes                                                                                                                        |
+|------------------------------------------------------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Any single reference type                                  | `Values`                                         | Use for non-string, non-collection, non-map objects                                                                          |
+| `String`                                                   | `Strings` / `TrimmedStrings`                     | `TrimmedStrings` trims whitespace before length checks and returns the trimmed value                                         |
+| Numeric (`int`, `long`, `double`, `BigDecimal`, …)         | `Numbers`                                        | Primitive and boxed overloads for all 8 types                                                                                |
+| `Duration`                                                 | `Durations`                                      |                                                                                                                              |
+| `Period`                                                   | `Periods`                                        | No min/max/range — `Period` has no natural total ordering                                                                    |
+| `Instant`, `LocalDate`, `LocalDateTime`, etc.              | `Instants`, `LocalDates`, `LocalDateTimes`, etc. |                                                                                                                              |
+| `Collection<T>` or `T[]`                                   | `Sequences`                                      |                                                                                                                              |
+| `Collection<String>` or `String[]` (validate each element) | `StringSequences`                                | Validates every string element within the collection; compose with `Sequences` size methods when a size bound is also needed |
+| `Map<K, V>`                                                | `Maps`                                           |                                                                                                                              |
 
 ### Collection / array rules
 
@@ -118,21 +118,21 @@ Length is measured in **Unicode code points**, not `char` values.
 
 ### Throws — Strings / TrimmedStrings
 
-| Method family | `NullValueException` | `EmptyValueException` | `BlankValueException` | `StringLengthOutsideRangeException` | `PatternMismatchException` | `IllegalConfigurationException` |
-|---|---|---|---|---|---|---|
-| `notNull` | value is null | — | — | — | — | — |
-| `notEmpty` | value is null | value is empty | — | — | — | — |
-| `notBlank` | value is null | — | value is blank | — | — | — |
-| `maxLength` | value is null | — | — | value exceeds maxLength | — | maxLength < 1 |
-| `minLength` | value is null | — | — | value is shorter than minLength | — | minLength < 1 |
-| `length(min,max)` | value is null | — | — | value length outside range | — | either bound < 1, or max < min |
-| `length(exact)` | value is null | — | — | value is not exactly `length` | — | length < 1 |
-| `notBlankWithMaxLength` | value is null | — | value is blank | value exceeds maxLength | — | maxLength < 1 |
-| `notBlankWithMinLength` | value is null | — | value is blank | value is shorter than minLength | — | minLength < 1 |
-| `notBlankWithLength` | value is null | — | value is blank | value length outside range | — | bound invalid |
-| `notBlankWithMatches` | value is null | — | value is blank | — | value does not match | pattern is null |
-| `notBlankWithMaxLengthAndMatches` | value is null | — | value is blank | value exceeds maxLength | value does not match | maxLength < 1 or pattern null |
-| `optional*` variants | — (null passes through) | same as non-optional if non-null | same as non-optional if non-null | same as non-optional if non-null | same as non-optional if non-null | same bound checks always apply |
+| Method family                     | `NullValueException`    | `EmptyValueException`            | `BlankValueException`            | `StringLengthOutsideRangeException` | `PatternMismatchException`       | `IllegalConfigurationException` |
+|-----------------------------------|-------------------------|----------------------------------|----------------------------------|-------------------------------------|----------------------------------|---------------------------------|
+| `notNull`                         | value is null           | —                                | —                                | —                                   | —                                | —                               |
+| `notEmpty`                        | value is null           | value is empty                   | —                                | —                                   | —                                | —                               |
+| `notBlank`                        | value is null           | —                                | value is blank                   | —                                   | —                                | —                               |
+| `maxLength`                       | value is null           | —                                | —                                | value exceeds maxLength             | —                                | maxLength < 1                   |
+| `minLength`                       | value is null           | —                                | —                                | value is shorter than minLength     | —                                | minLength < 1                   |
+| `length(min,max)`                 | value is null           | —                                | —                                | value length outside range          | —                                | either bound < 1, or max < min  |
+| `length(exact)`                   | value is null           | —                                | —                                | value is not exactly `length`       | —                                | length < 1                      |
+| `notBlankWithMaxLength`           | value is null           | —                                | value is blank                   | value exceeds maxLength             | —                                | maxLength < 1                   |
+| `notBlankWithMinLength`           | value is null           | —                                | value is blank                   | value is shorter than minLength     | —                                | minLength < 1                   |
+| `notBlankWithLength`              | value is null           | —                                | value is blank                   | value length outside range          | —                                | bound invalid                   |
+| `notBlankWithMatches`             | value is null           | —                                | value is blank                   | —                                   | value does not match             | pattern is null                 |
+| `notBlankWithMaxLengthAndMatches` | value is null           | —                                | value is blank                   | value exceeds maxLength             | value does not match             | maxLength < 1 or pattern null   |
+| `optional*` variants              | — (null passes through) | same as non-optional if non-null | same as non-optional if non-null | same as non-optional if non-null    | same as non-optional if non-null | same bound checks always apply  |
 
 ---
 
@@ -167,12 +167,12 @@ Double  weight = Numbers.optionalRange("weight", weight, 0.0, 1.0);
 
 All constraint methods throw `NullPointerException` if `name` is null or blank.
 
-| Overload / situation | `NullValueException` | `NumericValueOutsideRangeException` | `IllegalConfigurationException` |
-|---|---|---|---|
-| Primitive overload (`int`, `long`, etc.) | — | value violates the bound | range methods only: max < min (or max ≤ min for exclusive) |
-| Boxed overload (`Integer`, `Long`, etc.) | value is null | value violates the bound | same as above |
-| `optional*` variants | — (null passes through) | value violates the bound if non-null | same bound checks always apply |
-| `notNull` (boxed only) | value is null | — | — |
+| Overload / situation                     | `NullValueException`    | `NumericValueOutsideRangeException`  | `IllegalConfigurationException`                            |
+|------------------------------------------|-------------------------|--------------------------------------|------------------------------------------------------------|
+| Primitive overload (`int`, `long`, etc.) | —                       | value violates the bound             | range methods only: max < min (or max ≤ min for exclusive) |
+| Boxed overload (`Integer`, `Long`, etc.) | value is null           | value violates the bound             | same as above                                              |
+| `optional*` variants                     | — (null passes through) | value violates the bound if non-null | same bound checks always apply                             |
+| `notNull` (boxed only)                   | value is null           | —                                    | —                                                          |
 
 ---
 
@@ -196,31 +196,31 @@ Periods.notNegative("grace", grace);                 // no component negative
 
 All methods throw `NullPointerException` if `name` is null or blank, or if any bound argument is null.
 
-| Method family | `NullValueException` | `DurationOutsideRangeException` | `IllegalConfigurationException` |
-|---|---|---|---|
-| `notNull` | value is null | — | — |
-| `positive` | value is null | value is not > ZERO | — |
-| `notNegative` | value is null | value is negative | — |
-| `min` | value is null | value < min | — |
-| `max` | value is null | value > max | — |
-| `minExclusive` | value is null | value ≤ min | — |
-| `maxExclusive` | value is null | value ≥ max | — |
-| `range` | value is null | value outside [min, max] | max < min |
-| `exclusiveRange` | value is null | value outside (min, max) | max ≤ min |
-| `rangeExclusiveMax` | value is null | value outside [min, max) | max ≤ min |
-| `rangeExclusiveMin` | value is null | value outside (min, max] | max ≤ min |
-| `optional*` variants | — (null passes through) | same as non-optional if non-null | same bound checks always apply |
+| Method family        | `NullValueException`    | `DurationOutsideRangeException`  | `IllegalConfigurationException` |
+|----------------------|-------------------------|----------------------------------|---------------------------------|
+| `notNull`            | value is null           | —                                | —                               |
+| `positive`           | value is null           | value is not > ZERO              | —                               |
+| `notNegative`        | value is null           | value is negative                | —                               |
+| `min`                | value is null           | value < min                      | —                               |
+| `max`                | value is null           | value > max                      | —                               |
+| `minExclusive`       | value is null           | value ≤ min                      | —                               |
+| `maxExclusive`       | value is null           | value ≥ max                      | —                               |
+| `range`              | value is null           | value outside [min, max]         | max < min                       |
+| `exclusiveRange`     | value is null           | value outside (min, max)         | max ≤ min                       |
+| `rangeExclusiveMax`  | value is null           | value outside [min, max)         | max ≤ min                       |
+| `rangeExclusiveMin`  | value is null           | value outside (min, max]         | max ≤ min                       |
+| `optional*` variants | — (null passes through) | same as non-optional if non-null | same bound checks always apply  |
 
 ### Throws — Periods
 
 All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family | `NullValueException` | `PeriodOutsideRangeException` |
-|---|---|---|
-| `notNull` | value is null | — |
-| `positive` | value is null | value is zero or any component is negative |
-| `notNegative` | value is null | any component is negative |
-| `optional*` variants | — (null passes through) | same as non-optional if non-null |
+| Method family        | `NullValueException`    | `PeriodOutsideRangeException`              |
+|----------------------|-------------------------|--------------------------------------------|
+| `notNull`            | value is null           | —                                          |
+| `positive`           | value is null           | value is zero or any component is negative |
+| `notNegative`        | value is null           | any component is negative                  |
+| `optional*` variants | — (null passes through) | same as non-optional if non-null           |
 
 ---
 
@@ -269,24 +269,24 @@ LocalDates.optionalFuture("expiresOn", expiresOn);
 
 All methods throw `NullPointerException` if `name` is null or blank, or if any bound or `clock` argument is null. Each type uses its own dedicated exception class for all failures (range and clock-relative alike).
 
-| Type | Value failure exception |
-|---|---|
-| `Instants` | `InstantOutsideRangeException` |
-| `LocalDates` | `LocalDateOutsideRangeException` |
-| `LocalDateTimes` | `LocalDateTimeOutsideRangeException` |
-| `LocalTimes` | `LocalTimeOutsideRangeException` |
+| Type              | Value failure exception               |
+|-------------------|---------------------------------------|
+| `Instants`        | `InstantOutsideRangeException`        |
+| `LocalDates`      | `LocalDateOutsideRangeException`      |
+| `LocalDateTimes`  | `LocalDateTimeOutsideRangeException`  |
+| `LocalTimes`      | `LocalTimeOutsideRangeException`      |
 | `OffsetDateTimes` | `OffsetDateTimeOutsideRangeException` |
-| `OffsetTimes` | `OffsetTimeOutsideRangeException` |
-| `ZonedDateTimes` | `ZonedDateTimeOutsideRangeException` |
+| `OffsetTimes`     | `OffsetTimeOutsideRangeException`     |
+| `ZonedDateTimes`  | `ZonedDateTimeOutsideRangeException`  |
 
-| Method family | `NullValueException` | `*OutsideRangeException` | `IllegalConfigurationException` |
-|---|---|---|---|
-| `notNull` | value is null | — | — |
-| `min` / `max` / `minExclusive` / `maxExclusive` | value is null | value violates the bound | — |
-| `range` / `exclusiveRange` / `rangeExclusiveMax` / `rangeExclusiveMin` | value is null | value outside the range | max invalid relative to min |
-| `past` / `future` | value is null | value is not in the required direction | — |
-| `pastOrPresent` / `futureOrPresent` | value is null | value is not in the required direction (outside tolerance if provided) | tolerance is null |
-| `optional*` variants | — (null passes through) | same as non-optional if non-null | same bound/tolerance checks always apply |
+| Method family                                                          | `NullValueException`    | `*OutsideRangeException`                                               | `IllegalConfigurationException`          |
+|------------------------------------------------------------------------|-------------------------|------------------------------------------------------------------------|------------------------------------------|
+| `notNull`                                                              | value is null           | —                                                                      | —                                        |
+| `min` / `max` / `minExclusive` / `maxExclusive`                        | value is null           | value violates the bound                                               | —                                        |
+| `range` / `exclusiveRange` / `rangeExclusiveMax` / `rangeExclusiveMin` | value is null           | value outside the range                                                | max invalid relative to min              |
+| `past` / `future`                                                      | value is null           | value is not in the required direction                                 | —                                        |
+| `pastOrPresent` / `futureOrPresent`                                    | value is null           | value is not in the required direction (outside tolerance if provided) | tolerance is null                        |
+| `optional*` variants                                                   | — (null passes through) | same as non-optional if non-null                                       | same bound/tolerance checks always apply |
 
 ---
 
@@ -348,56 +348,56 @@ Maps.optionalSize("metadata", metadata, 1, 50);
 
 All methods throw `NullPointerException` if `name` is null or blank, or if the `allowed`/`disallowed` set argument is null.
 
-| Method | `NullValueException` | `DisallowedValueException` | `IllegalConfigurationException` |
-|---|---|---|---|
-| `notNull` | value is null | — | — |
-| `oneOf` | value is null | value is not in the allowed set | allowed set is empty |
-| `notOneOf` | value is null | value is in the disallowed set | disallowed set is empty |
-| `optionalOneOf` | — (null passes through) | value not in allowed set if non-null | allowed set is empty |
-| `optionalNotOneOf` | — (null passes through) | value in disallowed set if non-null | disallowed set is empty |
+| Method             | `NullValueException`    | `DisallowedValueException`           | `IllegalConfigurationException` |
+|--------------------|-------------------------|--------------------------------------|---------------------------------|
+| `notNull`          | value is null           | —                                    | —                               |
+| `oneOf`            | value is null           | value is not in the allowed set      | allowed set is empty            |
+| `notOneOf`         | value is null           | value is in the disallowed set       | disallowed set is empty         |
+| `optionalOneOf`    | — (null passes through) | value not in allowed set if non-null | allowed set is empty            |
+| `optionalNotOneOf` | — (null passes through) | value in disallowed set if non-null  | disallowed set is empty         |
 
 ### Throws — Sequences
 
 All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family | `NullValueException` | `MissingElementsException` | `NullElementException` | `SequenceSizeOutsideRangeException` | `DuplicateElementsException` | `IllegalConfigurationException` |
-|---|---|---|---|---|---|---|
-| `notNull` | container is null | — | — | — | — | — |
-| `notEmpty` | container is null | container is empty | element is null | — | — | — |
-| `minSize` | container is null | container is empty | element is null | size < minSize | — | minSize < 1 |
-| `maxSize` | container is null | container is empty | element is null | size > maxSize | — | maxSize < 1 |
-| `size` | container is null | container is empty | element is null | size outside [min,max] | — | bound < 1, or max < min |
-| `noDuplicates` | container is null | container is empty | element is null | — | duplicate element found | — |
-| `optional*` variants | — (null passes through) | same if non-null | same if non-null | same if non-null | same if non-null | same bound checks always apply |
+| Method family        | `NullValueException`    | `MissingElementsException` | `NullElementException` | `SequenceSizeOutsideRangeException` | `DuplicateElementsException` | `IllegalConfigurationException` |
+|----------------------|-------------------------|----------------------------|------------------------|-------------------------------------|------------------------------|---------------------------------|
+| `notNull`            | container is null       | —                          | —                      | —                                   | —                            | —                               |
+| `notEmpty`           | container is null       | container is empty         | element is null        | —                                   | —                            | —                               |
+| `minSize`            | container is null       | container is empty         | element is null        | size < minSize                      | —                            | minSize < 1                     |
+| `maxSize`            | container is null       | container is empty         | element is null        | size > maxSize                      | —                            | maxSize < 1                     |
+| `size`               | container is null       | container is empty         | element is null        | size outside [min,max]              | —                            | bound < 1, or max < min         |
+| `noDuplicates`       | container is null       | container is empty         | element is null        | —                                   | duplicate element found      | —                               |
+| `optional*` variants | — (null passes through) | same if non-null           | same if non-null       | same if non-null                    | same if non-null             | same bound checks always apply  |
 
 ### Throws — StringSequences
 
 Every method first applies the full `notEmpty` check on the container, then validates each string element. All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family | Container failures | Per-element failures | `IllegalConfigurationException` |
-|---|---|---|---|
-| `notEmpty` | `NullValueException`, `MissingElementsException`, `NullElementException` | `EmptyValueException` | — |
-| `notBlank` | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException` | — |
-| `maxLength` | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException` | maxItemLength < 1 |
-| `minLength` | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException` | minItemLength < 1 |
-| `length` | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException` | bound < 1, or max < min |
-| `matches` | `NullValueException`, `MissingElementsException`, `NullElementException` | `PatternMismatchException` | pattern is null |
-| `notBlankWithMaxLength` | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `StringLengthOutsideRangeException` | maxItemLength < 1 |
-| `notBlankWithMatches` | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `PatternMismatchException` | pattern is null |
-| `optional*` variants | — (null passes through) | same as non-optional if non-null | same bound checks always apply |
+| Method family           | Container failures                                                       | Per-element failures                                       | `IllegalConfigurationException` |
+|-------------------------|--------------------------------------------------------------------------|------------------------------------------------------------|---------------------------------|
+| `notEmpty`              | `NullValueException`, `MissingElementsException`, `NullElementException` | `EmptyValueException`                                      | —                               |
+| `notBlank`              | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`                                      | —                               |
+| `maxLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | maxItemLength < 1               |
+| `minLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | minItemLength < 1               |
+| `length`                | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | bound < 1, or max < min         |
+| `matches`               | `NullValueException`, `MissingElementsException`, `NullElementException` | `PatternMismatchException`                                 | pattern is null                 |
+| `notBlankWithMaxLength` | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `StringLengthOutsideRangeException` | maxItemLength < 1               |
+| `notBlankWithMatches`   | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `PatternMismatchException`          | pattern is null                 |
+| `optional*` variants    | — (null passes through)                                                  | same as non-optional if non-null                           | same bound checks always apply  |
 
 ### Throws — Maps
 
 All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family | `NullValueException` | `MissingElementsException` | `NullMapKeyException` | `NullMapValueException` | `MapSizeOutsideRangeException` | `IllegalConfigurationException` |
-|---|---|---|---|---|---|---|
-| `notNull` | map is null | — | — | — | — | — |
-| `notEmpty` | map is null | map is empty | null key found | null value found | — | — |
-| `minSize` | map is null | map is empty | null key found | null value found | entry count < minSize | minSize < 1 |
-| `maxSize` | map is null | map is empty | null key found | null value found | entry count > maxSize | maxSize < 1 |
-| `size` | map is null | map is empty | null key found | null value found | count outside [min,max] | bound < 1, or max < min |
-| `optional*` variants | — (null passes through) | same if non-null | same if non-null | same if non-null | same if non-null | same bound checks always apply |
+| Method family        | `NullValueException`    | `MissingElementsException` | `NullMapKeyException` | `NullMapValueException` | `MapSizeOutsideRangeException` | `IllegalConfigurationException` |
+|----------------------|-------------------------|----------------------------|-----------------------|-------------------------|--------------------------------|---------------------------------|
+| `notNull`            | map is null             | —                          | —                     | —                       | —                              | —                               |
+| `notEmpty`           | map is null             | map is empty               | null key found        | null value found        | —                              | —                               |
+| `minSize`            | map is null             | map is empty               | null key found        | null value found        | entry count < minSize          | minSize < 1                     |
+| `maxSize`            | map is null             | map is empty               | null key found        | null value found        | entry count > maxSize          | maxSize < 1                     |
+| `size`               | map is null             | map is empty               | null key found        | null value found        | count outside [min,max]        | bound < 1, or max < min         |
+| `optional*` variants | — (null passes through) | same if non-null           | same if non-null      | same if non-null        | same if non-null               | same bound checks always apply  |
 
 ---
 
@@ -429,12 +429,12 @@ FieldGroups.noneOrAll(ADDRESS_FIELDS, street, city, postalCode, country);
 
 All methods throw `NullPointerException` if the `FieldGroup` argument is null.
 
-| Constraint | Accepts | `MissingFieldException` | `TooManyFieldsException` |
-|---|---|---|---|
-| `atLeastOne` | ≥ 1 non-null | all values are null | — |
-| `onlyOne` | exactly 1 non-null | all values are null | more than 1 non-null value |
-| `atMostOne` | 0 or 1 non-null | — | more than 1 non-null value |
-| `noneOrAll` | all null or all non-null | some but not all values are non-null | — |
+| Constraint   | Accepts                  | `MissingFieldException`              | `TooManyFieldsException`   |
+|--------------|--------------------------|--------------------------------------|----------------------------|
+| `atLeastOne` | ≥ 1 non-null             | all values are null                  | —                          |
+| `onlyOne`    | exactly 1 non-null       | all values are null                  | more than 1 non-null value |
+| `atMostOne`  | 0 or 1 non-null          | —                                    | more than 1 non-null value |
+| `noneOrAll`  | all null or all non-null | some but not all values are non-null | —                          |
 
 ---
 

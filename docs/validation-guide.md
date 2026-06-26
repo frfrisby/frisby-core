@@ -126,18 +126,18 @@ that `NaN` correctly fails every bound check.
 
 ### Constraint families
 
-| Method | Constraint |
-|--------|-----------|
-| `min(name, value, min)` | `value >= min` |
-| `max(name, value, max)` | `value <= max` |
-| `minExclusive(name, value, min)` | `value > min` |
-| `maxExclusive(name, value, max)` | `value < max` |
-| `range(name, value, min, max)` | `min <= value <= max` |
-| `exclusiveRange(name, value, min, max)` | `min < value < max` |
-| `rangeExclusiveMin(name, value, min, max)` | `min < value <= max` |
-| `rangeExclusiveMax(name, value, min, max)` | `min <= value < max` |
-| `positive(name, value)` | `value > 0` |
-| `notNegative(name, value)` | `value >= 0` |
+| Method                                     | Constraint            |
+|--------------------------------------------|-----------------------|
+| `min(name, value, min)`                    | `value >= min`        |
+| `max(name, value, max)`                    | `value <= max`        |
+| `minExclusive(name, value, min)`           | `value > min`         |
+| `maxExclusive(name, value, max)`           | `value < max`         |
+| `range(name, value, min, max)`             | `min <= value <= max` |
+| `exclusiveRange(name, value, min, max)`    | `min < value < max`   |
+| `rangeExclusiveMin(name, value, min, max)` | `min < value <= max`  |
+| `rangeExclusiveMax(name, value, min, max)` | `min <= value < max`  |
+| `positive(name, value)`                    | `value > 0`           |
+| `notNegative(name, value)`                 | `value >= 0`          |
 
 ### Examples
 
@@ -200,15 +200,15 @@ Period grace = Periods.notNegative("grace", grace);
 Seven classes cover the standard `java.time` types. All follow the same constraint
 structure as `Numbers`.
 
-| Class | Type | Range family | Clock-relative family |
-|-------|------|:---:|:---:|
-| `Instants` | `Instant` | ✓ | ✓ |
-| `LocalDates` | `LocalDate` | ✓ | ✓ |
-| `LocalDateTimes` | `LocalDateTime` | ✓ | ✓ |
-| `LocalTimes` | `LocalTime` | ✓ | — |
-| `OffsetDateTimes` | `OffsetDateTime` | ✓ | ✓ |
-| `OffsetTimes` | `OffsetTime` | ✓ | — |
-| `ZonedDateTimes` | `ZonedDateTime` | ✓ | ✓ |
+| Class             | Type             | Range family | Clock-relative family |
+|-------------------|------------------|:------------:|:---------------------:|
+| `Instants`        | `Instant`        |      ✓       |           ✓           |
+| `LocalDates`      | `LocalDate`      |      ✓       |           ✓           |
+| `LocalDateTimes`  | `LocalDateTime`  |      ✓       |           ✓           |
+| `LocalTimes`      | `LocalTime`      |      ✓       |           —           |
+| `OffsetDateTimes` | `OffsetDateTime` |      ✓       |           ✓           |
+| `OffsetTimes`     | `OffsetTime`     |      ✓       |           —           |
+| `ZonedDateTimes`  | `ZonedDateTime`  |      ✓       |           ✓           |
 
 ### Range constraints
 
@@ -338,28 +338,28 @@ All value-failure exceptions extend `IllegalArgumentException`. Every exception 
 carries a descriptive message identifying the argument by name and stating the constraint
 that was violated.
 
-| Exception | Thrown when |
-|-----------|-------------|
-| `NullValueException` | value is null |
-| `EmptyValueException` | string or collection is empty |
-| `BlankValueException` | string is blank |
-| `StringLengthOutsideRangeException` | string length fails a constraint |
-| `PatternMismatchException` | string does not match a pattern |
-| `NumericValueOutsideRangeException` | numeric value fails a constraint |
-| `DurationOutsideRangeException` | Duration fails a constraint |
-| `PeriodOutsideRangeException` | Period fails a sign constraint |
-| `InstantOutsideRangeException` | Instant fails a constraint |
-| `LocalDateOutsideRangeException` | LocalDate fails a constraint |
-| `LocalDateTimeOutsideRangeException` | LocalDateTime fails a constraint |
-| `LocalTimeOutsideRangeException` | LocalTime fails a constraint |
-| `OffsetDateTimeOutsideRangeException` | OffsetDateTime fails a constraint |
-| `OffsetTimeOutsideRangeException` | OffsetTime fails a constraint |
-| `ZonedDateTimeOutsideRangeException` | ZonedDateTime fails a constraint |
-| `DisallowedValueException` | value is in a disallowed set |
-| `SequenceSizeOutsideRangeException` | collection/array size fails a constraint |
-| `DuplicateElementsException` | collection/array contains duplicates |
-| `MapSizeOutsideRangeException` | map size fails a constraint |
-| `IllegalConfigurationException` | a bound or configuration argument is invalid (API misuse) |
+| Exception                             | Thrown when                                               |
+|---------------------------------------|-----------------------------------------------------------|
+| `NullValueException`                  | value is null                                             |
+| `EmptyValueException`                 | string or collection is empty                             |
+| `BlankValueException`                 | string is blank                                           |
+| `StringLengthOutsideRangeException`   | string length fails a constraint                          |
+| `PatternMismatchException`            | string does not match a pattern                           |
+| `NumericValueOutsideRangeException`   | numeric value fails a constraint                          |
+| `DurationOutsideRangeException`       | Duration fails a constraint                               |
+| `PeriodOutsideRangeException`         | Period fails a sign constraint                            |
+| `InstantOutsideRangeException`        | Instant fails a constraint                                |
+| `LocalDateOutsideRangeException`      | LocalDate fails a constraint                              |
+| `LocalDateTimeOutsideRangeException`  | LocalDateTime fails a constraint                          |
+| `LocalTimeOutsideRangeException`      | LocalTime fails a constraint                              |
+| `OffsetDateTimeOutsideRangeException` | OffsetDateTime fails a constraint                         |
+| `OffsetTimeOutsideRangeException`     | OffsetTime fails a constraint                             |
+| `ZonedDateTimeOutsideRangeException`  | ZonedDateTime fails a constraint                          |
+| `DisallowedValueException`            | value is in a disallowed set                              |
+| `SequenceSizeOutsideRangeException`   | collection/array size fails a constraint                  |
+| `DuplicateElementsException`          | collection/array contains duplicates                      |
+| `MapSizeOutsideRangeException`        | map size fails a constraint                               |
+| `IllegalConfigurationException`       | a bound or configuration argument is invalid (API misuse) |
 
 `NullPointerException` is thrown (not `NullValueException`) when the `name` parameter
 itself is null or blank, or when a required bound argument is null. These indicate

@@ -60,21 +60,21 @@ executor.shutdown();
 
 **`from()` overloads:**
 
-| Overload | Description |
-|---|---|
+| Overload                    | Description                                                          |
+|-----------------------------|----------------------------------------------------------------------|
 | `.from(PipelineStage<T,N>)` | Head is a stage with input `T` and output `N`; returns `Chain<T,N>`. |
-| `.from(OpenPipeline<T,N>)` | Head is a pre-assembled open pipeline; returns `Chain<T,N>`. |
-| `.from(PipelineTarget<T>)` | Single-block terminal pipeline (no `then()`). |
-| `.from(Consumer<T>)` | Shorthand for a single `Action` terminal. |
+| `.from(OpenPipeline<T,N>)`  | Head is a pre-assembled open pipeline; returns `Chain<T,N>`.         |
+| `.from(PipelineTarget<T>)`  | Single-block terminal pipeline (no `then()`).                        |
+| `.from(Consumer<T>)`        | Shorthand for a single `Action` terminal.                            |
 
 **`to()` overloads (on `Chain<H,O>`):**
 
-| Overload | Description |
-|---|---|
-| `.to(Consumer<O>)` | Wraps in an `Action` and closes the chain. |
-| `.to(Action<O>)` | Closes with a configured `Action` stage. |
+| Overload                 | Description                                                                  |
+|--------------------------|------------------------------------------------------------------------------|
+| `.to(Consumer<O>)`       | Wraps in an `Action` and closes the chain.                                   |
+| `.to(Action<O>)`         | Closes with a configured `Action` stage.                                     |
 | `.to(PipelineTarget<O>)` | Closes with any `PipelineTarget` (use `() -> existingBlock` for raw blocks). |
-| `.to(Pipeline<O>)` | Closes by linking to a pre-assembled terminal pipeline. |
+| `.to(Pipeline<O>)`       | Closes by linking to a pre-assembled terminal pipeline.                      |
 
 ---
 
@@ -208,7 +208,7 @@ Delay.of(Task.class)
 
 ### Synchronous Intermediate Stages
 
-#### `Tap<T>` — side-effect pass-through, `T → T`
+#### `Tap<T>` — side effect pass-through, `T → T`
 
 ```java
 Tap.of(Order.class)
@@ -316,12 +316,12 @@ Use `OpenRouter` (not `Router`) when arm output must flow to a shared downstream
 
 **Routing strategies** (mutually exclusive; default is round-robin):
 
-| Method | Behavior |
-|---|---|
-| `.roundRobin()` | Explicit round-robin (same as the default). |
-| `.balanced()` | Route to the arm with the fewest in-flight items. |
-| `.sticky(Function<T,?>)` | Consistent hashing — same key always goes to the same arm. |
-| `.routingFunction(RoutingFunction<T>)` | Custom; return a zero-based arm index. |
+| Method                                 | Behavior                                                   |
+|----------------------------------------|------------------------------------------------------------|
+| `.roundRobin()`                        | Explicit round-robin (same as the default).                |
+| `.balanced()`                          | Route to the arm with the fewest in-flight items.          |
+| `.sticky(Function<T,?>)`               | Consistent hashing — same key always goes to the same arm. |
+| `.routingFunction(RoutingFunction<T>)` | Custom; return a zero-based arm index.                     |
 
 ---
 
@@ -515,22 +515,22 @@ public class MetricsTarget<T> implements Target<T> {
 
 ### Available block builders (direct API)
 
-| Block interface | Builder entry point |
-|---|---|
-| `BufferBlock<T>` | `BufferBlock.<T>builder()` |
+| Block interface          | Builder entry point                |
+|--------------------------|------------------------------------|
+| `BufferBlock<T>`         | `BufferBlock.<T>builder()`         |
 | `PriorityBufferBlock<T>` | `PriorityBufferBlock.<T>builder()` |
-| `BatchBlock<T>` | `BatchBlock.<T>builder()` |
-| `GroupBlock<T, K>` | `GroupBlock.<T, K>builder()` |
-| `DelayBlock<T>` | `DelayBlock.<T>builder()` |
-| `TapBlock<T>` | `TapBlock.<T>builder()` |
-| `TransformBlock<T, R>` | `TransformBlock.<T, R>builder()` |
-| `ExpandBlock<T>` | `ExpandBlock.<T>builder()` |
-| `BranchBlock<T>` | `BranchBlock.<T>builder()` |
-| `RouterBlock<T>` | `RouterBlock.<T>builder()` |
-| `BroadcastBlock<T>` | `BroadcastBlock.<T>builder()` |
-| `ActionBlock<T>` | `ActionBlock.<T>builder()` |
-| `SourceBlock<T>` | `SourceBlock.<T>builder()` |
-| `NamedExecutorService` | `NamedExecutorService.builder()` |
+| `BatchBlock<T>`          | `BatchBlock.<T>builder()`          |
+| `GroupBlock<T, K>`       | `GroupBlock.<T, K>builder()`       |
+| `DelayBlock<T>`          | `DelayBlock.<T>builder()`          |
+| `TapBlock<T>`            | `TapBlock.<T>builder()`            |
+| `TransformBlock<T, R>`   | `TransformBlock.<T, R>builder()`   |
+| `ExpandBlock<T>`         | `ExpandBlock.<T>builder()`         |
+| `BranchBlock<T>`         | `BranchBlock.<T>builder()`         |
+| `RouterBlock<T>`         | `RouterBlock.<T>builder()`         |
+| `BroadcastBlock<T>`      | `BroadcastBlock.<T>builder()`      |
+| `ActionBlock<T>`         | `ActionBlock.<T>builder()`         |
+| `SourceBlock<T>`         | `SourceBlock.<T>builder()`         |
+| `NamedExecutorService`   | `NamedExecutorService.builder()`   |
 
 ---
 
@@ -614,9 +614,9 @@ Pipeline<Message> p2 = Pipeline.<Message>builder().executor(executor).from(Buffe
 
 All diagnostic output flows through a single logger: `software.frisby.core.concurrency.EventSource`.
 
-| Level | When it fires |
-|---|---|
-| **ERROR** | Delivery failure, callback exception, predicate failure, supplier failure. |
+| Level       | When it fires                                                                                                                                                                          |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **ERROR**   | Delivery failure, callback exception, predicate failure, supplier failure.                                                                                                             |
 | **WARNING** | A block received an item but has no downstream target linked yet.  Fires at most once per posting thread before the first `linkTo()` call; never fires again after the block is wired. |
 
 Recommended production threshold: **WARNING** — captures both delivery failures and the
