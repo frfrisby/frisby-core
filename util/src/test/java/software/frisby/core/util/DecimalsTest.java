@@ -16,8 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class DecimalsTest {
-    private static final String NULL_VALUE_MSG  = "The 'value' value is invalid. The value must not be null.";
+    private static final String NULL_VALUE_MSG = "The 'value' value is invalid. The value must not be null.";
     private static final String EMPTY_VALUE_MSG = "The 'value' value is invalid. The value must not be empty.";
+
     @ParameterizedTest
     @ArgumentsSource(StringConvertProvider.class)
     void parse(String actual, BigDecimal expected) {
