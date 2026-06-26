@@ -45,7 +45,7 @@ Validation, Hibernate Validator) or are too minimal to be genuinely useful (Guav
 |---------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------|
 | `bom`         | `software.frisby.core:bom`         | Bill of Materials — import for managed dependency versions                                                        |
 | `validation`  | `software.frisby.core:validation`  | Validation utilities and exception types; zero runtime dependencies                                               |
-| `util`        | `software.frisby.core:util`        | General utilities (`StopWatch`, `Decimals`); depends on `validation`                                              |
+| `util`        | `software.frisby.core:util`        | General utilities (`StopWatch`, `Decimals`, `Uris`, `HttpUris`); depends on `validation`                          |
 | `concurrency` | `software.frisby.core:concurrency` | Asynchronous pipeline building blocks (`BufferBlock`, `BatchBlock`, `RouterBlock`, etc.); depends on `validation` |
 
 Additional modules are planned. The BOM will track all of them.
@@ -121,11 +121,12 @@ The 'age' value of '15' is invalid.  The value must be greater than or equal to 
 
 ## Documentation
 
-| Guide | Description |
-|-------|-------------|
-| [Validation Guide](docs/validation-guide.md) | All validator classes, constraint families, optional variants, and the exception hierarchy |
-| [Field Groups Guide](docs/field-groups-guide.md) | Cross-field cardinality constraints with worked examples |
-| [Concurrency Guide](docs/concurrency-guide.md) | Block overview, fluent pipeline API, logging & diagnostics, and `errorOccurredHandler` usage patterns |
+| Guide                                            | Description                                                                                           |
+|--------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [Validation Guide](docs/validation-guide.md)     | All validator classes, constraint families, optional variants, and the exception hierarchy            |
+| [Field Groups Guide](docs/field-groups-guide.md) | Cross-field cardinality constraints with worked examples                                              |
+| [Util Guide](docs/util-guide.md)                 | `StopWatch`, `Decimals`, `Uris`, and `HttpUris` — usage patterns and anti-patterns                    |
+| [Concurrency Guide](docs/concurrency-guide.md)   | Block overview, fluent pipeline API, logging & diagnostics, and `errorOccurredHandler` usage patterns |
 
 ---
 
@@ -138,11 +139,18 @@ designed to be attached to an AI assistant's context window when generating vali
 It covers every validator class with exact call signatures and representative examples —
 small enough to load without meaningfully consuming a context budget.
 
+### Util
+
+A compact AI context reference is provided at [`docs/ai/util.md`](docs/ai/util.md),
+covering all four utility classes (`StopWatch`, `Decimals`, `Uris`, `HttpUris`) with
+call signatures, behavioral notes, and antipatterns.  Attach it when generating code
+that involves timing, `BigDecimal` conversion, or URI manipulation.
+
 ### Concurrency
 
 A compact AI context reference is provided at [`docs/ai/concurrency.md`](docs/ai/concurrency.md),
 covering block builder signatures, defaults, routing strategies, the fluent pipeline API,
-the completion lifecycle, and common anti-patterns.  Attach it when generating pipeline code.
+the completion lifecycle, and common antipatterns.  Attach it when generating pipeline code.
 
 ### Persistent Instructions
 
@@ -161,6 +169,19 @@ Key conventions:
 - Every validation method takes `(String name, T value, ...)` and returns `value` unchanged.
 - `optional*` variants pass `null` through without validation.
 - Declare `FieldGroup` instances as `private static final`.
+
+## Util
+
+This project uses `software.frisby.core:util` for general utilities.
+When generating code that involves timing, BigDecimal conversion, or URI manipulation,
+attach `docs/ai/util.md` from the frisby-core repository for the full API reference.
+
+Key conventions:
+- Always use `Decimals.of(double/float)` instead of `new BigDecimal(double/float)`.
+- Use `Uris` for scheme-agnostic structural URI operations (path manipulation, parsing,
+  userinfo extraction).
+- Use `HttpUris` for HTTP/S-semantic operations (origin, effectivePort, toHttps).
+  Every `HttpUris` method validates that the scheme is `http` or `https`.
 
 ## Concurrency
 

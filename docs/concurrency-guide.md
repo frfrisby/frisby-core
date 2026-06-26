@@ -12,22 +12,22 @@ Blocks are the units of a pipeline.  Each block accepts items via `post()`, opti
 transforms or accumulates them, then forwards the result downstream via a linked
 `Target`.  Every block is constructed through a static `builder()` method.
 
-| Block | Type | Description |
-|---|---|---|
-| `SourceBlock<T>` | Async producer | Polls a `Supplier<T>` or `Supplier<List<T>>` on a dedicated thread and pushes items downstream. |
-| `BufferBlock<T>` | Async pass-through | Accepts items from posting threads and delivers them to a single downstream target on a dedicated worker thread.  Bounded capacity; posting threads block when full. |
-| `PriorityBufferBlock<T>` | Async pass-through | Same as `BufferBlock` but items are delivered in priority order determined by a `Comparator<T>`. |
-| `BatchBlock<T>` | Async accumulator | Accumulates individual items into `List<T>` batches and delivers them downstream when the batch is full or a timeout fires. |
-| `GroupBlock<T, K>` | Async accumulator | Groups items by a key function into per-key `List<T>` groups and delivers each group downstream when it reaches a size limit, a timeout, or an idle timeout. |
-| `DelayBlock<T>` | Async delay | Accepts items and holds each one for a duration computed by a `Function<T, Duration>`, then delivers them downstream after their delay expires. |
-| `TapBlock<T>` | Synchronous | Passes each item to a `Consumer<T>` as a side effect, then forwards the original item downstream unchanged.  Consumer exceptions propagate to the posting thread. |
-| `TransformBlock<T, R>` | Synchronous | Applies a `Function<T, R>` to each item and forwards the result inline on the posting thread.  A `null` result is silently dropped. |
-| `ExpandBlock<T>` | Synchronous | Accepts a `List<T>` and posts each element individually to the downstream target. |
-| `BranchBlock<T>` | Synchronous | Routes each item to the first branch whose `Predicate<T>` matches, or to an `otherwise` target. |
-| `RouterBlock<T>` | Synchronous | Distributes items across multiple downstream targets using round-robin, load-balanced, sticky-key, or custom routing. |
-| `OpenRouterBlock<T>` | Synchronous | Like `RouterBlock` but each arm is an `OpenPipeline<T, R>`; merges all arm tail sources into a single output that can be wired to a shared downstream stage. |
-| `BroadcastBlock<T>` | Synchronous | Delivers each item to every registered downstream target. |
-| `ActionBlock<T>` | Synchronous terminal | Applies a `Consumer<T>` to each item.  Typically used as the final stage in a pipeline. |
+| Block                    | Type                 | Description                                                                                                                                                          |
+|--------------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `SourceBlock<T>`         | Async producer       | Polls a `Supplier<T>` or `Supplier<List<T>>` on a dedicated thread and pushes items downstream.                                                                      |
+| `BufferBlock<T>`         | Async pass-through   | Accepts items from posting threads and delivers them to a single downstream target on a dedicated worker thread.  Bounded capacity; posting threads block when full. |
+| `PriorityBufferBlock<T>` | Async pass-through   | Same as `BufferBlock` but items are delivered in priority order determined by a `Comparator<T>`.                                                                     |
+| `BatchBlock<T>`          | Async accumulator    | Accumulates individual items into `List<T>` batches and delivers them downstream when the batch is full or a timeout fires.                                          |
+| `GroupBlock<T, K>`       | Async accumulator    | Groups items by a key function into per-key `List<T>` groups and delivers each group downstream when it reaches a size limit, a timeout, or an idle timeout.         |
+| `DelayBlock<T>`          | Async delay          | Accepts items and holds each one for a duration computed by a `Function<T, Duration>`, then delivers them downstream after their delay expires.                      |
+| `TapBlock<T>`            | Synchronous          | Passes each item to a `Consumer<T>` as a side effect, then forwards the original item downstream unchanged.  Consumer exceptions propagate to the posting thread.    |
+| `TransformBlock<T, R>`   | Synchronous          | Applies a `Function<T, R>` to each item and forwards the result inline on the posting thread.  A `null` result is silently dropped.                                  |
+| `ExpandBlock<T>`         | Synchronous          | Accepts a `List<T>` and posts each element individually to the downstream target.                                                                                    |
+| `BranchBlock<T>`         | Synchronous          | Routes each item to the first branch whose `Predicate<T>` matches, or to an `otherwise` target.                                                                      |
+| `RouterBlock<T>`         | Synchronous          | Distributes items across multiple downstream targets using round-robin, load-balanced, sticky-key, or custom routing.                                                |
+| `OpenRouterBlock<T>`     | Synchronous          | Like `RouterBlock` but each arm is an `OpenPipeline<T, R>`; merges all arm tail sources into a single output that can be wired to a shared downstream stage.         |
+| `BroadcastBlock<T>`      | Synchronous          | Delivers each item to every registered downstream target.                                                                                                            |
+| `ActionBlock<T>`         | Synchronous terminal | Applies a `Consumer<T>` to each item.  Typically used as the final stage in a pipeline.                                                                              |
 
 ---
 
@@ -98,21 +98,21 @@ Buffer.of(new GenericType<List<Message>>() {})
 Buffer.ofLists(Message.class)   // → Buffer<List<Message>>
 ```
 
-| Fluent builder | Stage type | Key configuration method(s) |
-|---|---|---|
-| `Buffer.of(T.class)` | Async pass-through | `.capacity(int)` (default 1024) |
-| `PriorityBuffer.of(T.class)` | Async pass-through | `.capacity(int)`, `.comparator(Comparator<T>)` |
-| `Batch.of(T.class)` | Async `T → List<T>` | `.batchSize(int)` (default 128), `.timeout(Duration)` (default 5 s) |
-| `Group.of(T.class, K.class)` | Async `T → List<T>` | `.groupingFunction(Function<T,K>)` (required), `.maxGroupSize(int)` (default 128), `.timeout(Duration)` (default 10 s), `.idleTimeout(Duration)` (default 5 s) |
-| `Delay.of(T.class)` | Async `T → T` | `.delay(Duration)` or `.delay(Function<T,Duration>)` (required) |
-| `Tap.of(T.class)` | Sync side-effect | `.consumer(Consumer<T>)` (required) |
-| `Transform.of(T.class, R.class)` | Sync `T → R` | `.transform(Function<T,R>)` (required) |
-| `Expand.of(T.class)` | Sync `List<T> → T` | _(none — no configuration required)_ |
-| `Branch.of(T.class)` | Sync terminal routing | `.when(Predicate<T>, Pipeline<T>)` (repeatable), `.otherwise(Pipeline<T>)` (required) |
-| `Router.of(T.class)` | Sync terminal fan-out | `.routes(int)`, `.factory(Supplier<Pipeline<T>>)`, routing strategy |
-| `OpenRouter.of(T.class, R.class)` | Sync intermediate fan-out | `.routes(int)`, `.factory(Supplier<OpenPipeline<T,R>>)`, routing strategy |
-| `Broadcast.of(T.class)` | Sync terminal fan-out | `.targets(List<Pipeline<T>>)` |
-| `Action.of(T.class)` | Sync terminal consumer | `.action(Consumer<T>)` (required) |
+| Fluent builder                    | Stage type                | Key configuration method(s)                                                                                                                                    |
+|-----------------------------------|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Buffer.of(T.class)`              | Async pass-through        | `.capacity(int)` (default 1024)                                                                                                                                |
+| `PriorityBuffer.of(T.class)`      | Async pass-through        | `.capacity(int)`, `.comparator(Comparator<T>)`                                                                                                                 |
+| `Batch.of(T.class)`               | Async `T → List<T>`       | `.batchSize(int)` (default 128), `.timeout(Duration)` (default 5 s)                                                                                            |
+| `Group.of(T.class, K.class)`      | Async `T → List<T>`       | `.groupingFunction(Function<T,K>)` (required), `.maxGroupSize(int)` (default 128), `.timeout(Duration)` (default 10 s), `.idleTimeout(Duration)` (default 5 s) |
+| `Delay.of(T.class)`               | Async `T → T`             | `.delay(Duration)` or `.delay(Function<T,Duration>)` (required)                                                                                                |
+| `Tap.of(T.class)`                 | Sync side-effect          | `.consumer(Consumer<T>)` (required)                                                                                                                            |
+| `Transform.of(T.class, R.class)`  | Sync `T → R`              | `.transform(Function<T,R>)` (required)                                                                                                                         |
+| `Expand.of(T.class)`              | Sync `List<T> → T`        | _(none — no configuration required)_                                                                                                                           |
+| `Branch.of(T.class)`              | Sync terminal routing     | `.when(Predicate<T>, Pipeline<T>)` (repeatable), `.otherwise(Pipeline<T>)` (required)                                                                          |
+| `Router.of(T.class)`              | Sync terminal fan-out     | `.routes(int)`, `.factory(Supplier<Pipeline<T>>)`, routing strategy                                                                                            |
+| `OpenRouter.of(T.class, R.class)` | Sync intermediate fan-out | `.routes(int)`, `.factory(Supplier<OpenPipeline<T,R>>)`, routing strategy                                                                                      |
+| `Broadcast.of(T.class)`           | Sync terminal fan-out     | `.targets(List<Pipeline<T>>)`                                                                                                                                  |
+| `Action.of(T.class)`              | Sync terminal consumer    | `.action(Consumer<T>)` (required)                                                                                                                              |
 
 **Routing strategies** (for `Router` and `OpenRouter`, mutually exclusive; default is round-robin):
 - `.roundRobin()` — explicit round-robin (default when no strategy is set).
@@ -124,10 +124,10 @@ Buffer.ofLists(Message.class)   // → Buffer<List<Message>>
 
 Async blocks and some sync blocks accept optional observer callbacks:
 
-| Callback | Interface | Fires when |
-|---|---|---|
-| `itemPostedHandler` | `ItemPostedHandler<T>` | An item is accepted or rejected at `post()`. |
-| `itemDeliveredHandler` | `ItemDeliveredHandler<O>` | An item (or batch/group) is successfully delivered downstream. |
+| Callback               | Interface                 | Fires when                                                      |
+|------------------------|---------------------------|-----------------------------------------------------------------|
+| `itemPostedHandler`    | `ItemPostedHandler<T>`    | An item is accepted or rejected at `post()`.                    |
+| `itemDeliveredHandler` | `ItemDeliveredHandler<O>` | An item (or batch/group) is successfully delivered downstream.  |
 | `errorOccurredHandler` | `ErrorOccurredHandler<O>` | A downstream target throws during delivery (async blocks only). |
 
 Register via the fluent builder:
@@ -175,9 +175,9 @@ when items are returned — no busy-spin, no polling delay.
 
 ### Supplier modes
 
-| Method | Behavior |
-|---|---|
-| `.supplier(Supplier<T>)` | Each call returns one item or `null`.  A `null` return is a no-op; the supplier is called again immediately. |
+| Method                              | Behavior                                                                                                                           |
+|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `.supplier(Supplier<T>)`            | Each call returns one item or `null`.  A `null` return is a no-op; the supplier is called again immediately.                       |
 | `.batchSupplier(Supplier<List<T>>)` | Each call returns a list of items.  A `null` or empty list is a no-op.  Items are forwarded to the downstream target individually. |
 
 Exactly one of `.supplier()` or `.batchSupplier()` must be configured.  Calling neither,
@@ -185,7 +185,7 @@ or calling both, throws `IllegalStateException` at build time.
 
 ### Concurrency policy
 
-By default a single thread polls the supplier.  Pass a `SourceConcurrencyPolicy` to run
+By default, a single thread polls the supplier.  Pass a `SourceConcurrencyPolicy` to run
 multiple threads:
 
 ```java
@@ -222,11 +222,11 @@ implicit default when no policy is configured) and `SourceConcurrencyPolicy.adap
 with `minThreads(1)` both start at a single thread; the difference is that `adaptive`
 grows and shrinks automatically while `fixed` stays constant.
 
-| Parameter | Default | Description |
-|---|---|---|
-| `maxThreads` | _(required)_ | Ceiling on active polling threads; must be ≥ 2. |
-| `minThreads(int)` | `1` | Floor; threads never retire below this count. |
-| `scaleUpThreshold(int)` | `10` | Consecutive non-empty supplier calls required before adding one thread.  Lower values scale up more aggressively. |
+| Parameter               | Default      | Description                                                                                                       |
+|-------------------------|--------------|-------------------------------------------------------------------------------------------------------------------|
+| `maxThreads`            | _(required)_ | Ceiling on active polling threads; must be ≥ 2.                                                                   |
+| `minThreads(int)`       | `1`          | Floor; threads never retire below this count.                                                                     |
+| `scaleUpThreshold(int)` | `10`         | Consecutive non-empty supplier calls required before adding one thread.  Lower values scale up more aggressively. |
 
 > **Thread-safety requirement** — when more than one polling thread is active the
 > downstream head block must be safe to call concurrently.  The recommended pattern is
@@ -249,10 +249,10 @@ pipeline.awaitCompletion();
 
 ### Delegate handlers
 
-| Method | Fires when |
-|---|---|
+| Method                                           | Fires when                                     |
+|--------------------------------------------------|------------------------------------------------|
 | `.itemDeliveredHandler(ItemDeliveredHandler<T>)` | An item was successfully forwarded downstream. |
-| `.errorOccurredHandler(ErrorOccurredHandler<T>)` | The downstream target threw during delivery. |
+| `.errorOccurredHandler(ErrorOccurredHandler<T>)` | The downstream target threw during delivery.   |
 
 ---
 
@@ -375,10 +375,10 @@ Configuring this one name is all that is needed to control the module's entire l
 
 ### Level Semantics
 
-| Level | What it covers | Volume |
-|---|---|---|
-| **ERROR** | Delivery failures — a downstream `Target.post()` threw an exception.  Exceptions thrown by user-supplied callbacks (`ErrorOccurredHandler`, `ItemDeliveredHandler`, `ItemPostedHandler`).  Predicate failures in `BranchBlock`.  Supplier failures in `SourceBlock`. | Low — one entry per failure event. |
-| **WARNING** | A block received an item but has no downstream target linked yet — posting is blocked until `linkTo()` is called.  Fires at most once per posting thread before the first `linkTo()` call; never fires again once the block is wired. | Very low — one entry per unlinked block per posting thread. |
+| Level       | What it covers                                                                                                                                                                                                                                                       | Volume                                                      |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
+| **ERROR**   | Delivery failures — a downstream `Target.post()` threw an exception.  Exceptions thrown by user-supplied callbacks (`ErrorOccurredHandler`, `ItemDeliveredHandler`, `ItemPostedHandler`).  Predicate failures in `BranchBlock`.  Supplier failures in `SourceBlock`. | Low — one entry per failure event.                          |
+| **WARNING** | A block received an item but has no downstream target linked yet — posting is blocked until `linkTo()` is called.  Fires at most once per posting thread before the first `linkTo()` call; never fires again once the block is wired.                                | Very low — one entry per unlinked block per posting thread. |
 
 **ERROR is always emitted** — even if no `errorOccurredHandler` is configured, the failure
 is logged so that silent data loss never occurs in an asynchronous block.
@@ -483,14 +483,14 @@ always present.
 to* the ERROR log.  Register one when your application needs to *react* to the failure,
 not just observe it:
 
-| Use case | Approach |
-|---|---|
-| See that failures are happening | ERROR log — already there, nothing to add. |
-| Increment a metrics counter on failure | Register an `errorOccurredHandler`. |
-| Trip a circuit-breaker after N failures | Register an `errorOccurredHandler`. |
+| Use case                                 | Approach                                                                                |
+|------------------------------------------|-----------------------------------------------------------------------------------------|
+| See that failures are happening          | ERROR log — already there, nothing to add.                                              |
+| Increment a metrics counter on failure   | Register an `errorOccurredHandler`.                                                     |
+| Trip a circuit-breaker after N failures  | Register an `errorOccurredHandler`.                                                     |
 | Send failed items to a dead-letter queue | Register an `errorOccurredHandler` — the `item` parameter carries the undelivered item. |
-| Retry the item on a transient error | Register an `errorOccurredHandler` — inspect the `error`, re-post if appropriate. |
-| Page an on-call engineer | Register an `errorOccurredHandler`. |
+| Retry the item on a transient error      | Register an `errorOccurredHandler` — inspect the `error`, re-post if appropriate.       |
+| Page an on-call engineer                 | Register an `errorOccurredHandler`.                                                     |
 
 If you only need visibility into failures and your logging pipeline already alerts on
 ERROR, the automatic log entry is sufficient and no handler is needed.
@@ -502,7 +502,7 @@ ERROR, the automatic log entry is sufficient and no handler is needed.
 When working with an AI coding assistant on code that wires or extends this module,
 attach this guide and `docs/ai/concurrency.md` to your session context.  The AI context
 file covers exact builder signatures, defaults, routing strategy options, the completion
-lifecycle, and common anti-patterns in a compact, attachable format.
+lifecycle, and common antipatterns in a compact, attachable format.
 
 If your project uses a persistent instructions file (such as
 `.github/copilot-instructions.md`), add the following to tell the assistant about the
