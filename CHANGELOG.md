@@ -9,6 +9,24 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.2.0](https://github.com/frfrisby/frisby-core/compare/v1.1.1...v1.2.0) (2026-06-26)
+
+
+### Features
+
+* **util:** add Uris and HttpUris URI utility classes ([#63](https://github.com/frfrisby/frisby-core/issues/63)) ([d3cab6a](https://github.com/frfrisby/frisby-core/commit/d3cab6ac5464a86ba9ef61246e17059a33d636c3))
+* **util:** add Uris and HttpUris utility classes ([d3cab6a](https://github.com/frfrisby/frisby-core/commit/d3cab6ac5464a86ba9ef61246e17059a33d636c3))
+
+
+### Bug Fixes
+
+* Removed an IDE specific suppression. ([#61](https://github.com/frfrisby/frisby-core/issues/61)) ([d35de80](https://github.com/frfrisby/frisby-core/commit/d35de80482f3cca9b6012c2300df5eef6b21a37a))
+
+
+### Documentation
+
+* **util:** add util-guide and update AI reference and README ([#64](https://github.com/frfrisby/frisby-core/issues/64)) ([44bdb4e](https://github.com/frfrisby/frisby-core/commit/44bdb4ee49dd87e04cb479bbbb613acbc7f3782b))
+
 ## [1.1.1](https://github.com/frfrisby/frisby-core/compare/v1.1.0...v1.1.1) (2026-05-21)
 
 
