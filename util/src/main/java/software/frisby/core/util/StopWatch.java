@@ -57,7 +57,7 @@ public final class StopWatch {
      * Indicates whether the stopwatch has been stopped.
      *
      * @return {@code true} if {@link #stop()} has been called; {@code false} if the
-     *         stopwatch is still running.
+     * stopwatch is still running.
      */
     public boolean isStopped() {
         return stopTime.get() >= 0;
