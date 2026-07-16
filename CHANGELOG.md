@@ -9,6 +9,14 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.3.0](https://github.com/frfrisby/frisby-core/compare/v1.2.0...v1.3.0) (2026-07-16)
+
+
+### Features
+
+* **validation:** add Sequences.noNullElements and optionalNoNullElements ([#66](https://github.com/frfrisby/frisby-core/issues/66)) ([8173adf](https://github.com/frfrisby/frisby-core/commit/8173adf157c79b7612658b8ded0bc656eaa77210))
+* **validation:** add StringSequences.noEmptyElements and noBlankElements ([#69](https://github.com/frfrisby/frisby-core/issues/69)) ([bec1cd8](https://github.com/frfrisby/frisby-core/commit/bec1cd8d520550b538264d06e31321e3df1d3881))
+
 ## [1.2.0](https://github.com/frfrisby/frisby-core/compare/v1.1.1...v1.2.0) (2026-06-26)
 
 
