@@ -299,6 +299,7 @@ Validates `Collection<T>` and `T[]` values. Both overloads are provided for ever
 ```java
 // Null / empty checks
 List<String> tags = Sequences.notNull("tags", tags);
+List<String> tags = Sequences.noNullElements("tags", tags);
 List<String> tags = Sequences.notEmpty("tags", tags);
 
 // Size constraints
