@@ -78,6 +78,91 @@ class SequencesTest {
     }
 
     // -------------------------------------------------------------------------
+    // NoNullElements
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class NoNullElements {
+        @Nested
+        class Collection {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.noNullElements(null, List.of("a")));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.noNullElements("   ", List.of("a")));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> Sequences.noNullElements("field", (java.util.List<String>) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyValue_returnsValue() {
+                var list = new java.util.ArrayList<String>();
+                assertSame(list, Sequences.noNullElements("field", list));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> Sequences.noNullElements("field", Arrays.asList("a", null, "b")));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nonNullValue_returnsValue() {
+                var list = List.of("a", "b");
+                assertSame(list, Sequences.noNullElements("field", list));
+            }
+        }
+
+        @Nested
+        class Array {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.noNullElements(null, new String[]{"a"}));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.noNullElements("   ", new String[]{"a"}));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> Sequences.noNullElements("field", (String[]) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.noNullElements("field", array));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> Sequences.noNullElements("field", new String[]{"a", null, "b"}));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nonNullValue_returnsValue() {
+                var array = new String[]{"a", "b"};
+                assertSame(array, Sequences.noNullElements("field", array));
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // NotEmpty
     // -------------------------------------------------------------------------
 
@@ -764,6 +849,89 @@ class SequencesTest {
             void valueWithUniqueKeys_returnsValue() {
                 var array = new String[]{"a", "bb", "ccc"};
                 assertSame(array, Sequences.noDuplicates("field", array, String::length));
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // OptionalNoNullElements
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class OptionalNoNullElements {
+        @Nested
+        class Collection {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.optionalNoNullElements(null, List.of("a")));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.optionalNoNullElements("   ", List.of("a")));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_returnsNull() {
+                assertNull(Sequences.optionalNoNullElements("field", (java.util.List<String>) null));
+            }
+
+            @Test
+            void emptyValue_returnsValue() {
+                var list = new java.util.ArrayList<String>();
+                assertSame(list, Sequences.optionalNoNullElements("field", list));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> Sequences.optionalNoNullElements("field", Arrays.asList("a", null)));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nonNullValue_returnsValue() {
+                var list = List.of("a", "b");
+                assertSame(list, Sequences.optionalNoNullElements("field", list));
+            }
+        }
+
+        @Nested
+        class Array {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.optionalNoNullElements(null, new String[]{"a"}));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> Sequences.optionalNoNullElements("   ", new String[]{"a"}));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_returnsNull() {
+                assertNull(Sequences.optionalNoNullElements("field", (String[]) null));
+            }
+
+            @Test
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalNoNullElements("field", array));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> Sequences.optionalNoNullElements("field", new String[]{"a", null}));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nonNullValue_returnsValue() {
+                var array = new String[]{"a", "b"};
+                assertSame(array, Sequences.optionalNoNullElements("field", array));
             }
         }
     }

@@ -15,7 +15,7 @@ import java.util.function.Function;
  *       blank; passing an invalid {@code name} is an API misuse and throws
  *       {@link NullPointerException}.</li>
  *   <li>Configuration arguments ({@code minSize}, {@code maxSize}) must be ≥ 1; passing a
- *       value less than 1 throws {@link IllegalConfigurationException}. For {@code size},
+ *       value less than 1, throws {@link IllegalConfigurationException}. For {@code size},
  *       {@code maxSize} must additionally be ≥ {@code minSize}.</li>
  *   <li>Methods return the validated {@code value} unchanged, allowing inline assignment:
  *       <pre>this.tags = Sequences.notEmpty("tags", tags);</pre>
@@ -36,14 +36,15 @@ import java.util.function.Function;
  *       validated does not meet the required criteria.</li>
  * </ul>
  *
- * <p>Six constraint families are provided:
+ * <p>Seven constraint families are provided:
  * <ul>
- *   <li>{@code notNull}      — collection/array must not be null</li>
- *   <li>{@code notEmpty}     — not null, not empty, no null elements</li>
- *   <li>{@code minSize}      — {@code notEmpty} + size ≥ minSize</li>
- *   <li>{@code maxSize}      — {@code notEmpty} + size ≤ maxSize</li>
- *   <li>{@code size}         — {@code notEmpty} + minSize ≤ size ≤ maxSize</li>
- *   <li>{@code noDuplicates} — {@code notEmpty} + all elements unique</li>
+ *   <li>{@code notNull}        — collection/array must not be null</li>
+ *   <li>{@code noNullElements} — not null, no null elements (empty is allowed)</li>
+ *   <li>{@code notEmpty}       — not null, not empty, no null elements</li>
+ *   <li>{@code minSize}        — {@code notEmpty} + size ≥ minSize</li>
+ *   <li>{@code maxSize}        — {@code notEmpty} + size ≤ maxSize</li>
+ *   <li>{@code size}           — {@code notEmpty} + minSize ≤ size ≤ maxSize</li>
+ *   <li>{@code noDuplicates}   — {@code notEmpty} + all elements unique</li>
  * </ul>
  *
  * <p>{@code optional*} variants pass a {@code null} value through without validation.
@@ -91,6 +92,55 @@ public final class Sequences {
         Throws.ifInvalidName(name);
 
         if (null == value) throw nullValue(name);
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value} is not null and contains no null elements.
+     * An empty collection is valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @param <T>   The element type.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     */
+    public static <T, C extends Collection<T>> C noNullElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        for (T element : value) {
+            if (null == element) throw nullElement(name);
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value} is not null and contains no null elements.
+     * An empty array is valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @param <T>   The element type.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     */
+    public static <T> T[] noNullElements(String name, T[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        for (T element : value) {
+            if (null == element) throw nullElement(name);
+        }
 
         return value;
     }
@@ -404,8 +454,57 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty and contains no null elements.
+    /**
+     * Validates that {@code value}, if present, contains no null elements.
      * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty collection is also valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @param <T>   The element type.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     */
+    public static <T, C extends Collection<T>> C optionalNoNullElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
+            for (T element : value) {
+                if (null == element) throw nullElement(name);
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, contains no null elements.
+     * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty array is also valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @param <T>   The element type.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     */
+    public static <T> T[] optionalNoNullElements(String name, T[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
+            for (T element : value) {
+                if (null == element) throw nullElement(name);
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, is not empty and contains no null elements.
      *
      * @param name  The name of the argument being validated, used in exception messages.
      * @param value The value to validate, may be null.

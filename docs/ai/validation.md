@@ -54,9 +54,11 @@ call:
 - `MissingElementsException` — container is empty
 - `NullElementException` — container contains a null element
 
-**`Sequences.notNull()` vs `Sequences.notEmpty()`:**
+**`Sequences.notNull()` vs `Sequences.noNullElements()` vs `Sequences.notEmpty()`:**
 - `notNull` — rejects null container only; empty is accepted, null elements are accepted.
-  Use only when an empty collection is genuinely valid for the field.
+  Use only when an empty collection is genuinely valid and null elements are also acceptable.
+- `noNullElements` — rejects null container and null elements; empty is accepted.
+  Use when an empty collection is valid but null elements are not.
 - `notEmpty` (and all size/duplicate methods) — rejects null, empty, and null elements.
   Use this in almost all cases.
 
@@ -305,10 +307,12 @@ Values.notOneOf("username", username, Set.of("root", "system"));
 Values.optionalOneOf("role", role, Set.of("admin", "editor"));
 
 // Sequences — Collection<T> and T[] overloads exist for every method.
-// notNull   → rejects null container only; empty and null elements are allowed.
-// notEmpty  → rejects null, empty, and null elements.  Use this in almost all cases.
+// notNull          → rejects null container only; empty and null elements are allowed.
+// noNullElements   → rejects null container and null elements; empty is allowed.
+// notEmpty         → rejects null, empty, and null elements.  Use this in almost all cases.
 // All size and duplicate methods include full notEmpty semantics — do NOT call notEmpty first.
 Sequences.notNull("queue", queue);                    // container must not be null; empty is accepted
+Sequences.noNullElements("tags", tags);               // not null, no null elements; empty is accepted
 Sequences.notEmpty("tags", tags);                     // not null, not empty, no null elements
 Sequences.minSize("tags", tags, 1);                   // notEmpty + size >= 1
 Sequences.maxSize("tags", tags, 10);                  // notEmpty + size <= 10
@@ -317,6 +321,7 @@ Sequences.noDuplicates("ids", ids);                   // notEmpty + no duplicate
 Sequences.noDuplicates("users", users, User::getId);  // notEmpty + no duplicate keys
 
 // Optional variants — null passes through unchanged; non-null values are fully validated
+Sequences.optionalNoNullElements("tags", tags);
 Sequences.optionalNotEmpty("tags", tags);
 Sequences.optionalMinSize("tags", tags, 1);
 Sequences.optionalMaxSize("tags", tags, 10);
@@ -363,6 +368,7 @@ All methods throw `NullPointerException` if `name` is null or blank.
 | Method family        | `NullValueException`    | `MissingElementsException` | `NullElementException` | `SequenceSizeOutsideRangeException` | `DuplicateElementsException` | `IllegalConfigurationException` |
 |----------------------|-------------------------|----------------------------|------------------------|-------------------------------------|------------------------------|---------------------------------|
 | `notNull`            | container is null       | —                          | —                      | —                                   | —                            | —                               |
+| `noNullElements`     | container is null       | —                          | element is null        | —                                   | —                            | —                               |
 | `notEmpty`           | container is null       | container is empty         | element is null        | —                                   | —                            | —                               |
 | `minSize`            | container is null       | container is empty         | element is null        | size < minSize                      | —                            | minSize < 1                     |
 | `maxSize`            | container is null       | container is empty         | element is null        | size > maxSize                      | —                            | maxSize < 1                     |
