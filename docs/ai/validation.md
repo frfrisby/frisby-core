@@ -329,10 +329,17 @@ Sequences.optionalSize("tags", tags, 1, 10);
 Sequences.optionalNoDuplicates("ids", ids);
 Sequences.optionalNoDuplicates("users", users, User::getId);
 
-// StringSequences — validates each String element within the collection/array
-StringSequences.notBlank("tags", tags);
+// StringSequences — validates each String element within the collection/array.
+// notEmpty / notBlank / maxLength etc. reject an empty container.
+// noEmptyElements / noBlankElements accept an empty container but validate non-empty ones.
+StringSequences.notEmpty("tags", tags);                        // not null, not empty, elements not empty
+StringSequences.notBlank("tags", tags);                        // not null, not empty, elements not blank
+StringSequences.noEmptyElements("tags", tags);                 // not null, empty OK, elements not empty
+StringSequences.noBlankElements("tags", tags);                 // not null, empty OK, elements not blank
 StringSequences.notBlankWithMaxLength("tags", tags, 64);
 StringSequences.notBlankWithMatches("codes", codes, CODE_PATTERN);
+StringSequences.optionalNoEmptyElements("tags", tags);         // null OK, empty OK, elements not empty
+StringSequences.optionalNoBlankElements("tags", tags);         // null OK, empty OK, elements not blank
 
 // Maps — notEmpty also rejects null keys (NullMapKeyException) and null values (NullMapValueException).
 // All size methods include the same null-key and null-value checks.
@@ -383,7 +390,9 @@ Every method first applies the full `notEmpty` check on the container, then vali
 | Method family           | Container failures                                                       | Per-element failures                                       | `IllegalConfigurationException` |
 |-------------------------|--------------------------------------------------------------------------|------------------------------------------------------------|---------------------------------|
 | `notEmpty`              | `NullValueException`, `MissingElementsException`, `NullElementException` | `EmptyValueException`                                      | —                               |
+| `noEmptyElements`       | `NullValueException`, `NullElementException`                             | `EmptyValueException`                                      | —                               |
 | `notBlank`              | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`                                      | —                               |
+| `noBlankElements`       | `NullValueException`, `NullElementException`                             | `BlankValueException`                                      | —                               |
 | `maxLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | maxItemLength < 1               |
 | `minLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | minItemLength < 1               |
 | `length`                | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | bound < 1, or max < min         |

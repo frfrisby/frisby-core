@@ -319,6 +319,31 @@ String[] tags = Sequences.notEmpty("tags", tags);
 
 ---
 
+## StringSequences
+
+**Class:** `StringSequences`
+
+Validates `Collection<String>` and `String[]` values where every element is a `String`.
+Every method first checks the container (not null, not empty, no null elements at the
+container level), then validates each string element.
+
+```java
+// Reject empty container + validate elements
+List<String> tags = StringSequences.notEmpty("tags", tags);   // elements not empty
+List<String> tags = StringSequences.notBlank("tags", tags);   // elements not blank
+List<String> tags = StringSequences.maxLength("tags", tags, 64);
+
+// Allow empty container + validate elements (when non-empty)
+List<String> tags = StringSequences.noEmptyElements("tags", tags);  // not null, empty OK, elements not empty
+List<String> tags = StringSequences.noBlankElements("tags", tags);  // not null, empty OK, elements not blank
+
+// Composites — reject empty container, validate multiple element constraints in one pass
+List<String> tags = StringSequences.notBlankWithMaxLength("tags", tags, 64);
+List<String> tags = StringSequences.notBlankWithMatches("codes", codes, CODE_PATTERN);
+```
+
+
+
 ## Maps
 
 **Class:** `Maps`

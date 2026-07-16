@@ -41,14 +41,16 @@ import java.util.regex.Pattern;
  *       that the value being validated does not meet the required criteria.</li>
  * </ul>
  *
- * <p>Six single-constraint families are provided:
+ * <p>Eight single-constraint families are provided:
  * <ul>
- *   <li>{@code notEmpty}   — each element is not empty</li>
- *   <li>{@code notBlank}   — each element is not blank</li>
- *   <li>{@code maxLength}  — each element ≤ maxItemLength Unicode code points</li>
- *   <li>{@code minLength}  — each element ≥ minItemLength Unicode code points</li>
- *   <li>{@code length}     — each element within [minItemLength, maxItemLength] code points</li>
- *   <li>{@code matches}    — each element matches a {@link Pattern} in its entirety</li>
+ *   <li>{@code notEmpty}        — each element is not empty; empty container rejected</li>
+ *   <li>{@code noEmptyElements} — each element is not empty; empty container allowed</li>
+ *   <li>{@code notBlank}        — each element is not blank; empty container rejected</li>
+ *   <li>{@code noBlankElements} — each element is not blank; empty container allowed</li>
+ *   <li>{@code maxLength}       — each element ≤ maxItemLength Unicode code points</li>
+ *   <li>{@code minLength}       — each element ≥ minItemLength Unicode code points</li>
+ *   <li>{@code length}          — each element within [minItemLength, maxItemLength] code points</li>
+ *   <li>{@code matches}         — each element matches a {@link Pattern} in its entirety</li>
  * </ul>
  *
  * <p>Five performance-optimized composite families are also provided; each checks multiple
@@ -211,6 +213,124 @@ public final class StringSequences {
     }
 
     /**
+     * Validates that {@code value} is not null and contains no null or empty string elements.
+     * An empty collection is valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws EmptyValueException  if {@code value} contains any empty string element.
+     */
+    public static <C extends Collection<String>> C noEmptyElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        int index = 0;
+
+        for (String element : value) {
+            if (null == element) throw nullElement(name);
+            if (element.isEmpty()) throw emptyElement(name, index);
+
+            index++;
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value} is not null and contains no null or empty string elements.
+     * An empty array is valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws EmptyValueException  if {@code value} contains any empty string element.
+     */
+    public static String[] noEmptyElements(String name, String[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        int index = 0;
+
+        for (String element : value) {
+            if (null == element) throw nullElement(name);
+            if (element.isEmpty()) throw emptyElement(name, index);
+
+            index++;
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, contains no null or empty string elements.
+     * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty collection is also valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws EmptyValueException  if {@code value} contains any empty string element.
+     */
+    public static <C extends Collection<String>> C optionalNoEmptyElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
+            int index = 0;
+
+            for (String element : value) {
+                if (null == element) throw nullElement(name);
+                if (element.isEmpty()) throw emptyElement(name, index);
+
+                index++;
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, contains no null or empty string elements.
+     * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty array is also valid.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws EmptyValueException  if {@code value} contains any empty string element.
+     */
+    public static String[] optionalNoEmptyElements(String name, String[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
+            int index = 0;
+
+            for (String element : value) {
+                if (null == element) throw nullElement(name);
+                if (element.isEmpty()) throw emptyElement(name, index);
+
+                index++;
+            }
+        }
+
+        return value;
+    }
+
+    /**
      * Validates that {@code value} is not null, not empty, contains no null elements, and
      * contains no blank string elements.
      *
@@ -331,6 +451,136 @@ public final class StringSequences {
         if (null != value) {
             if (value.length == 0) throw empty(name);
 
+            int index = 0;
+
+            for (String element : value) {
+                if (null == element) throw nullElement(name);
+                if (element.isBlank()) throw blankElement(name, index);
+
+                index++;
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value} is not null and contains no null or blank string elements.
+     * An empty collection is valid.
+     *
+     * <p>A blank element is one for which {@link String#isBlank()} returns {@code true};
+     * this includes empty strings and strings containing only whitespace characters.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws BlankValueException  if {@code value} contains any blank string element.
+     */
+    public static <C extends Collection<String>> C noBlankElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        int index = 0;
+
+        for (String element : value) {
+            if (null == element) throw nullElement(name);
+            if (element.isBlank()) throw blankElement(name, index);
+
+            index++;
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value} is not null and contains no null or blank string elements.
+     * An empty array is valid.
+     *
+     * <p>A blank element is one for which {@link String#isBlank()} returns {@code true};
+     * this includes empty strings and strings containing only whitespace characters.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate.
+     * @return The {@code value} unchanged.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullValueException   if {@code value} is null.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws BlankValueException  if {@code value} contains any blank string element.
+     */
+    public static String[] noBlankElements(String name, String[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null == value) throw nullValue(name);
+
+        int index = 0;
+
+        for (String element : value) {
+            if (null == element) throw nullElement(name);
+            if (element.isBlank()) throw blankElement(name, index);
+
+            index++;
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, contains no null or blank string elements.
+     * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty collection is also valid.
+     *
+     * <p>A blank element is one for which {@link String#isBlank()} returns {@code true};
+     * this includes empty strings and strings containing only whitespace characters.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @param <C>   The concrete collection type; preserved in the return value.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws BlankValueException  if {@code value} contains any blank string element.
+     */
+    public static <C extends Collection<String>> C optionalNoBlankElements(String name, C value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
+            int index = 0;
+
+            for (String element : value) {
+                if (null == element) throw nullElement(name);
+                if (element.isBlank()) throw blankElement(name, index);
+
+                index++;
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * Validates that {@code value}, if present, contains no null or blank string elements.
+     * A null {@code value} is considered valid and returned as {@code null}.
+     * An empty array is also valid.
+     *
+     * <p>A blank element is one for which {@link String#isBlank()} returns {@code true};
+     * this includes empty strings and strings containing only whitespace characters.
+     *
+     * @param name  The name of the argument being validated, used in exception messages.
+     * @param value The value to validate, may be null.
+     * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
+     * @throws NullPointerException if {@code name} is null or blank.
+     * @throws NullElementException if {@code value} contains any null element.
+     * @throws BlankValueException  if {@code value} contains any blank string element.
+     */
+    public static String[] optionalNoBlankElements(String name, String[] value) {
+        Throws.ifInvalidName(name);
+
+        if (null != value) {
             int index = 0;
 
             for (String element : value) {
