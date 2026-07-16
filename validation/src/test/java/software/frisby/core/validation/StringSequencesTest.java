@@ -117,6 +117,103 @@ class StringSequencesTest {
     }
 
     // -------------------------------------------------------------------------
+    // NoEmptyElements
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class NoEmptyElements {
+        @Nested
+        class Collection {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noEmptyElements(null, List.of("a")));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noEmptyElements("   ", List.of("a")));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> StringSequences.noEmptyElements("field", (java.util.List<String>) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyCollection_returnsValue() {
+                var list = new java.util.ArrayList<String>();
+                assertSame(list, StringSequences.noEmptyElements("field", list));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> StringSequences.noEmptyElements("field", Arrays.asList("a", null)));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyElement_throwsEmptyValueException() {
+                var ex = assertThrows(EmptyValueException.class, () -> StringSequences.noEmptyElements("field", Arrays.asList("a", "", "b")));
+                assertEquals("The 'field' value is invalid. The value must not contain empty elements. Element at index '1' is empty.", ex.getMessage());
+            }
+
+            @Test
+            void validValue_returnsValue() {
+                var list = List.of("hello", "world");
+                assertSame(list, StringSequences.noEmptyElements("field", list));
+            }
+        }
+
+        @Nested
+        class Array {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noEmptyElements(null, new String[]{"a"}));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noEmptyElements("   ", new String[]{"a"}));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> StringSequences.noEmptyElements("field", (String[]) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyArray_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.noEmptyElements("field", array));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> StringSequences.noEmptyElements("field", new String[]{"a", null}));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyElement_throwsEmptyValueException() {
+                var ex = assertThrows(EmptyValueException.class, () -> StringSequences.noEmptyElements("field", new String[]{"a", "", "b"}));
+                assertEquals("The 'field' value is invalid. The value must not contain empty elements. Element at index '1' is empty.", ex.getMessage());
+            }
+
+            @Test
+            void validValue_returnsValue() {
+                var array = new String[]{"hello", "world"};
+                assertSame(array, StringSequences.noEmptyElements("field", array));
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // NotBlank
     // -------------------------------------------------------------------------
 
@@ -215,6 +312,109 @@ class StringSequencesTest {
             void validValue_returnsValue() {
                 var array = new String[]{"hello", "world"};
                 assertSame(array, StringSequences.notBlank("field", array));
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // NoBlankElements
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class NoBlankElements {
+        @Nested
+        class Collection {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noBlankElements(null, List.of("a")));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noBlankElements("   ", List.of("a")));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> StringSequences.noBlankElements("field", (java.util.List<String>) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyCollection_returnsValue() {
+                var list = new java.util.ArrayList<String>();
+                assertSame(list, StringSequences.noBlankElements("field", list));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> StringSequences.noBlankElements("field", Arrays.asList("a", null)));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankElement_throwsBlankValueException() {
+                var ex = assertThrows(BlankValueException.class, () -> StringSequences.noBlankElements("field", Arrays.asList("a", "   ", "b")));
+                assertEquals("The 'field' value is invalid. The value must not contain blank elements. Element at index '1' is blank.", ex.getMessage());
+            }
+
+            @Test
+            void emptyElementIsBlank_throwsBlankValueException() {
+                var ex = assertThrows(BlankValueException.class, () -> StringSequences.noBlankElements("field", Arrays.asList("a", "")));
+                assertEquals("The 'field' value is invalid. The value must not contain blank elements. Element at index '1' is blank.", ex.getMessage());
+            }
+
+            @Test
+            void validValue_returnsValue() {
+                var list = List.of("hello", "world");
+                assertSame(list, StringSequences.noBlankElements("field", list));
+            }
+        }
+
+        @Nested
+        class Array {
+            @Test
+            void nullName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noBlankElements(null, new String[]{"a"}));
+                assertEquals(NULL_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankName_throwsNullPointerException() {
+                var ex = assertThrows(NullPointerException.class, () -> StringSequences.noBlankElements("   ", new String[]{"a"}));
+                assertEquals(BLANK_NAME_MSG, ex.getMessage());
+            }
+
+            @Test
+            void nullValue_throwsNullValueException() {
+                var ex = assertThrows(NullValueException.class, () -> StringSequences.noBlankElements("field", (String[]) null));
+                assertEquals(NULL_VALUE_MSG, ex.getMessage());
+            }
+
+            @Test
+            void emptyArray_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.noBlankElements("field", array));
+            }
+
+            @Test
+            void nullElement_throwsNullElementException() {
+                var ex = assertThrows(NullElementException.class, () -> StringSequences.noBlankElements("field", new String[]{"a", null}));
+                assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+            }
+
+            @Test
+            void blankElement_throwsBlankValueException() {
+                var ex = assertThrows(BlankValueException.class, () -> StringSequences.noBlankElements("field", new String[]{"a", "   ", "b"}));
+                assertEquals("The 'field' value is invalid. The value must not contain blank elements. Element at index '1' is blank.", ex.getMessage());
+            }
+
+            @Test
+            void validValue_returnsValue() {
+                var array = new String[]{"hello", "world"};
+                assertSame(array, StringSequences.noBlankElements("field", array));
             }
         }
     }
@@ -1356,6 +1556,67 @@ class StringSequencesTest {
     }
 
     @Nested
+    class OptionalNoEmptyElements {
+        @Test
+        void nullValue_returnsNull() {
+            assertNull(StringSequences.optionalNoEmptyElements("field", (java.util.List<String>) null));
+        }
+
+        @Test
+        void nullValue_array_returnsNull() {
+            assertNull(StringSequences.optionalNoEmptyElements("field", (String[]) null));
+        }
+
+        @Test
+        void emptyCollection_returnsValue() {
+            var list = new java.util.ArrayList<String>();
+            assertSame(list, StringSequences.optionalNoEmptyElements("field", list));
+        }
+
+        @Test
+        void emptyArray_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalNoEmptyElements("field", array));
+        }
+
+        @Test
+        void nullElement_throwsNullElementException() {
+            var ex = assertThrows(NullElementException.class, () -> StringSequences.optionalNoEmptyElements("field", Arrays.asList("a", null)));
+            assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+        }
+
+        @Test
+        void nullElement_array_throwsNullElementException() {
+            var ex = assertThrows(NullElementException.class, () -> StringSequences.optionalNoEmptyElements("field", new String[]{"a", null}));
+            assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+        }
+
+        @Test
+        void emptyElement_throwsEmptyValueException() {
+            var ex = assertThrows(EmptyValueException.class, () -> StringSequences.optionalNoEmptyElements("field", Arrays.asList("a", "")));
+            assertEquals("The 'field' value is invalid. The value must not contain empty elements. Element at index '1' is empty.", ex.getMessage());
+        }
+
+        @Test
+        void emptyElement_array_throwsEmptyValueException() {
+            var ex = assertThrows(EmptyValueException.class, () -> StringSequences.optionalNoEmptyElements("field", new String[]{"a", ""}));
+            assertEquals("The 'field' value is invalid. The value must not contain empty elements. Element at index '1' is empty.", ex.getMessage());
+        }
+
+        @Test
+        void validValue_returnsValue() {
+            var list = List.of("hello");
+            assertSame(list, StringSequences.optionalNoEmptyElements("field", list));
+        }
+
+        @Test
+        void validValue_array_returnsValue() {
+            var array = new String[]{"hello"};
+            assertSame(array, StringSequences.optionalNoEmptyElements("field", array));
+        }
+    }
+
+    @Nested
     class OptionalNotBlank {
         @Test
         void nullValue_returnsNull() {
@@ -1413,6 +1674,67 @@ class StringSequencesTest {
         void validValue_array_returnsValue() {
             var array = new String[]{"hello"};
             assertSame(array, StringSequences.optionalNotBlank("field", array));
+        }
+    }
+
+    @Nested
+    class OptionalNoBlankElements {
+        @Test
+        void nullValue_returnsNull() {
+            assertNull(StringSequences.optionalNoBlankElements("field", (java.util.List<String>) null));
+        }
+
+        @Test
+        void nullValue_array_returnsNull() {
+            assertNull(StringSequences.optionalNoBlankElements("field", (String[]) null));
+        }
+
+        @Test
+        void emptyCollection_returnsValue() {
+            var list = new java.util.ArrayList<String>();
+            assertSame(list, StringSequences.optionalNoBlankElements("field", list));
+        }
+
+        @Test
+        void emptyArray_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalNoBlankElements("field", array));
+        }
+
+        @Test
+        void nullElement_throwsNullElementException() {
+            var ex = assertThrows(NullElementException.class, () -> StringSequences.optionalNoBlankElements("field", Arrays.asList("a", null)));
+            assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+        }
+
+        @Test
+        void nullElement_array_throwsNullElementException() {
+            var ex = assertThrows(NullElementException.class, () -> StringSequences.optionalNoBlankElements("field", new String[]{"a", null}));
+            assertEquals(NULL_ELEMENT_MSG, ex.getMessage());
+        }
+
+        @Test
+        void blankElement_throwsBlankValueException() {
+            var ex = assertThrows(BlankValueException.class, () -> StringSequences.optionalNoBlankElements("field", Arrays.asList("a", "   ")));
+            assertEquals("The 'field' value is invalid. The value must not contain blank elements. Element at index '1' is blank.", ex.getMessage());
+        }
+
+        @Test
+        void blankElement_array_throwsBlankValueException() {
+            var ex = assertThrows(BlankValueException.class, () -> StringSequences.optionalNoBlankElements("field", new String[]{"a", "   "}));
+            assertEquals("The 'field' value is invalid. The value must not contain blank elements. Element at index '1' is blank.", ex.getMessage());
+        }
+
+        @Test
+        void validValue_returnsValue() {
+            var list = List.of("hello");
+            assertSame(list, StringSequences.optionalNoBlankElements("field", list));
+        }
+
+        @Test
+        void validValue_array_returnsValue() {
+            var array = new String[]{"hello"};
+            assertSame(array, StringSequences.optionalNoBlankElements("field", array));
         }
     }
 
