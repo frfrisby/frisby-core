@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.3.1](https://github.com/frfrisby/frisby-core/compare/v1.3.0...v1.3.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* Suppress deployment of root aggregator POM to Maven Central. ([#71](https://github.com/frfrisby/frisby-core/issues/71)) ([9d349ea](https://github.com/frfrisby/frisby-core/commit/9d349eaa832e384fc8030ac54177e0ac5a3fe4de))
+
 ## [1.3.0](https://github.com/frfrisby/frisby-core/compare/v1.2.0...v1.3.0) (2026-07-16)
 
 
