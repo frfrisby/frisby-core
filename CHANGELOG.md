@@ -9,6 +9,18 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.3.2](https://github.com/frfrisby/frisby-core/compare/v1.3.1...v1.3.2) (2026-08-28)
+
+
+### Bug Fixes
+
+* **concurrency:** Extract async executor wiring into AsyncStages helper. ([#76](https://github.com/frfrisby/frisby-core/issues/76)) ([478c250](https://github.com/frfrisby/frisby-core/commit/478c250f9c6a1913150aba7bad5963f1a7b04c54))
+
+
+### Documentation
+
+* Document inFlight(), size(), and capacity monitoring in concurrency docs. ([#74](https://github.com/frfrisby/frisby-core/issues/74)) ([0a96f38](https://github.com/frfrisby/frisby-core/commit/0a96f3840f5ec11f395a593468d9b7e68b2dd27a))
+
 ## [1.3.1](https://github.com/frfrisby/frisby-core/compare/v1.3.0...v1.3.1) (2026-07-27)
 
 
