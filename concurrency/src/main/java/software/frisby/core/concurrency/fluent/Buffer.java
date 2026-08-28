@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
  * @see Batch
  * @see PriorityBuffer
  */
-public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage, AsyncObservableBlockBuilder<T, T, Buffer<T>> {
+public final class Buffer<T> implements PipelineStage<T, T>, AsyncObservableBlockBuilder<T, T, Buffer<T>> {
     private Integer capacity;
     private Executor executor;
     private ErrorOccurredHandler<T> errorOccurredHandler;
@@ -134,8 +134,16 @@ public final class Buffer<T> implements PipelineStage<T, T>, ExecutorAwareStage,
         return toBufferBlock();
     }
 
-    @Override
-    public void executor(Executor executor) {
+    /**
+     * Sets the executor that will run this stage's internal worker thread.
+     * <p>
+     * Called by {@link AsyncStages#configureExecutorIfAsync} during pipeline assembly to inject
+     * a shared executor into every async stage in the chain, avoiding the need for callers to
+     * configure an executor on each stage individually.
+     *
+     * @param executor The executor to use.
+     */
+    void executor(Executor executor) {
         this.executor = executor;
     }
 

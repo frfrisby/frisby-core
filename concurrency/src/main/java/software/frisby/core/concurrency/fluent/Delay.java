@@ -27,7 +27,7 @@ import java.util.function.Function;
  * @param <T> The type of items passed through this stage.
  * @see Buffer
  */
-public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, AsyncObservableBlockBuilder<T, T, Delay<T>> {
+public final class Delay<T> implements PipelineStage<T, T>, AsyncObservableBlockBuilder<T, T, Delay<T>> {
     private Duration fixedDelay;
     private Function<T, Duration> delayFunction;
     private Integer capacity;
@@ -166,8 +166,16 @@ public final class Delay<T> implements PipelineStage<T, T>, ExecutorAwareStage, 
         return toDelayBlock();
     }
 
-    @Override
-    public void executor(Executor executor) {
+    /**
+     * Sets the executor that will run this stage's internal worker thread.
+     * <p>
+     * Called by {@link AsyncStages#configureExecutorIfAsync} during pipeline assembly to inject
+     * a shared executor into every async stage in the chain, avoiding the need for callers to
+     * configure an executor on each stage individually.
+     *
+     * @param executor The executor to use.
+     */
+    void executor(Executor executor) {
         this.executor = executor;
     }
 

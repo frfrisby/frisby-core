@@ -30,7 +30,7 @@ import java.util.concurrent.Executor;
  * @see Expand
  * @see Group
  */
-public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareStage, AsyncObservableBlockBuilder<T, List<T>, Batch<T>> {
+public final class Batch<T> implements PipelineStage<T, List<T>>, AsyncObservableBlockBuilder<T, List<T>, Batch<T>> {
     private Integer capacity;
     private Integer batchSize;
     private Duration timeout;
@@ -152,8 +152,16 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, ExecutorAwareS
         return toBatchBlock();
     }
 
-    @Override
-    public void executor(Executor executor) {
+    /**
+     * Sets the executor that will run this stage's internal worker thread.
+     * <p>
+     * Called by {@link AsyncStages#configureExecutorIfAsync} during pipeline assembly to inject
+     * a shared executor into every async stage in the chain, avoiding the need for callers to
+     * configure an executor on each stage individually.
+     *
+     * @param executor The executor to use.
+     */
+    void executor(Executor executor) {
         this.executor = executor;
     }
 

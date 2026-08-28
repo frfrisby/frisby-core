@@ -140,9 +140,7 @@ public final class OpenChain<H, I, O> {
         OpenChain<H, ?, ?> last;
 
         do {
-            if (current.target instanceof ExecutorAwareStage asyncStage) {
-                asyncStage.executor(this.start.executor);
-            }
+            AsyncStages.configureExecutorIfAsync(current.target, this.start.executor);
 
             current.target.toTarget();
 
