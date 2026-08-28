@@ -100,7 +100,7 @@ Buffer.ofLists(Message.class)   // → Buffer<List<Message>>
 
 | Fluent builder                    | Stage type                | Key configuration method(s)                                                                                                                                    |
 |-----------------------------------|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Buffer.of(T.class)`              | Async pass-through        | `.capacity(int)` (default 1024)                                                                                                                                |
+| `Buffer.of(T.class)`              | Async pass-through        | `.capacity(int)` (default 1024).  `post()` blocks the caller once the queue is full — there is no built-in reject-on-full variant.  See [Capacity Monitoring and Backpressure](#capacity-monitoring-and-backpressure) for the `inFlight()` pattern. |
 | `PriorityBuffer.of(T.class)`      | Async pass-through        | `.capacity(int)`, `.comparator(Comparator<T>)`                                                                                                                 |
 | `Batch.of(T.class)`               | Async `T → List<T>`       | `.batchSize(int)` (default 128), `.timeout(Duration)` (default 5 s)                                                                                            |
 | `Group.of(T.class, K.class)`      | Async `T → List<T>`       | `.groupingFunction(Function<T,K>)` (required), `.maxGroupSize(int)` (default 128), `.timeout(Duration)` (default 10 s), `.idleTimeout(Duration)` (default 5 s) |
@@ -119,6 +119,12 @@ Buffer.ofLists(Message.class)   // → Buffer<List<Message>>
 - `.balanced()` — routes to the arm with the fewest in-flight items.
 - `.sticky(Function<T,?>)` — consistent hashing; all items with the same extracted key go to the same arm.
 - `.routingFunction(RoutingFunction<T>)` — custom zero-based arm index.
+
+> **`inFlight()` and fan-out** — calling `inFlight()` on a pipeline whose tail is a `Router`
+> or `OpenRouter` returns the sum across **all** arms.  A single `pipeline.inFlight()` call
+> therefore gives the correct total system load for fan-out pipelines without any per-arm
+> bookkeeping.  This also means the `.balanced()` strategy and the capacity monitoring pattern
+> both work correctly regardless of how many arms are configured.
 
 ### Observer callbacks
 
@@ -281,6 +287,43 @@ Pipeline<Message> pipeline = Pipeline.<Message>builder()
 **When to use `Router` vs `OpenRouter`:**
 - `Router` — each arm terminates independently; no fan-in needed.
 - `OpenRouter` — arms produce output that must flow to a common downstream stage.
+
+---
+
+## Capacity Monitoring and Backpressure
+
+Every `Pipeline` and `Target` exposes two non-blocking inspection methods:
+
+| Method       | What it returns                                                                                                                                                |
+|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `size()`     | Items queued **at this stage only** — does not include downstream stages.                                                                                      |
+| `inFlight()` | Items queued or being processed **anywhere in the pipeline** — recursively aggregates all downstream stages, including all arms of a `Router` or `OpenRouter`. |
+
+`inFlight()` is the recommended method for inspecting overall pipeline load from outside.
+Because it aggregates across the entire chain, it reflects total system backpressure rather
+than a single queue depth.
+
+### The pre-post pattern
+
+`Buffer`'s `post()` blocks the calling thread when the queue is full.  If you need
+drop, reroute, or disconnect-style overflow handling instead, check `inFlight()` before
+calling `post()`:
+
+```java
+if (pipeline.inFlight() < capacityThreshold) {
+    pipeline.post(item);
+} else {
+    // handle overflow: drop, reroute, record a metric, disconnect the producer, etc.
+}
+```
+
+This gives the posting thread full control over what happens when the pipeline is
+saturated.  The threshold is application-defined — a reasonable starting point is the
+sum of the `capacity` values configured across all async stages in the chain.
+
+> **Note:** `itemPostedHandler` and `itemDeliveredHandler` are per-event observability
+> callbacks, not backpressure tools.  Use `inFlight()` for capacity decisions and the
+> handlers for metrics, logging, and auditing.
 
 ---
 
