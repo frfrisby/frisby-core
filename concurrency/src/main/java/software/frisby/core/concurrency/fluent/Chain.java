@@ -174,9 +174,7 @@ public final class Chain<H, O> {
         Chain<H, ?> current = this.start;
 
         do {
-            if (current.target instanceof ExecutorAwareStage asyncStage) {
-                asyncStage.executor(this.start.executor);
-            }
+            AsyncStages.configureExecutorIfAsync(current.target, this.start.executor);
 
             current.target.toTarget();
 

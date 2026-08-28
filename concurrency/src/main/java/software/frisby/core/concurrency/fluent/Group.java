@@ -32,7 +32,7 @@ import java.util.function.Function;
  * @param <K> The type of the grouping key extracted from each item.
  * @see Batch
  */
-public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwareStage, AsyncObservableBlockBuilder<T, List<T>, Group<T, K>> {
+public final class Group<T, K> implements PipelineStage<T, List<T>>, AsyncObservableBlockBuilder<T, List<T>, Group<T, K>> {
     private Function<T, K> groupingFunction;
     private Duration timeout;
     private Duration idleTimeout;
@@ -223,8 +223,16 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, ExecutorAwa
         return toGroupBlock();
     }
 
-    @Override
-    public void executor(Executor executor) {
+    /**
+     * Sets the executor that will run this stage's internal worker thread.
+     * <p>
+     * Called by {@link AsyncStages#configureExecutorIfAsync} during pipeline assembly to inject
+     * a shared executor into every async stage in the chain, avoiding the need for callers to
+     * configure an executor on each stage individually.
+     *
+     * @param executor The executor to use.
+     */
+    void executor(Executor executor) {
         this.executor = executor;
     }
 
