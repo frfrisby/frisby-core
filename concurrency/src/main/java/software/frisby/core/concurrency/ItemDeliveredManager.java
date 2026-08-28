@@ -23,8 +23,12 @@ final class ItemDeliveredManager<T> {
 
             try {
                 this.handler.onDelivered(this.source, target, output);
-            } catch (Exception ex) {
-                this.eventSource.createOnDeliveredNotificationErrorEvent(ex);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately; everything else — including
+                // non-fatal Errors, not just ordinary Exceptions — is logged rather than
+                // allowed to break delivery over a purely observational callback.
+                Errors.throwIfFatal(t);
+                this.eventSource.createOnDeliveredNotificationErrorEvent(t);
             }
         }
     }

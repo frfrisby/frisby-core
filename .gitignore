@@ -13,5 +13,8 @@ target/
 # Misc
 .flattened-pom.xml
 
+# local temporary files
+temp/
+
 # Safety net — never commit the exported GPG private key
 gpg-private.asc

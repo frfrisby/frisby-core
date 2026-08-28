@@ -135,13 +135,16 @@ final class TargetManager<T> {
         }
 
         void post(T item) {
-
             if (this.errorManager.hasHandler()) {
                 try {
                     this.target.post(item);
                     this.deliveredManager.sendOnDeliveredNotification(this.target, item);
-                } catch (Exception ex) {
-                    this.errorManager.sendOnErrorNotification(this.target, item, ex);
+                } catch (Throwable t) {
+                    // Fatal JVM conditions propagate immediately; everything else is logged
+                    // and, since a handler is configured, forwarded to it — consistent with
+                    // the non-fatal/fatal split applied to worker delivery loops.
+                    Errors.throwIfFatal(t);
+                    this.errorManager.sendOnErrorNotification(this.target, item, t);
                 }
             } else {
                 this.target.post(item);

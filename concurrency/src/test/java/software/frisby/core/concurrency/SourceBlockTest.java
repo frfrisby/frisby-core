@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import software.frisby.core.concurrency.log.LogExpectation;
 import software.frisby.core.concurrency.log.SystemLogVerifier;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.NullValueException;
 
 import java.time.Duration;
@@ -881,6 +882,124 @@ class SourceBlockTest {
                 } finally {
                     executor.shutdown();
                 }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Worker resilience — Report 2: uncaught exceptions must not silently and
+    // permanently kill the worker thread.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class WorkerResilience {
+        @Test
+        void runtimeExceptionFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            AtomicInteger callCount = new AtomicInteger(0);
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try {
+                SourceBlock<String> block = SourceBlock.<String>builder()
+                        .supplier(() -> "item")
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (0 == callCount.getAndIncrement()) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                        .expect(LogExpectation.builder()
+                                .logger(EventSource.class)
+                                .level(System.Logger.Level.ERROR)
+                                .predicate(e -> e.message().contains("SourceBlock")
+                                        && null != e.thrown()
+                                        && "boom".equals(e.thrown().getMessage()))
+                                .build()
+                        )
+                        .build()) {
+                    verifier.assertExpectations(Duration.ofSeconds(5));
+                }
+
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the first item's exception and kept polling");
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void nonFatalErrorFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            AtomicInteger callCount = new AtomicInteger(0);
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try {
+                SourceBlock<String> block = SourceBlock.<String>builder()
+                        .supplier(() -> "item")
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (0 == callCount.getAndIncrement()) {
+                        throw new AssertionError("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                        .expect(LogExpectation.builder()
+                                .logger(EventSource.class)
+                                .level(System.Logger.Level.ERROR)
+                                .predicate(e -> null != e.thrown()
+                                        && e.thrown() instanceof AssertionError
+                                        && "boom".equals(e.thrown().getMessage()))
+                                .build()
+                        )
+                        .build()) {
+                    verifier.assertExpectations(Duration.ofSeconds(5));
+                }
+
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the non-fatal Error and kept polling");
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
+            NamedExecutorService executor = newExecutor();
+            StackOverflowError fatal = new StackOverflowError("fatal boom");
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultSourceBlock<String> block = (DefaultSourceBlock<String>) SourceBlock.<String>builder()
+                        .supplier(() -> "item")
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    throw fatal;
+                });
+
+                assertTrue(capture.await(5), "the fatal error should have escaped as a genuinely uncaught exception");
+                assertSame(fatal, capture.thrown());
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning());
+            } finally {
+                executor.shutdown();
             }
         }
     }

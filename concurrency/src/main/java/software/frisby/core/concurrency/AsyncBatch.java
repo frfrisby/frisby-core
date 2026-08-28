@@ -27,13 +27,15 @@ final class AsyncBatch<T> {
                Consumer<List<T>> consumer,
                int batchSize,
                Duration timeout,
-               Executor executor) {
+               Executor executor,
+               EventSource eventSource) {
         Sequences.notNull("queue", queue);
         Numbers.positive("capacity", capacity);
         Values.notNull("consumer", consumer);
         Numbers.positive("batchSize", batchSize);
         Durations.positive("timeout", timeout);
         Values.notNull("executor", executor);
+        Values.notNull("eventSource", eventSource);
 
         this.lifecycle = new WorkerLifecycle();
         this.capacityGate = new CapacityGate(capacity);
@@ -41,7 +43,7 @@ final class AsyncBatch<T> {
         this.batchSize = batchSize;
         this.timeout = timeout;
 
-        executor.execute(new Worker<>(consumer, this.completableQueue, batchSize, timeout.toMillis(), this.capacityGate, this.lifecycle));
+        executor.execute(new Worker<>(consumer, this.completableQueue, batchSize, timeout.toMillis(), this.capacityGate, this.lifecycle, eventSource));
     }
 
     boolean post(T item) {
@@ -133,19 +135,22 @@ final class AsyncBatch<T> {
         private final long timeoutMs;
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
+        private final EventSource eventSource;
 
         private Worker(Consumer<List<T>> consumer,
                        CompletableQueue<T> completableQueue,
                        int batchSize,
                        long timeoutMs,
                        CapacityGate capacityGate,
-                       WorkerLifecycle lifecycle) {
+                       WorkerLifecycle lifecycle,
+                       EventSource eventSource) {
             this.consumer = consumer;
             this.completableQueue = completableQueue;
             this.batchSize = batchSize;
             this.timeoutMs = timeoutMs;
             this.capacityGate = capacityGate;
             this.lifecycle = lifecycle;
+            this.eventSource = eventSource;
         }
 
         @Override
@@ -153,76 +158,98 @@ final class AsyncBatch<T> {
         public void run() {
             this.lifecycle.start();
 
-            ArrayList<T> list = new ArrayList<>(this.batchSize);
-            boolean beginPolling = false;
+            try {
+                ArrayList<T> list = new ArrayList<>(this.batchSize);
+                boolean beginPolling = false;
 
-            while (true) {
-                T item;
+                while (true) {
+                    T item;
 
-                if (beginPolling) {
-                    // Poll mode: wait up to the batch timeout for the next item.  A null
-                    // return means either the timeout elapsed or the queue is completed + empty.
-                    item = this.completableQueue.dequeue(this.timeoutMs, TimeUnit.MILLISECONDS);
+                    if (beginPolling) {
+                        // Poll mode: wait up to the batch timeout for the next item.  A null
+                        // return means either the timeout elapsed or the queue is completed + empty.
+                        item = this.completableQueue.dequeue(this.timeoutMs, TimeUnit.MILLISECONDS);
 
-                    if (null == item) {
-                        if (this.completableQueue.isCompleted()) {
-                            // Queue is fully drained.  Flush any partial batch and exit.
-                            if (!list.isEmpty()) {
-                                this.consumer.accept(list);
-                                this.capacityGate.release(list.size());
+                        if (null == item) {
+                            if (this.completableQueue.isCompleted()) {
+                                // Queue is fully drained.  Flush any partial batch and exit.
+                                if (!list.isEmpty()) {
+                                    deliverBatch(list);
+                                }
+
+                                break;
                             }
 
+                            // Batch timeout elapsed before the batch filled.  Flush any partial
+                            // batch accumulated so far, then revert to take mode so the worker
+                            // blocks cheaply until the next item arrives.
+                            beginPolling = false;
+
+                            if (!list.isEmpty()) {
+                                List<T> batch = list;
+                                list = new ArrayList<>(this.batchSize);
+
+                                deliverBatch(batch);
+                            }
+
+                            continue;
+                        }
+                    } else {
+                        // Take mode: block indefinitely until the first item of the next batch
+                        // arrives, or until the queue is completed + empty (returns null).
+                        item = this.completableQueue.dequeue();
+
+                        if (null == item) {
+                            // Queue is drained.  list is always empty in take mode, so there
+                            // is nothing to flush.
                             break;
                         }
 
-                        // Batch timeout elapsed before the batch filled.  Flush any partial
-                        // batch accumulated so far, then revert to take mode so the worker
-                        // blocks cheaply until the next item arrives.
-                        beginPolling = false;
-
-                        if (!list.isEmpty()) {
-                            List<T> batch = list;
-                            list = new ArrayList<>(this.batchSize);
-
-                            this.consumer.accept(batch);
-                            this.capacityGate.release(batch.size());
-                        }
-
-                        continue;
-                    }
-                } else {
-                    // Take mode: block indefinitely until the first item of the next batch
-                    // arrives, or until the queue is completed + empty (returns null).
-                    item = this.completableQueue.dequeue();
-
-                    if (null == item) {
-                        // Queue is drained.  list is always empty in take mode, so there
-                        // is nothing to flush.
-                        break;
+                        // First item of a new batch: switch to poll mode for subsequent items.
+                        beginPolling = true;
                     }
 
-                    // First item of a new batch: switch to poll mode for subsequent items.
-                    beginPolling = true;
+                    list.add(item);
+
+                    if (list.size() >= this.batchSize) {
+                        List<T> batch = list;
+                        list = new ArrayList<>(this.batchSize);
+
+                        deliverBatch(batch);
+
+                        // beginPolling remains true: continue filling the next batch in poll mode.
+                    }
                 }
 
-                list.add(item);
-
-                if (list.size() >= this.batchSize) {
-                    List<T> batch = list;
-                    list = new ArrayList<>(this.batchSize);
-
-                    this.consumer.accept(batch);
-
-                    // Release capacity permits now that the batch has been fully delivered.
-                    // Items hold their permits from when they were posted until their batch
-                    // is consumed.
-                    this.capacityGate.release(batch.size());
-
-                    // beginPolling remains true: continue filling the next batch in poll mode.
-                }
+                // Normal exit only — a fatal error thrown from deliverBatch() propagates past
+                // this point, skipping finish() so completion() never resolves on fatal death.
+                this.lifecycle.finish();
+            } finally {
+                // Safety net reached on every exit path, including a fatal error.  Guarantees
+                // isRunning() is never left reporting true forever, without touching the
+                // completion future — see WorkerLifecycle.stopRunning()'s Javadoc.  A harmless
+                // no-op re-affirmation on the normal exit path, where finish() above already
+                // set isRunning to false.
+                this.lifecycle.stopRunning();
             }
+        }
 
-            this.lifecycle.finish();
+        // Delivers a full batch to the downstream target and releases its capacity permits,
+        // regardless of whether delivery succeeded.  Fatal JVM conditions propagate immediately;
+        // everything else is logged and the worker continues with the next batch rather than
+        // dying silently.
+        private void deliverBatch(List<T> batch) {
+            try {
+                this.consumer.accept(batch);
+            } catch (Throwable t) {
+                Errors.throwIfFatal(t);
+                this.eventSource.createErrorEvent(t);
+            } finally {
+                // Release capacity permits now that the batch has been fully delivered.
+                // Items hold their permits from when they were posted until their batch
+                // is consumed.
+                this.capacityGate.release(batch.size());
+            }
         }
     }
 }

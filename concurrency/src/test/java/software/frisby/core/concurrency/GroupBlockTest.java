@@ -2,7 +2,10 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.log.LogExpectation;
+import software.frisby.core.concurrency.log.SystemLogVerifier;
 import software.frisby.core.concurrency.mocks.MockInterruptedQueue;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.NumericValueOutsideRangeException;
@@ -1640,6 +1643,173 @@ class GroupBlockTest {
                 assertEquals(block.size() + 5, block.inFlight());
             } finally {
                 targetRelease.countDown();
+                executor.shutdown();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Worker resilience — Report 2: uncaught exceptions must not silently and
+    // permanently kill the worker thread.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class WorkerResilience {
+        @Test
+        void runtimeExceptionFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                        .expect(LogExpectation.builder()
+                                .logger(EventSource.class)
+                                .level(System.Logger.Level.ERROR)
+                                .predicate(e -> e.message().contains("GroupBlock")
+                                        && null != e.thrown()
+                                        && "boom".equals(e.thrown().getMessage()))
+                                .build()
+                        )
+                        .build()) {
+                    block.post(1);
+                    block.post(2);
+
+                    verifier.assertExpectations(Duration.ofSeconds(5));
+                }
+
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the first group's exception and delivered the second group");
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void nonFatalErrorFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new AssertionError("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                        .expect(LogExpectation.builder()
+                                .logger(EventSource.class)
+                                .level(System.Logger.Level.ERROR)
+                                .predicate(e -> null != e.thrown()
+                                        && e.thrown() instanceof AssertionError
+                                        && "boom".equals(e.thrown().getMessage()))
+                                .build()
+                        )
+                        .build()) {
+                    block.post(1);
+                    block.post(2);
+
+                    verifier.assertExpectations(Duration.ofSeconds(5));
+                }
+
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the non-fatal Error and delivered the second group");
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            StackOverflowError fatal = new StackOverflowError("fatal boom");
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultGroupBlock<Integer, Integer> block =
+                        (DefaultGroupBlock<Integer, Integer>) GroupBlock.<Integer, Integer>builder()
+                                .groupingFunction(item -> item)
+                                .maxGroupSize(1)
+                                .capacity(10)
+                                .executor(executor)
+                                .build();
+
+                block.linkTo(batch -> {
+                    throw fatal;
+                });
+
+                block.post(1);
+
+                assertTrue(capture.await(5), "the fatal error should have escaped as a genuinely uncaught exception");
+                assertSame(fatal, capture.thrown());
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning());
+
+                // completion()/awaitCompletion() never resolves on a fatal death — finish() is
+                // deliberately skipped so this documented trade-off remains observable.
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void runtimeExceptionFromTarget_capacityPermitsAreReleasedForNextGroup() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(1)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(block.post(2, Duration.ofSeconds(5)),
+                        "the capacity permit held by the failed first group should have been released");
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS));
+            } finally {
                 executor.shutdown();
             }
         }

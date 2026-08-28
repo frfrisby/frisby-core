@@ -43,7 +43,7 @@ final class DefaultBatchBlock<T> implements BatchBlock<T> {
         this.targetManager = new TargetManager<>(this, eventSource, itemDeliveredHandler, errorOccurredHandler);
         this.postedManager = new ItemPostedManager<>(this, eventSource, itemPostedHandler);
 
-        this.batch = new AsyncBatch<>(new ArrayBlockingQueue<>(capacity), capacity, this.targetManager::postToTarget, batchSize, timeout, executor);
+        this.batch = new AsyncBatch<>(new ArrayBlockingQueue<>(capacity), capacity, this.targetManager::postToTarget, batchSize, timeout, executor, eventSource);
 
         this.capacity = capacity;
 

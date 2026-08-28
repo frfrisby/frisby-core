@@ -24,8 +24,12 @@ final class ItemPostedManager<T> {
 
             try {
                 this.handler.onPosted(this.source, input, accepted);
-            } catch (Exception ex) {
-                this.eventSource.createOnPostedNotificationErrorEvent(ex);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately; everything else — including
+                // non-fatal Errors, not just ordinary Exceptions — is logged rather than
+                // allowed to break delivery over a purely observational callback.
+                Errors.throwIfFatal(t);
+                this.eventSource.createOnPostedNotificationErrorEvent(t);
             }
         }
     }

@@ -129,6 +129,13 @@ public interface Target<T> {
      * <p>{@link #complete()} must be called before invoking this method; otherwise the calling
      * thread will block indefinitely.  If the calling thread is interrupted while waiting, the
      * interrupt status is restored and this method returns immediately.</p>
+     *
+     * <p><strong>Fatal errors:</strong> if a worker thread is killed by a fatal JVM condition
+     * ({@link Error} subtypes such as {@code VirtualMachineError} or {@code LinkageError} are
+     * deliberately allowed to propagate rather than being caught and logged), that stage's
+     * completion never resolves, and this method blocks forever.  Prefer
+     * {@link #awaitCompletion(Duration)} for any shutdown path that must not hang
+     * indefinitely.</p>
      */
     default void awaitCompletion() {
         try {

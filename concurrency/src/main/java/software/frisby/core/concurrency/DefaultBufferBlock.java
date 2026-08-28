@@ -36,7 +36,7 @@ final class DefaultBufferBlock<T> implements BufferBlock<T> {
         this.targetManager = new TargetManager<>(this, eventSource, itemDeliveredHandler, errorOccurredHandler);
         this.postedManager = new ItemPostedManager<>(this, eventSource, itemPostedHandler);
 
-        this.buffer = new AsyncBuffer<>(new ArrayBlockingQueue<>(capacity), capacity, this.targetManager::postToTarget, executor);
+        this.buffer = new AsyncBuffer<>(new ArrayBlockingQueue<>(capacity), capacity, this.targetManager::postToTarget, executor, eventSource);
 
         this.capacity = capacity;
 

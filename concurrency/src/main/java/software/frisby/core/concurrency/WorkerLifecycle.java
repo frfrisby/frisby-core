@@ -52,6 +52,18 @@ import java.util.concurrent.CompletableFuture;
  *       {@code run()}.</li>
  *   <li>{@link #finish()} is idempotent: calling it more than once is safe.</li>
  * </ul>
+ *
+ * <h2>Fatal errors</h2>
+ * <p>
+ * Every worker's delivery loop catches non-fatal exceptions ({@link RuntimeException}s and
+ * non-fatal {@link Error}s such as {@link AssertionError}) so that an application bug in a
+ * downstream callback never kills the worker thread — see {@code Errors.throwIfFatal}. A
+ * genuinely fatal condition ({@link VirtualMachineError}, {@link LinkageError}) is deliberately
+ * allowed to propagate and terminate the worker thread without ever calling {@link #finish()}.
+ * In that case {@link #completion()} never resolves, and any caller blocked in
+ * {@code awaitCompletion()} hangs indefinitely.  Callers whose shutdown path must not hang
+ * indefinitely should use {@code awaitCompletion(Duration)} rather than the no-argument
+ * overload.
  */
 final class WorkerLifecycle {
     private final CompletableFuture<Void> completionFuture;
@@ -84,6 +96,30 @@ final class WorkerLifecycle {
     void finish() {
         this.isRunning = false;
         this.completionFuture.complete(null);
+    }
+
+    /**
+     * Sets {@code isRunning} to {@code false} without completing the future.
+     *
+     * <p>Call this from a {@code finally} block wrapped around the worker's entire
+     * {@code run()} body so that {@code isRunning()} always reflects reality — even when
+     * the worker thread exits via a fatal error ({@link VirtualMachineError},
+     * {@link LinkageError}) that is deliberately allowed to propagate uncaught rather than
+     * being routed through {@link #finish()}.  Without this, a fatally-killed worker would
+     * report {@code isRunning() == true} forever, in addition to {@link #completion()}
+     * never resolving.</p>
+     *
+     * <p>On the normal exit path, where {@link #finish()} has already run, this is a
+     * harmless no-op re-affirmation of a flag that is already {@code false}. This method
+     * never touches the completion future, so it never masks or changes the documented
+     * "never resolves on fatal death" behavior described in the class-level Javadoc — it
+     * only fixes the {@code isRunning()} observability gap.</p>
+     *
+     * <p>This method is idempotent: calling it more than once, or after {@link #finish()}
+     * has already run, is safe.
+     */
+    void stopRunning() {
+        this.isRunning = false;
     }
 
     /**

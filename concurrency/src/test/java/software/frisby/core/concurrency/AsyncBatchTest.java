@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AsyncBatchTest {
     private static final String PREFIX = "TestAsyncBatch";
+    private static final EventSource TEST_EVENT_SOURCE = new EventSource("TestAsyncBatch");
 
     private static NamedExecutorService newExecutor() {
         return NamedExecutorService.builder()
@@ -45,7 +46,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     batch.complete().get(5, TimeUnit.SECONDS);
@@ -73,7 +75,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     boolean result = batch.post("hello");
@@ -103,7 +106,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     Thread.currentThread().interrupt();
@@ -133,7 +137,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     batch.complete().get(5, TimeUnit.SECONDS);
@@ -160,7 +165,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     boolean result = batch.post("hello", Duration.ofSeconds(5));
@@ -190,7 +196,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     Thread.currentThread().interrupt();
@@ -225,7 +232,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 CompletableFuture<Void> first = batch.complete();
@@ -258,7 +266,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 assertNotNull(batch.completion());
@@ -279,7 +288,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 batch.complete();
@@ -321,7 +331,8 @@ class AsyncBatchTest {
                         },
                         1,                       // batchSize = 1: every item is its own flush
                         Duration.ofMillis(50),   // short poll timeout
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 // Post the first item — batchSize(1) triggers an immediate size-flush.
@@ -382,7 +393,8 @@ class AsyncBatchTest {
                         },
                         5,  // batchSize > items posted — no size-triggered flush
                         Duration.ofSeconds(5),
-                        delayedStart
+                        delayedStart,
+                        TEST_EVENT_SOURCE
                 );
 
                 batch.post("a");

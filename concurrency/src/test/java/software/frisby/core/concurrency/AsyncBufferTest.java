@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AsyncBufferTest {
     private static final String PREFIX = "TestAsyncBuffer";
+    private static final EventSource TEST_EVENT_SOURCE = new EventSource("TestAsyncBuffer");
 
     private static NamedExecutorService newExecutor() {
         return NamedExecutorService.builder()
@@ -41,7 +42,8 @@ class AsyncBufferTest {
                             10,
                             item -> {
                             },
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     buffer.complete().get(5, TimeUnit.SECONDS);
@@ -63,7 +65,7 @@ class AsyncBufferTest {
 
                 try {
                     AsyncBuffer<String> buffer = new AsyncBuffer<>(queue, 1024, item -> {
-                    }, executor);
+                    }, executor, TEST_EVENT_SOURCE);
 
                     boolean result = buffer.post("hello");
 
@@ -91,7 +93,8 @@ class AsyncBufferTest {
                             10,
                             item -> {
                             },
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     assertFalse(buffer.post(null, Duration.ofSeconds(5)));
@@ -110,7 +113,8 @@ class AsyncBufferTest {
                             10,
                             item -> {
                             },
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     buffer.complete().get(5, TimeUnit.SECONDS);
@@ -132,7 +136,7 @@ class AsyncBufferTest {
 
                 try {
                     AsyncBuffer<String> buffer = new AsyncBuffer<>(queue, 1024, item -> {
-                    }, executor);
+                    }, executor, TEST_EVENT_SOURCE);
 
                     boolean result = buffer.post("hello", Duration.ofSeconds(5));
 
@@ -159,7 +163,8 @@ class AsyncBufferTest {
                             10,
                             item -> {
                             },
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     Thread.currentThread().interrupt();
@@ -192,7 +197,8 @@ class AsyncBufferTest {
                         10,
                         item -> {
                         },
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 CompletableFuture<Void> first = buffer.complete();
@@ -223,7 +229,8 @@ class AsyncBufferTest {
                         10,
                         item -> {
                         },
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 assertNotNull(buffer.completion());
@@ -242,7 +249,8 @@ class AsyncBufferTest {
                         10,
                         item -> {
                         },
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 buffer.complete();
@@ -275,7 +283,8 @@ class AsyncBufferTest {
                         10,
                         item -> {
                         },
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
@@ -322,7 +331,8 @@ class AsyncBufferTest {
                         10,
                         item -> {
                         },
-                        deferredExecutor
+                        deferredExecutor,
+                        TEST_EVENT_SOURCE
                 );
 
                 // complete() marks the queue as completed before the worker starts.
