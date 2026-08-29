@@ -134,6 +134,7 @@ final class TargetManager<T> {
             this.target = target;
         }
 
+        @SuppressWarnings("java:S1181")
         void post(T item) {
             if (this.errorManager.hasHandler()) {
                 try {

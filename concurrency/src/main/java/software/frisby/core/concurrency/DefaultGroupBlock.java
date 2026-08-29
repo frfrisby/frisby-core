@@ -482,6 +482,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
             }
         }
 
+        @SuppressWarnings("java:S1181")
         private void publishGroup(K key, Group<T, K> group) {
             List<T> batch = group.toList();
 
@@ -501,6 +502,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
             }
         }
 
+        @SuppressWarnings("java:S1181")
         private Retention notifyObserver(Group<T, K> group) {
             try {
                 if (null != this.observer) {

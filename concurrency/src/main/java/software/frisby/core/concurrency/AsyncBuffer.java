@@ -125,6 +125,7 @@ final class AsyncBuffer<T> {
         }
 
         @Override
+        @SuppressWarnings("java:S1181")
         public void run() {
             this.lifecycle.start();
 

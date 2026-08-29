@@ -19,6 +19,7 @@ final class ItemPostedManager<T> {
         this.handler = handler;
     }
 
+    @SuppressWarnings("java:S1181")
     void sendOnPostedNotification(T input, boolean accepted) {
         if (null != this.handler) {
 
