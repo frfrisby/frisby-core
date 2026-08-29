@@ -170,6 +170,72 @@ class SyncCompletionGuardTest {
             guard.complete();
             assertTrue(guard.isCompleted(), "The guard should be completed after complete() transitions it.");
         }
+
+        @Test
+        void inFlight_noItemsInFlight_returnsZero() {
+            SyncCompletionGuard guard = new SyncCompletionGuard(() -> {
+            });
+
+            assertEquals(0, guard.inFlight());
+        }
+
+        @Test
+        void inFlight_afterBegin_returnsOne() {
+            SyncCompletionGuard guard = new SyncCompletionGuard(() -> {
+            });
+
+            guard.begin();
+
+            assertEquals(1, guard.inFlight());
+        }
+
+        @Test
+        void inFlight_afterMultipleBegins_returnsCount() {
+            SyncCompletionGuard guard = new SyncCompletionGuard(() -> {
+            });
+
+            guard.begin();
+            guard.begin();
+            guard.begin();
+
+            assertEquals(3, guard.inFlight());
+        }
+
+        @Test
+        void inFlight_afterEnd_decrementsBack() {
+            SyncCompletionGuard guard = new SyncCompletionGuard(() -> {
+            });
+
+            guard.begin();
+            guard.begin();
+            guard.end();
+
+            assertEquals(1, guard.inFlight());
+
+            guard.end();
+
+            assertEquals(0, guard.inFlight());
+        }
+
+        @Test
+        void inFlight_endCalledFromFinallyAfterException_stillDecrements() {
+            // Mirrors the begin()/try{...}/finally{end()} pattern every synchronous block uses,
+            // confirming inFlight() is accurate even when the guarded work throws.
+            SyncCompletionGuard guard = new SyncCompletionGuard(() -> {
+            });
+
+            guard.begin();
+
+            try {
+                throw new RuntimeException("boom");
+            } catch (RuntimeException expected) {
+                // ignored — simulating the block's own catch/finally around begin()/end()
+            } finally {
+                guard.end();
+            }
+
+            assertEquals(0, guard.inFlight());
+        }
     }
 
     @Nested

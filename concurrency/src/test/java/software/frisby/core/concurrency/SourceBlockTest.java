@@ -899,7 +899,16 @@ class SourceBlockTest {
             AtomicInteger callCount = new AtomicInteger(0);
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("SourceBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 SourceBlock<String> block = SourceBlock.<String>builder()
                         .supplier(() -> "item")
                         .executor(executor)
@@ -914,21 +923,10 @@ class SourceBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> e.message().contains("SourceBlock")
-                                        && null != e.thrown()
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
-
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first item's exception and kept polling");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }
@@ -940,7 +938,16 @@ class SourceBlockTest {
             AtomicInteger callCount = new AtomicInteger(0);
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 SourceBlock<String> block = SourceBlock.<String>builder()
                         .supplier(() -> "item")
                         .executor(executor)
@@ -955,21 +962,10 @@ class SourceBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> null != e.thrown()
-                                        && e.thrown() instanceof AssertionError
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
-
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the non-fatal Error and kept polling");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }

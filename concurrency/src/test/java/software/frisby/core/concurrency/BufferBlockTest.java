@@ -1020,6 +1020,47 @@ class BufferBlockTest {
                 executor.shutdown();
             }
         }
+
+        @Test
+        void inFlight_downstreamActionBlockCurrentlyRunning_reportsOne() throws Exception {
+            // Report 1 end-to-end repro: a Buffer whose worker has dequeued an item and handed
+            // it to a downstream ActionBlock that is still executing must report inFlight() == 1
+            // for the duration of that call, not 0 — even though the item has already left the
+            // Buffer's own queue (size() == 0 at that point).
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch actionStarted = new CountDownLatch(1);
+            CountDownLatch releaseAction = new CountDownLatch(1);
+
+            try {
+                BufferBlock<String> block = BufferBlock.<String>builder()
+                        .capacity(1)
+                        .executor(executor)
+                        .build();
+
+                ActionBlock<String> sink = ActionBlock.<String>builder()
+                        .action(item -> {
+                            actionStarted.countDown();
+
+                            try {
+                                releaseAction.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        })
+                        .build();
+
+                block.linkTo(sink);
+                block.post("hello");
+
+                assertTrue(actionStarted.await(5, TimeUnit.SECONDS));
+
+                assertEquals(0, block.size(), "the item has already been dequeued from the Buffer's own queue");
+                assertEquals(1, block.inFlight(), "the downstream ActionBlock is still processing the item");
+            } finally {
+                releaseAction.countDown();
+                executor.shutdown();
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -1034,7 +1075,16 @@ class BufferBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("BufferBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
                         .capacity(10)
                         .executor(executor)
@@ -1049,25 +1099,14 @@ class BufferBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> e.message().contains("BufferBlock")
-                                        && null != e.thrown()
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first item's exception and delivered the second item");
                 assertTrue(block.isRunning());
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }
@@ -1078,7 +1117,16 @@ class BufferBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
                         .capacity(10)
                         .executor(executor)
@@ -1093,25 +1141,14 @@ class BufferBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> null != e.thrown()
-                                        && e.thrown() instanceof AssertionError
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the non-fatal Error and delivered the second item");
                 assertTrue(block.isRunning());
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }

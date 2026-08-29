@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
@@ -30,6 +31,16 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
     private final Duration idleTimeout;
     private final CapacityGate capacityGate;
     private final WorkerLifecycle lifecycle;
+
+    // Tracks items currently mid-delivery to the downstream target — i.e. inside
+    // publishGroup()'s postToTarget() call, after capacityGate.acquire() but before
+    // capacityGate.release().  Decoupled from capacityGate itself, which must keep its current
+    // acquire/release timing unchanged to correctly bound concurrent processing.  Subtracting
+    // this from size() aligns Group's size()/inFlight() semantics with Buffer/Delay: size()
+    // reports only items waiting to be grouped, not items currently being handed to the
+    // downstream target, so a correctly self-reporting downstream's own inFlight() is the sole
+    // source of truth for that window instead of being double-counted alongside size().
+    private final AtomicInteger deliveringCount;
 
     // Production constructor — called by DefaultGroupBlockBuilder.  Delegates to the
     // queue-accepting constructor via createQueue(), which validates capacity and constructs
@@ -91,6 +102,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         this.capacityGate = new CapacityGate(capacity);
         this.completableQueue = new CompletableQueue<>(queue);
         this.lifecycle = new WorkerLifecycle();
+        this.deliveringCount = new AtomicInteger(0);
 
         EventSource eventSource = new EventSource("GroupBlock");
         this.targetManager = new TargetManager<>(this, eventSource, itemDeliveredHandler, errorOccurredHandler);
@@ -111,7 +123,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                 this,
                 eventSource,
                 this.capacityGate,
-                this.lifecycle
+                this.lifecycle,
+                this.deliveringCount
         ));
     }
 
@@ -208,7 +221,11 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         // Derive from CapacityGate: in-flight items = capacity − available permits.
         // The semaphore acquires one permit per accepted item and releases on delivery,
         // so this is always equivalent to the removed AtomicInteger pendingItems.
-        return this.capacity - this.capacityGate.available();
+        //
+        // deliveringCount is subtracted to exclude items currently mid-delivery (inside
+        // publishGroup()'s postToTarget() call), matching Buffer/Delay's raw-queue-based size()
+        // semantics — see deliveringCount's field Javadoc for the full rationale.
+        return this.capacity - this.capacityGate.available() - this.deliveringCount.get();
     }
 
     @Override
@@ -255,6 +272,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
         private final EventSource eventSource;
+        private final AtomicInteger deliveringCount;
 
         // Tracks the soonest expiry deadline across all active groups, in epoch millis.
         // Maintained as a lower-bound cache: it is only ever updated to a smaller (sooner)
@@ -276,7 +294,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                        Object source,
                        EventSource eventSource,
                        CapacityGate capacityGate,
-                       WorkerLifecycle lifecycle) {
+                       WorkerLifecycle lifecycle,
+                       AtomicInteger deliveringCount) {
             this.completableQueue = completableQueue;
             this.groupingFunction = groupingFunction;
             this.targetManager = targetManager;
@@ -291,6 +310,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
             this.capacityGate = capacityGate;
             this.lifecycle = lifecycle;
             this.eventSource = eventSource;
+            this.deliveringCount = deliveringCount;
         }
 
         @Override
@@ -465,6 +485,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         private void publishGroup(K key, Group<T, K> group) {
             List<T> batch = group.toList();
 
+            this.deliveringCount.addAndGet(batch.size());
+
             try {
                 this.targetManager.postToTarget(batch);
             } catch (Throwable t) {
@@ -473,6 +495,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                 Errors.throwIfFatal(t);
                 this.eventSource.createErrorEvent(t);
             } finally {
+                this.deliveringCount.addAndGet(-batch.size());
                 this.capacityGate.release(batch.size());
                 this.groups.remove(key);
             }

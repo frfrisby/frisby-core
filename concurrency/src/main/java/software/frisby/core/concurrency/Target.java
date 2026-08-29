@@ -40,7 +40,11 @@ public interface Target<T> {
      * <p>The default implementation returns {@code 0}, which is correct for lambda targets and
      * synchronous blocks that process items inline and hold no internal queue.  Async buffered
      * blocks ({@link BufferBlock}, {@link BatchBlock}, {@link PriorityBufferBlock},
-     * {@link DelayBlock}) override this to return their actual queue depth.</p>
+     * {@link DelayBlock}) override this to return their actual queue depth. In all four cases,
+     * an item currently mid-delivery to this target's own downstream (i.e. inside the downstream
+     * target's {@code post()} call) is excluded from this count — that item is reflected instead
+     * by the downstream target's own {@link #inFlight()}, keeping the four buffered blocks
+     * internally consistent with one another.</p>
      *
      * <p>For capacity monitoring, use {@link #inFlight()} instead, which accounts for items
      * held anywhere across all stages of a pipeline arm — not just the head buffer.</p>
@@ -57,18 +61,25 @@ public interface Target<T> {
      * downstream pipeline stages.
      *
      * <p>For a plain block ({@link BufferBlock}, {@link BatchBlock}, {@link GroupBlock},
-     * {@link DelayBlock}), the in-flight count equals {@link #size()} because each block's
-     * capacity gate tracks every item from acceptance to delivery, covering both the ingress
-     * queue and any items held in an internal accumulator (batch buffer, key-grouped map,
-     * delay queue).</p>
+     * {@link DelayBlock}), this is {@link #size()} (items still awaiting processing at this
+     * stage) plus the linked downstream target's own {@link #inFlight()} — which is the sole
+     * source of truth for an item currently mid-delivery, since {@link #size()} deliberately
+     * excludes it. This composition is consistent across all four buffered blocks.</p>
      *
      * <p>This value is used by {@link RouterBlockBuilder#balanced()} to route each posted item
      * to the least-loaded downstream target.  It is a point-in-time snapshot and may change
      * between the routing decision and the actual {@link #post} call; callers should treat it
-     * as a best-effort approximation rather than a precise count.</p>
+     * as a best-effort approximation rather than a precise count — in particular, a hand-wired
+     * custom {@link Target} downstream of a buffered block that does not override {@code
+     * inFlight()} will cause the composed total to under-report while that target is busy, since
+     * neither the buffered block's {@code size()} nor the default {@code inFlight()} (which
+     * delegates to {@code size()}) accounts for it.</p>
      *
      * <p>The default implementation delegates to {@link #size()}, which is correct for any
-     * target that is not a multi-stage pipeline.</p>
+     * target that is not a multi-stage pipeline. A terminal, queue-less synchronous block —
+     * such as {@link ActionBlock} — overrides this method directly rather than {@link #size()},
+     * since it has no queue to report but is still legitimately "in-flight" for the duration of
+     * its own {@code post()} call.</p>
      *
      * @return The total number of items currently in-flight across this target and all of its
      * downstream pipeline stages; {@code 0} if this target holds no internal buffer.

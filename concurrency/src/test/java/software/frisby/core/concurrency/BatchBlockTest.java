@@ -302,6 +302,7 @@ class BatchBlockTest {
             @Test
             void multipleItems_capacityReached() throws Exception {
                 NamedExecutorService executor = newExecutor();
+                CountDownLatch firstItemStarted = new CountDownLatch(1);
                 CountDownLatch targetLatch = new CountDownLatch(1);
                 CountDownLatch posted = new CountDownLatch(1);
                 List<String> sent = new ArrayList<>();
@@ -317,6 +318,15 @@ class BatchBlockTest {
                             .build();
 
                     block.linkTo(batch -> {
+                        if ("hello-1".equals(batch.get(0))) {
+                            // Signals that the worker has begun delivering "hello-1" — i.e.
+                            // deliveringCount has already been incremented (Report 1b) — before
+                            // it blocks on targetLatch.  Reading size() only after this fires
+                            // makes blockSizes[0]/[1] deterministic instead of racing against
+                            // the worker thread's scheduling.
+                            firstItemStarted.countDown();
+                        }
+
                         try {
                             // Block all deliveries until the latch is signaled.
                             targetLatch.await();
@@ -335,6 +345,13 @@ class BatchBlockTest {
                         String item = items.get(0);
                         block.post(item);
                         sent.add(item);
+
+                        try {
+                            firstItemStarted.await(5, TimeUnit.SECONDS);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+
                         blockSizes.add(block.size());
 
                         item = items.get(1);
@@ -369,7 +386,16 @@ class BatchBlockTest {
                     assertTrue(delivered.await(5, TimeUnit.SECONDS));
                     assertTrue(postBlocked.get());
                     assertEquals(List.of("hello-1", "hello-2"), sent);
-                    assertEquals(List.of(1, 2, 2), blockSizes);
+                    // All three reads are now deterministic because blockSizes[0]/[1] are taken
+                    // only after firstItemStarted confirms the worker has begun delivering
+                    // "hello-1" (deliveringCount == 1) and is blocked on targetLatch — a single
+                    // worker thread, so it cannot have started processing "hello-2" yet either.
+                    // [0] after "hello-1": available = 2-1=1, deliveringCount=1 -> size() = 0.
+                    // [1] after "hello-2": available = 2-2=0, deliveringCount=1 -> size() = 1.
+                    // [2] after "hello-3" rejected: unchanged from [1] -> size() = 1.
+                    // (Report 1b: size() excludes items currently mid-delivery, matching
+                    // Buffer/Delay's semantics — see AsyncBatch's deliveringCount field Javadoc.)
+                    assertEquals(List.of(0, 1, 1), blockSizes);
                 } finally {
                     executor.shutdown();
                 }
@@ -1076,6 +1102,57 @@ class BatchBlockTest {
                 executor.shutdown();
             }
         }
+
+        @Test
+        void inFlight_downstreamActionBlockCurrentlyRunning_reportsOneNotTwo() throws Exception {
+            // Report 1b: Batch's size() now excludes items currently mid-delivery (inside the
+            // downstream target's post() call), matching Buffer/Delay's raw-queue-based size()
+            // semantics — see AsyncBatch's deliveringCount field Javadoc. While the downstream
+            // ActionBlock is running, size() reports 0 (the in-flight batch is no longer counted
+            // here) and the downstream's own inFlight() reports 1 (ActionBlock correctly tracks
+            // itself, per Report 1), so the composed total is the accurate 1 — not the 2 this
+            // test used to assert before Report 1b (see report-1b plan doc for the full
+            // before/after rationale, and inFlight_withDownstreamInFlight_addsBothCounts above
+            // for why a *synthetic*, always-non-zero downstream still composes additively — that
+            // test's synthetic value doesn't represent a real overlapping window the way a real
+            // self-reporting downstream's transient busy-state does).
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch actionStarted = new CountDownLatch(1);
+            CountDownLatch releaseAction = new CountDownLatch(1);
+
+            try {
+                BatchBlock<String> block = BatchBlock.<String>builder()
+                        .capacity(1)
+                        .batchSize(1)
+                        .executor(executor)
+                        .build();
+
+                ActionBlock<List<String>> sink = ActionBlock.<List<String>>builder()
+                        .action(batch -> {
+                            actionStarted.countDown();
+
+                            try {
+                                releaseAction.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        })
+                        .build();
+
+                block.linkTo(sink);
+                block.post("hello");
+
+                assertTrue(actionStarted.await(5, TimeUnit.SECONDS));
+
+                assertEquals(0, block.size(), "the in-flight batch is excluded from size() while mid-delivery");
+                assertEquals(1, sink.inFlight(), "the downstream ActionBlock is still processing the batch");
+                assertEquals(1, block.inFlight(),
+                        "size() excludes the mid-delivery batch, so the downstream's own count is the sole, accurate source of truth");
+            } finally {
+                releaseAction.countDown();
+                executor.shutdown();
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -1090,7 +1167,16 @@ class BatchBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondBatchDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("BatchBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 BatchBlock<Integer> block = BatchBlock.<Integer>builder()
                         .capacity(10)
                         .batchSize(1)
@@ -1106,24 +1192,13 @@ class BatchBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> e.message().contains("BatchBlock")
-                                        && null != e.thrown()
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondBatchDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first batch's exception and delivered the second batch");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }
@@ -1134,7 +1209,16 @@ class BatchBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondBatchDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 BatchBlock<Integer> block = BatchBlock.<Integer>builder()
                         .capacity(10)
                         .batchSize(1)
@@ -1150,24 +1234,13 @@ class BatchBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> null != e.thrown()
-                                        && e.thrown() instanceof AssertionError
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondBatchDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the non-fatal Error and delivered the second batch");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }

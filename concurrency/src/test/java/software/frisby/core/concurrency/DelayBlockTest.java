@@ -1349,7 +1349,16 @@ class DelayBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("DelayBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 DelayBlock<Integer> block = DelayBlock.<Integer>builder()
                         .delay(INSTANT)
                         .capacity(10)
@@ -1365,24 +1374,13 @@ class DelayBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> e.message().contains("DelayBlock")
-                                        && null != e.thrown()
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first item's exception and delivered the second item");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }
@@ -1393,7 +1391,16 @@ class DelayBlockTest {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondItemDelivered = new CountDownLatch(1);
 
-            try {
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
                 DelayBlock<Integer> block = DelayBlock.<Integer>builder()
                         .delay(INSTANT)
                         .capacity(10)
@@ -1409,24 +1416,13 @@ class DelayBlockTest {
                     return true;
                 });
 
-                try (SystemLogVerifier verifier = SystemLogVerifier.builder()
-                        .expect(LogExpectation.builder()
-                                .logger(EventSource.class)
-                                .level(System.Logger.Level.ERROR)
-                                .predicate(e -> null != e.thrown()
-                                        && e.thrown() instanceof AssertionError
-                                        && "boom".equals(e.thrown().getMessage()))
-                                .build()
-                        )
-                        .build()) {
-                    block.post(1);
-                    block.post(2);
-
-                    verifier.assertExpectations(Duration.ofSeconds(5));
-                }
+                block.post(1);
+                block.post(2);
 
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the non-fatal Error and delivered the second item");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
             } finally {
                 executor.shutdown();
             }

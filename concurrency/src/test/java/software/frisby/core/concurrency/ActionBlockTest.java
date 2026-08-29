@@ -208,5 +208,70 @@ class ActionBlockTest {
             assertEquals(List.of("a", "b"), received);
         }
     }
+
+    // -------------------------------------------------------------------------
+    // inFlight() — Report 1: a terminal, queue-less synchronous block must still report
+    // itself as in-flight for the duration of its own post() call.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class InFlight {
+        @Test
+        void noItemsPosted_returnsZero() {
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                    })
+                    .build();
+
+            assertEquals(0, block.inFlight());
+        }
+
+        @Test
+        void whileActionIsRunning_returnsOne() throws Exception {
+            CountDownLatch actionStarted = new CountDownLatch(1);
+            CountDownLatch releaseAction = new CountDownLatch(1);
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                        actionStarted.countDown();
+
+                        try {
+                            releaseAction.await();
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    })
+                    .build();
+
+            Thread poster = new Thread(() -> block.post("hello"));
+            poster.start();
+
+            try {
+                assertTrue(actionStarted.await(5, TimeUnit.SECONDS));
+
+                assertEquals(1, block.inFlight());
+            } finally {
+                releaseAction.countDown();
+                poster.join(5_000);
+            }
+
+            assertEquals(0, block.inFlight());
+        }
+
+        @Test
+        void afterActionThrows_returnsZero() {
+            // The guard's end() runs in DefaultActionBlock.post()'s finally block, so inFlight()
+            // must not remain stuck at a non-zero value after the action throws.
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                        throw new RuntimeException("boom");
+                    })
+                    .build();
+
+            assertThrows(RuntimeException.class, () -> block.post("hello"));
+
+            assertEquals(0, block.inFlight());
+        }
+    }
 }
 

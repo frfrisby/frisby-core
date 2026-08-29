@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 @SuppressWarnings("ALL")
@@ -21,6 +22,16 @@ final class AsyncBatch<T> {
     private final WorkerLifecycle lifecycle;
     private final int batchSize;
     private final Duration timeout;
+
+    // Tracks items currently mid-delivery to the downstream target — i.e. inside the
+    // consumer.accept(batch) call in deliverBatch(), after capacityGate.acquire() but before
+    // capacityGate.release().  Decoupled from capacityGate itself, which must keep its current
+    // acquire/release timing unchanged to correctly bound concurrent processing.  Subtracting
+    // this from size() aligns Batch's size()/inFlight() semantics with Buffer/Delay: size()
+    // reports only items waiting to be batched, not items currently being handed to the
+    // downstream target, so a correctly self-reporting downstream's own inFlight() is the sole
+    // source of truth for that window instead of being double-counted alongside size().
+    private final AtomicInteger deliveringCount;
 
     AsyncBatch(BlockingQueue<T> queue,
                int capacity,
@@ -42,8 +53,20 @@ final class AsyncBatch<T> {
         this.completableQueue = new CompletableQueue<>(queue);
         this.batchSize = batchSize;
         this.timeout = timeout;
+        this.deliveringCount = new AtomicInteger(0);
 
-        executor.execute(new Worker<>(consumer, this.completableQueue, batchSize, timeout.toMillis(), this.capacityGate, this.lifecycle, eventSource));
+        executor.execute(
+                new Worker<>(
+                        consumer,
+                        this.completableQueue,
+                        batchSize,
+                        timeout.toMillis(),
+                        this.capacityGate,
+                        this.lifecycle,
+                        eventSource,
+                        this.deliveringCount
+                )
+        );
     }
 
     boolean post(T item) {
@@ -109,7 +132,12 @@ final class AsyncBatch<T> {
     }
 
     int size() {
-        return this.completableQueue.capacity() - this.capacityGate.available();
+        // Excludes items currently mid-delivery (inside deliverBatch()'s consumer.accept() call),
+        // matching Buffer/Delay's raw-queue-based size() semantics: this reports only items still
+        // waiting to be batched, not items already handed off to the downstream target.  A
+        // correctly self-reporting downstream target's own inFlight() is the sole source of truth
+        // for the mid-delivery window — see deliveringCount's field Javadoc.
+        return this.completableQueue.capacity() - this.capacityGate.available() - this.deliveringCount.get();
     }
 
     boolean isRunning() {
@@ -136,6 +164,7 @@ final class AsyncBatch<T> {
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
         private final EventSource eventSource;
+        private final AtomicInteger deliveringCount;
 
         private Worker(Consumer<List<T>> consumer,
                        CompletableQueue<T> completableQueue,
@@ -143,7 +172,8 @@ final class AsyncBatch<T> {
                        long timeoutMs,
                        CapacityGate capacityGate,
                        WorkerLifecycle lifecycle,
-                       EventSource eventSource) {
+                       EventSource eventSource,
+                       AtomicInteger deliveringCount) {
             this.consumer = consumer;
             this.completableQueue = completableQueue;
             this.batchSize = batchSize;
@@ -151,6 +181,7 @@ final class AsyncBatch<T> {
             this.capacityGate = capacityGate;
             this.lifecycle = lifecycle;
             this.eventSource = eventSource;
+            this.deliveringCount = deliveringCount;
         }
 
         @Override
@@ -239,6 +270,8 @@ final class AsyncBatch<T> {
         // everything else is logged and the worker continues with the next batch rather than
         // dying silently.
         private void deliverBatch(List<T> batch) {
+            this.deliveringCount.addAndGet(batch.size());
+
             try {
                 this.consumer.accept(batch);
             } catch (Throwable t) {
@@ -248,6 +281,7 @@ final class AsyncBatch<T> {
                 // Release capacity permits now that the batch has been fully delivered.
                 // Items hold their permits from when they were posted until their batch
                 // is consumed.
+                this.deliveringCount.addAndGet(-batch.size());
                 this.capacityGate.release(batch.size());
             }
         }
