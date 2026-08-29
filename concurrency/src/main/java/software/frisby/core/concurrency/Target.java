@@ -62,7 +62,7 @@ public interface Target<T> {
      *
      * <p>For a plain block ({@link BufferBlock}, {@link BatchBlock}, {@link GroupBlock},
      * {@link DelayBlock}), this is {@link #size()} (items still awaiting processing at this
-     * stage) plus the linked downstream target's own {@link #inFlight()} — which is the sole
+     * stage) plus the linked downstream target's own {@code inFlight()} — which is the sole
      * source of truth for an item currently mid-delivery, since {@link #size()} deliberately
      * excludes it. This composition is consistent across all four buffered blocks.</p>
      *

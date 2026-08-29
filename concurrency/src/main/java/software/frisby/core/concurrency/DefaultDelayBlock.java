@@ -195,8 +195,9 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
                 boolean exit = false;
                 while (!exit) {
                     try {
-                        // If draining, flush any remaining items without blocking in take() —
-                        // this handles both the normal drain path (draining set while we were
+                        // If draining, flush any remaining items without blocking in take().
+                        //
+                        // This handles both the normal drain path (draining set while we were
                         // processing) and the race where drain() was called before this thread
                         // started (workerThread was null so no interrupt was sent at the time).
                         if (this.draining) {

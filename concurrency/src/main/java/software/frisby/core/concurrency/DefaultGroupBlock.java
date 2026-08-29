@@ -38,7 +38,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
     // acquire/release timing unchanged to correctly bound concurrent processing.  Subtracting
     // this from size() aligns Group's size()/inFlight() semantics with Buffer/Delay: size()
     // reports only items waiting to be grouped, not items currently being handed to the
-    // downstream target, so a correctly self-reporting downstream's own inFlight() is the sole
+    // downstream target, so a correctly self-reporting target's own inFlight() is the sole
     // source of truth for that window instead of being double-counted alongside size().
     private final AtomicInteger deliveringCount;
 
