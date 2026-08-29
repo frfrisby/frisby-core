@@ -155,6 +155,7 @@ final class DefaultBranchBlock<T> implements BranchBlock<T> {
             this.eventSource = eventSource;
         }
 
+        @SuppressWarnings("java:S1181")
         boolean matchesCriteria(T item) {
             try {
                 return this.criteria.test(item);

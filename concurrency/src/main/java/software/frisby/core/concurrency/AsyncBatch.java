@@ -166,6 +166,7 @@ final class AsyncBatch<T> {
         private final EventSource eventSource;
         private final AtomicInteger deliveringCount;
 
+        @SuppressWarnings("java:S107")
         private Worker(Consumer<List<T>> consumer,
                        CompletableQueue<T> completableQueue,
                        int batchSize,
@@ -269,6 +270,7 @@ final class AsyncBatch<T> {
         // regardless of whether delivery succeeded.  Fatal JVM conditions propagate immediately;
         // everything else is logged and the worker continues with the next batch rather than
         // dying silently.
+        @SuppressWarnings("java:S1181")
         private void deliverBatch(List<T> batch) {
             this.deliveringCount.addAndGet(batch.size());
 

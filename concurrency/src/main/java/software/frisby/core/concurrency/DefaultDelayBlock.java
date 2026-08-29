@@ -259,6 +259,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         // regardless of whether delivery succeeded.  Fatal JVM conditions propagate immediately;
         // everything else is logged and the worker continues with the next item rather than
         // dying silently.
+        @SuppressWarnings("java:S1181")
         private void deliverAndRelease(T item) {
             try {
                 this.targetManager.postToTarget(item);

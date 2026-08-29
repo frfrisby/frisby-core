@@ -23,6 +23,7 @@ final class ErrorOccurredManager<T> {
         return null != this.handler;
     }
 
+    @SuppressWarnings("java:S1181")
     void sendOnErrorNotification(Object target, T item, Throwable error) {
         this.eventSource.createErrorEvent(error);
 
