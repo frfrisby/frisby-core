@@ -2,6 +2,9 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.log.LogExpectation;
+import software.frisby.core.concurrency.log.SystemLogVerifier;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.NumericValueOutsideRangeException;
@@ -1014,6 +1017,208 @@ class BufferBlockTest {
                 assertEquals(block.size() + 5, block.inFlight());
             } finally {
                 targetRelease.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void inFlight_downstreamActionBlockCurrentlyRunning_reportsOne() throws Exception {
+            // Report 1 end-to-end repro: a Buffer whose worker has dequeued an item and handed
+            // it to a downstream ActionBlock that is still executing must report inFlight() == 1
+            // for the duration of that call, not 0 — even though the item has already left the
+            // Buffer's own queue (size() == 0 at that point).
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch actionStarted = new CountDownLatch(1);
+            CountDownLatch releaseAction = new CountDownLatch(1);
+
+            try {
+                BufferBlock<String> block = BufferBlock.<String>builder()
+                        .capacity(1)
+                        .executor(executor)
+                        .build();
+
+                ActionBlock<String> sink = ActionBlock.<String>builder()
+                        .action(item -> {
+                            actionStarted.countDown();
+
+                            try {
+                                releaseAction.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        })
+                        .build();
+
+                block.linkTo(sink);
+                block.post("hello");
+
+                assertTrue(actionStarted.await(5, TimeUnit.SECONDS));
+
+                assertEquals(0, block.size(), "the item has already been dequeued from the Buffer's own queue");
+                assertEquals(1, block.inFlight(), "the downstream ActionBlock is still processing the item");
+            } finally {
+                releaseAction.countDown();
+                executor.shutdown();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Worker resilience — Report 2: uncaught exceptions must not silently and
+    // permanently kill the worker thread.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class WorkerResilience {
+        @Test
+        void runtimeExceptionFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("BufferBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
+                DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (1 == item) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+                block.post(2);
+
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the first item's exception and delivered the second item");
+                assertTrue(block.isRunning());
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void nonFatalErrorFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
+                DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (1 == item) {
+                        throw new AssertionError("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+                block.post(2);
+
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the non-fatal Error and delivered the second item");
+                assertTrue(block.isRunning());
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            StackOverflowError fatal = new StackOverflowError("fatal boom");
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    throw fatal;
+                });
+
+                block.post(1);
+
+                assertTrue(capture.await(5), "the fatal error should have escaped as a genuinely uncaught exception");
+                assertSame(fatal, capture.thrown());
+
+                // isRunning() correctly reports false — WorkerLifecycle.stopRunning() runs in
+                // the worker's outer finally on every exit path, including this fatal one.
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning());
+
+                // But completion()/awaitCompletion() never resolves on a fatal death — finish()
+                // is deliberately skipped so this documented trade-off remains observable.
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void runtimeExceptionFromTarget_capacityPermitIsReleasedForNextItem() throws Exception {
+            // Capacity 1: if the permit held by the failing first item were not released, the
+            // second post() would block forever.  A short, bounded post(item, timeout) proves
+            // the permit was released without risking an indefinite test hang.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try {
+                BufferBlock<Integer> block = BufferBlock.<Integer>builder()
+                        .capacity(1)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (1 == item) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(block.post(2, Duration.ofSeconds(5)),
+                        "the capacity permit held by the failed first item should have been released");
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS));
+            } finally {
                 executor.shutdown();
             }
         }

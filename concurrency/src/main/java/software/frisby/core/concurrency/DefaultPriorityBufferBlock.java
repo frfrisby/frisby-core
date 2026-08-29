@@ -52,7 +52,8 @@ final class DefaultPriorityBufferBlock<T> implements PriorityBufferBlock<T> {
                 new PriorityBlockingQueue<>(capacity, payloadComparator),
                 capacity,
                 payload -> this.targetManager.postToTarget(payload.item),
-                executor
+                executor,
+                eventSource
         );
 
         this.capacity = capacity;

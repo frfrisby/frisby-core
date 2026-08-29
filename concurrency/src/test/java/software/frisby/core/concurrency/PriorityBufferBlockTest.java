@@ -1267,4 +1267,48 @@ class PriorityBufferBlockTest {
             }
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Worker resilience — Report 2: uncaught exceptions must not silently and
+    // permanently kill the worker thread.
+    //
+    // PriorityBufferBlock shares AsyncBuffer.Worker with BufferBlock, so full coverage
+    // (RuntimeException, non-fatal Error, and fatal Error propagation) already lives in
+    // BufferBlockTest.WorkerResilience.  This single confirmatory test exists only to prove
+    // the shared fix also applies through this block's own construction path.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class WorkerResilience {
+        @Test
+        void runtimeExceptionFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondItemDelivered = new CountDownLatch(1);
+
+            try {
+                PriorityBufferBlock<Integer> block = PriorityBufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .comparator(Comparator.naturalOrder())
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    if (1 == item) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondItemDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+                block.post(2);
+
+                assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the first item's exception and delivered the second item");
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
 }

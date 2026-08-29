@@ -2,7 +2,10 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.log.LogExpectation;
+import software.frisby.core.concurrency.log.SystemLogVerifier;
 import software.frisby.core.concurrency.mocks.MockInterruptedQueue;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.NumericValueOutsideRangeException;
@@ -206,6 +209,93 @@ class GroupBlockTest {
                 executor.shutdown();
             }
         }
+
+        @Test
+        void whileGroupIsMidDelivery_excludesDeliveringItems() throws Exception {
+            // Report 1b: size() now excludes items currently mid-delivery to the downstream
+            // target, matching Buffer/Delay's raw-queue-based semantics.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch targetStarted = new CountDownLatch(1);
+            CountDownLatch targetRelease = new CountDownLatch(1);
+
+            try {
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    targetStarted.countDown();
+
+                    try {
+                        targetRelease.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post("hello");
+
+                assertTrue(targetStarted.await(5, TimeUnit.SECONDS));
+
+                // The permit is still held (capacity 10, 1 consumed), but the single in-flight
+                // item is excluded from size() while its group is mid-delivery.
+                assertEquals(0, block.size());
+            } finally {
+                targetRelease.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void whileGroupIsMidDelivery_capacityGateBlockingIsUnaffected() throws Exception {
+            // Report 1b regression guard: deliveringCount is a purely cosmetic reporting counter
+            // and must never influence actual backpressure.  size() reporting 0 here must NOT
+            // mean a new item can be accepted — the real capacityGate permit for the mid-delivery
+            // item is still held until delivery completes, so a second post() must still be
+            // rejected at the same point as before this change.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch targetStarted = new CountDownLatch(1);
+            CountDownLatch targetRelease = new CountDownLatch(1);
+
+            try {
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(1)  // capacity = 1: exactly one permit available
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    targetStarted.countDown();
+
+                    try {
+                        targetRelease.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post("hello");
+
+                assertTrue(targetStarted.await(5, TimeUnit.SECONDS));
+
+                // size() reports 0 (mid-delivery item excluded), but the real permit is still
+                // held — a second post() must still time out, proving deliveringCount never
+                // affects actual capacity/backpressure.
+                assertEquals(0, block.size());
+                assertFalse(block.post("world", Duration.ofMillis(200)));
+            } finally {
+                targetRelease.countDown();
+                executor.shutdown();
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -374,6 +464,7 @@ class GroupBlockTest {
             @Test
             void multipleItems_capacityReached() throws Exception {
                 NamedExecutorService executor = newExecutor();
+                CountDownLatch firstItemStarted = new CountDownLatch(1);
                 CountDownLatch targetLatch = new CountDownLatch(1);
                 CountDownLatch posted = new CountDownLatch(1);
                 List<String> sent = new ArrayList<>();
@@ -389,7 +480,16 @@ class GroupBlockTest {
                             .capacity(2)
                             .build();
 
-                    block.linkTo(item -> {
+                    block.linkTo(group -> {
+                        if (group.contains("hello-1")) {
+                            // Signals that the worker has begun delivering the "hello-1" group —
+                            // i.e. deliveringCount has already been incremented (Report 1b) —
+                            // before it blocks on targetLatch.  Reading size() only after this
+                            // fires makes blockSizes[0]/[1] deterministic instead of racing
+                            // against the worker thread's scheduling.
+                            firstItemStarted.countDown();
+                        }
+
                         try {
                             // Block all incoming posts until the latch is signaled
                             targetLatch.await();
@@ -408,6 +508,13 @@ class GroupBlockTest {
                         String item = items.get(0);
                         block.post(item);
                         sent.add(item);
+
+                        try {
+                            firstItemStarted.await(5, TimeUnit.SECONDS);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+
                         blockSizes.add(block.size());
 
                         item = items.get(1);
@@ -442,7 +549,17 @@ class GroupBlockTest {
                     assertTrue(delivered.await(5, TimeUnit.SECONDS));
                     assertTrue(postBlocked.get());
                     assertEquals(List.of("hello-1", "hello-2"), sent);
-                    assertEquals(List.of(1, 2, 2), blockSizes);
+                    // All three reads are now deterministic because blockSizes[0]/[1] are taken
+                    // only after firstItemStarted confirms the worker has begun delivering the
+                    // "hello-1" group (deliveringCount == 1) and is blocked on targetLatch — a
+                    // single worker thread, so it cannot have started processing "hello-2" yet.
+                    // [0] after "hello-1": available = 2-1=1, deliveringCount=1 -> size() = 0.
+                    // [1] after "hello-2": available = 2-2=0, deliveringCount=1 -> size() = 1.
+                    // [2] after "hello-3" rejected: unchanged from [1] -> size() = 1.
+                    // (Report 1b: size() excludes items currently mid-delivery, matching
+                    // Buffer/Delay's semantics — see DefaultGroupBlock's deliveringCount field
+                    // Javadoc.)
+                    assertEquals(List.of(0, 1, 1), blockSizes);
                 } finally {
                     executor.shutdown();
                 }
@@ -1640,6 +1757,215 @@ class GroupBlockTest {
                 assertEquals(block.size() + 5, block.inFlight());
             } finally {
                 targetRelease.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void inFlight_downstreamActionBlockCurrentlyRunning_reportsOne() throws Exception {
+            // Report 1/1b end-to-end repro, parity with the Buffer/Batch equivalents: a Group
+            // whose worker has published a group and handed it to a downstream ActionBlock that
+            // is still executing must report inFlight() == 1 for that one group — size() excludes
+            // the mid-delivery group (Report 1b), and the downstream ActionBlock correctly tracks
+            // its own in-flight state (Report 1), so the composed total is accurate, not doubled.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch actionStarted = new CountDownLatch(1);
+            CountDownLatch releaseAction = new CountDownLatch(1);
+
+            try {
+                GroupBlock<String> block = GroupBlock.<String, String>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                ActionBlock<List<String>> sink = ActionBlock.<List<String>>builder()
+                        .action(group -> {
+                            actionStarted.countDown();
+
+                            try {
+                                releaseAction.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        })
+                        .build();
+
+                block.linkTo(sink);
+                block.post("hello");
+
+                assertTrue(actionStarted.await(5, TimeUnit.SECONDS));
+
+                assertEquals(0, block.size(), "the in-flight group is excluded from size() while mid-delivery");
+                assertEquals(1, sink.inFlight(), "the downstream ActionBlock is still processing the group");
+                assertEquals(1, block.inFlight(),
+                        "size() excludes the mid-delivery group, so the downstream's own count is the sole, accurate source of truth");
+            } finally {
+                releaseAction.countDown();
+                executor.shutdown();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Worker resilience — Report 2: uncaught exceptions must not silently and
+    // permanently kill the worker thread.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class WorkerResilience {
+        @Test
+        void runtimeExceptionFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> e.message().contains("GroupBlock")
+                                    && null != e.thrown()
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+                block.post(2);
+
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the first group's exception and delivered the second group");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void nonFatalErrorFromTarget_noHandlerConfigured_logsAndWorkerSurvives() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try (SystemLogVerifier verifier = SystemLogVerifier.builder()
+                    .expect(LogExpectation.builder()
+                            .logger(EventSource.class)
+                            .level(System.Logger.Level.ERROR)
+                            .predicate(e -> null != e.thrown()
+                                    && e.thrown() instanceof AssertionError
+                                    && "boom".equals(e.thrown().getMessage()))
+                            .build()
+                    )
+                    .build()) {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new AssertionError("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+                block.post(2);
+
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS),
+                        "worker thread should have survived the non-fatal Error and delivered the second group");
+
+                verifier.assertExpectations(Duration.ofSeconds(5));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            StackOverflowError fatal = new StackOverflowError("fatal boom");
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultGroupBlock<Integer, Integer> block =
+                        (DefaultGroupBlock<Integer, Integer>) GroupBlock.<Integer, Integer>builder()
+                                .groupingFunction(item -> item)
+                                .maxGroupSize(1)
+                                .capacity(10)
+                                .executor(executor)
+                                .build();
+
+                block.linkTo(batch -> {
+                    throw fatal;
+                });
+
+                block.post(1);
+
+                assertTrue(capture.await(5), "the fatal error should have escaped as a genuinely uncaught exception");
+                assertSame(fatal, capture.thrown());
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning());
+
+                // completion()/awaitCompletion() never resolves on a fatal death — finish() is
+                // deliberately skipped so this documented trade-off remains observable.
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)));
+            } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void runtimeExceptionFromTarget_capacityPermitsAreReleasedForNextGroup() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch secondGroupDelivered = new CountDownLatch(1);
+
+            try {
+                GroupBlock<Integer> block = GroupBlock.<Integer, Integer>builder()
+                        .groupingFunction(item -> item)
+                        .maxGroupSize(1)
+                        .capacity(1)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(batch -> {
+                    if (batch.contains(1)) {
+                        throw new RuntimeException("boom");
+                    }
+
+                    secondGroupDelivered.countDown();
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(block.post(2, Duration.ofSeconds(5)),
+                        "the capacity permit held by the failed first group should have been released");
+                assertTrue(secondGroupDelivered.await(5, TimeUnit.SECONDS));
+            } finally {
                 executor.shutdown();
             }
         }

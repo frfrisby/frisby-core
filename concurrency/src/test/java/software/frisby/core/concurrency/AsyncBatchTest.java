@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AsyncBatchTest {
     private static final String PREFIX = "TestAsyncBatch";
+    private static final EventSource TEST_EVENT_SOURCE = new EventSource("TestAsyncBatch");
 
     private static NamedExecutorService newExecutor() {
         return NamedExecutorService.builder()
@@ -45,7 +46,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     batch.complete().get(5, TimeUnit.SECONDS);
@@ -73,7 +75,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     boolean result = batch.post("hello");
@@ -103,7 +106,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     Thread.currentThread().interrupt();
@@ -133,7 +137,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     batch.complete().get(5, TimeUnit.SECONDS);
@@ -160,7 +165,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     boolean result = batch.post("hello", Duration.ofSeconds(5));
@@ -190,7 +196,8 @@ class AsyncBatchTest {
                             },
                             1,
                             Duration.ofSeconds(5),
-                            executor
+                            executor,
+                            TEST_EVENT_SOURCE
                     );
 
                     Thread.currentThread().interrupt();
@@ -225,7 +232,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 CompletableFuture<Void> first = batch.complete();
@@ -258,7 +266,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 assertNotNull(batch.completion());
@@ -279,7 +288,8 @@ class AsyncBatchTest {
                         },
                         1,
                         Duration.ofSeconds(5),
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 batch.complete();
@@ -321,7 +331,8 @@ class AsyncBatchTest {
                         },
                         1,                       // batchSize = 1: every item is its own flush
                         Duration.ofMillis(50),   // short poll timeout
-                        executor
+                        executor,
+                        TEST_EVENT_SOURCE
                 );
 
                 // Post the first item — batchSize(1) triggers an immediate size-flush.
@@ -382,7 +393,8 @@ class AsyncBatchTest {
                         },
                         5,  // batchSize > items posted — no size-triggered flush
                         Duration.ofSeconds(5),
-                        delayedStart
+                        delayedStart,
+                        TEST_EVENT_SOURCE
                 );
 
                 batch.post("a");
@@ -400,6 +412,131 @@ class AsyncBatchTest {
 
                 assertTrue(delivered.await(5, TimeUnit.SECONDS));
                 assertEquals(List.of("a", "b", "c"), received.get());
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // size() — Report 1b: excludes items currently mid-delivery to the downstream
+    // consumer, matching Buffer/Delay's raw-queue-based semantics.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class Size {
+        @Test
+        void whileBatchIsMidDelivery_excludesDeliveringItems() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch consumerStarted = new CountDownLatch(1);
+            CountDownLatch releaseConsumer = new CountDownLatch(1);
+
+            try {
+                AsyncBatch<String> batch = new AsyncBatch<>(
+                        new ArrayBlockingQueue<>(10),
+                        10,
+                        items -> {
+                            consumerStarted.countDown();
+
+                            try {
+                                releaseConsumer.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        },
+                        1,  // batchSize = 1: the posted item is flushed immediately
+                        Duration.ofSeconds(5),
+                        executor,
+                        TEST_EVENT_SOURCE
+                );
+
+                batch.post("hello");
+
+                assertTrue(consumerStarted.await(5, TimeUnit.SECONDS));
+
+                // The permit is still held (capacityGate.available() == 9), but the single
+                // in-flight item is excluded from size() while its batch is mid-delivery.
+                assertEquals(0, batch.size());
+            } finally {
+                releaseConsumer.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void whileBatchIsMidDelivery_capacityGateBlockingIsUnaffected() throws Exception {
+            // Report 1b regression guard: deliveringCount is a purely cosmetic reporting counter
+            // and must never influence actual backpressure.  size() reporting 0 here must NOT
+            // mean a new item can be accepted — the real capacityGate permit for the mid-delivery
+            // item is still held until delivery completes, so a second post() must still be
+            // rejected at the same point as before this change.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch consumerStarted = new CountDownLatch(1);
+            CountDownLatch releaseConsumer = new CountDownLatch(1);
+
+            try {
+                AsyncBatch<String> batch = new AsyncBatch<>(
+                        new ArrayBlockingQueue<>(1),
+                        1,  // capacity = 1: exactly one permit available
+                        items -> {
+                            consumerStarted.countDown();
+
+                            try {
+                                releaseConsumer.await();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        },
+                        1,
+                        Duration.ofSeconds(5),
+                        executor,
+                        TEST_EVENT_SOURCE
+                );
+
+                batch.post("hello");
+
+                assertTrue(consumerStarted.await(5, TimeUnit.SECONDS));
+
+                // size() reports 0 (mid-delivery item excluded), but the real permit is still
+                // held — a second post() must still time out, proving deliveringCount never
+                // affects actual capacity/backpressure.
+                assertEquals(0, batch.size());
+                assertFalse(batch.post("world", Duration.ofMillis(200)));
+            } finally {
+                releaseConsumer.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void afterDeliveryCompletes_deliveringCountIsReleased() throws Exception {
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch delivered = new CountDownLatch(1);
+
+            try {
+                AsyncBatch<String> batch = new AsyncBatch<>(
+                        new ArrayBlockingQueue<>(10),
+                        10,
+                        items -> delivered.countDown(),
+                        1,
+                        Duration.ofSeconds(5),
+                        executor,
+                        TEST_EVENT_SOURCE
+                );
+
+                batch.post("hello");
+
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+
+                // Give the worker a moment to exit deliverBatch()'s finally block after
+                // countDown() fires (countDown() happens inside the consumer, before
+                // deliverBatch()'s finally runs).
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (0 != batch.size() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+
+                assertEquals(0, batch.size());
             } finally {
                 executor.shutdown();
             }

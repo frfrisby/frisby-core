@@ -139,6 +139,22 @@ final class SyncCompletionGuard {
         }
     }
 
+    /**
+     * Returns the number of items currently between a {@link #begin()} call and its matching
+     * {@link #end()} call — i.e. the number of items this guard's owning block is currently
+     * processing synchronously on the calling thread(s).
+     *
+     * <p>Synchronous blocks built on this guard (e.g. {@code ActionBlock}) expose this value
+     * via their own {@code inFlight()} override so that an upstream async block's own
+     * {@code inFlight()} composition correctly accounts for an item still being processed by a
+     * terminal, queue-less synchronous stage.</p>
+     *
+     * @return The current in-flight count.
+     */
+    int inFlight() {
+        return this.inFlight.get();
+    }
+
     private void signalDownstream() {
         if (this.downstreamSignaled.compareAndSet(false, true)) {
             this.downstream.run();

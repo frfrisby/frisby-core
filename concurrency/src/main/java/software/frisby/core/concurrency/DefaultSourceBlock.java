@@ -192,45 +192,57 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
             this.lifecycle.start();
 
             try {
-                // Wait until at least one target is linked before polling the supplier.
-                // Using await() once before the loop avoids per-iteration AQS overhead.
-                this.startLatch.await();
+                try {
+                    // Wait until at least one target is linked before polling the supplier.
+                    // Using await() once before the loop avoids per-iteration AQS overhead.
+                    this.startLatch.await();
 
-                while (!Thread.currentThread().isInterrupted()) {
-                    this.gate.acquire();
+                    while (!Thread.currentThread().isInterrupted()) {
+                        this.gate.acquire();
 
-                    boolean hasResult = false;
+                        boolean hasResult = false;
 
-                    try {
-                        if (null != this.singleItemSupplier) {
-                            T item = this.singleItemSupplier.get();
+                        try {
+                            if (null != this.singleItemSupplier) {
+                                T item = this.singleItemSupplier.get();
 
-                            if (null != item) {
-                                hasResult = true;
-                                this.consumer.accept(item);
-                            }
-                        } else {
-                            List<T> batch = this.batchSupplier.get();
-
-                            if (null != batch && !batch.isEmpty()) {
-                                hasResult = true;
-
-                                for (T item : batch) {
+                                if (null != item) {
+                                    hasResult = true;
                                     this.consumer.accept(item);
                                 }
-                            }
-                        }
-                    } catch (Exception ex) {
-                        this.eventSource.createErrorEvent(ex);
-                    } finally {
-                        this.gate.release(hasResult);
-                    }
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+                            } else {
+                                List<T> batch = this.batchSupplier.get();
 
-            this.lifecycle.finish();
+                                if (null != batch && !batch.isEmpty()) {
+                                    hasResult = true;
+
+                                    for (T item : batch) {
+                                        this.consumer.accept(item);
+                                    }
+                                }
+                            }
+                        } catch (Throwable t) {
+                            Errors.throwIfFatal(t);
+                            this.eventSource.createErrorEvent(t);
+                        } finally {
+                            this.gate.release(hasResult);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // Normal exit only — a fatal error thrown above propagates past this point,
+                // skipping finish() so completion() never resolves on fatal death.
+                this.lifecycle.finish();
+            } finally {
+                // Safety net reached on every exit path, including a fatal error.  Guarantees
+                // isRunning() is never left reporting true forever, without touching the
+                // completion future — see WorkerLifecycle.stopRunning()'s Javadoc.  A harmless
+                // no-op re-affirmation on the normal exit path, where finish() above already
+                // set isRunning to false.
+                this.lifecycle.stopRunning();
+            }
         }
     }
 
@@ -262,41 +274,50 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
             this.lifecycle.start();
 
             try {
-                // Wait exactly once until at least one target is linked.
-                //
-                // Performing this before the loop eliminates the per-item AQS overhead
-                // (Thread.interrupted() + volatile read).
-                this.startLatch.await();
+                try {
+                    // Wait exactly once until at least one target is linked.
+                    //
+                    // Performing this before the loop eliminates the per-item AQS overhead
+                    // (Thread.interrupted() + volatile read).
+                    this.startLatch.await();
 
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        if (null != this.singleItemSupplier) {
-                            T item = this.singleItemSupplier.get();
+                    while (!Thread.currentThread().isInterrupted()) {
+                        try {
+                            if (null != this.singleItemSupplier) {
+                                T item = this.singleItemSupplier.get();
 
-                            if (null != item) {
-                                this.consumer.accept(item);
-                            }
-                        } else {
-                            List<T> batch = this.batchSupplier.get();
-
-                            if (null != batch) {
-                                for (T item : batch) {
+                                if (null != item) {
                                     this.consumer.accept(item);
                                 }
-                            }
-                        }
-                    } catch (Exception ex) {
-                        this.eventSource.createErrorEvent(ex);
-                    }
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+                            } else {
+                                List<T> batch = this.batchSupplier.get();
 
-            // WorkerLifecycle enforces the ordering invariant: isRunning is set to false
-            // BEFORE the completion future resolves, so any thread spinning on isRunning()
-            // is guaranteed to observe false once the worker has fully exited run().
-            this.lifecycle.finish();
+                                if (null != batch) {
+                                    for (T item : batch) {
+                                        this.consumer.accept(item);
+                                    }
+                                }
+                            }
+                        } catch (Throwable t) {
+                            Errors.throwIfFatal(t);
+                            this.eventSource.createErrorEvent(t);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // Normal exit only — a fatal error thrown above propagates past this point,
+                // skipping finish() so completion() never resolves on fatal death.
+                this.lifecycle.finish();
+            } finally {
+                // Safety net reached on every exit path, including a fatal error.  Guarantees
+                // isRunning() is never left reporting true forever, without touching the
+                // completion future — see WorkerLifecycle.stopRunning()'s Javadoc.  A harmless
+                // no-op re-affirmation on the normal exit path, where finish() above already
+                // set isRunning to false.
+                this.lifecycle.stopRunning();
+            }
         }
     }
 }

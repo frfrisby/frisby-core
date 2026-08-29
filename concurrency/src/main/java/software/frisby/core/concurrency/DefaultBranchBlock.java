@@ -158,8 +158,13 @@ final class DefaultBranchBlock<T> implements BranchBlock<T> {
         boolean matchesCriteria(T item) {
             try {
                 return this.criteria.test(item);
-            } catch (Exception ex) {
-                this.eventSource.createTargetPredicateErrorEvent(item, this.branchId, ex);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately.  Everything else — including
+                // non-fatal Errors, not just ordinary Exceptions — is logged and treated as a
+                // non-match, consistent with this method's existing "log and keep evaluating"
+                // contract rather than letting one bad predicate abort the whole dispatch.
+                Errors.throwIfFatal(t);
+                this.eventSource.createTargetPredicateErrorEvent(item, this.branchId, t);
                 return false;
             }
         }

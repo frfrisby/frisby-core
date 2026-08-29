@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
@@ -30,6 +31,16 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
     private final Duration idleTimeout;
     private final CapacityGate capacityGate;
     private final WorkerLifecycle lifecycle;
+
+    // Tracks items currently mid-delivery to the downstream target — i.e. inside
+    // publishGroup()'s postToTarget() call, after capacityGate.acquire() but before
+    // capacityGate.release().  Decoupled from capacityGate itself, which must keep its current
+    // acquire/release timing unchanged to correctly bound concurrent processing.  Subtracting
+    // this from size() aligns Group's size()/inFlight() semantics with Buffer/Delay: size()
+    // reports only items waiting to be grouped, not items currently being handed to the
+    // downstream target, so a correctly self-reporting target's own inFlight() is the sole
+    // source of truth for that window instead of being double-counted alongside size().
+    private final AtomicInteger deliveringCount;
 
     // Production constructor — called by DefaultGroupBlockBuilder.  Delegates to the
     // queue-accepting constructor via createQueue(), which validates capacity and constructs
@@ -91,6 +102,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         this.capacityGate = new CapacityGate(capacity);
         this.completableQueue = new CompletableQueue<>(queue);
         this.lifecycle = new WorkerLifecycle();
+        this.deliveringCount = new AtomicInteger(0);
 
         EventSource eventSource = new EventSource("GroupBlock");
         this.targetManager = new TargetManager<>(this, eventSource, itemDeliveredHandler, errorOccurredHandler);
@@ -111,7 +123,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                 this,
                 eventSource,
                 this.capacityGate,
-                this.lifecycle
+                this.lifecycle,
+                this.deliveringCount
         ));
     }
 
@@ -208,7 +221,11 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         // Derive from CapacityGate: in-flight items = capacity − available permits.
         // The semaphore acquires one permit per accepted item and releases on delivery,
         // so this is always equivalent to the removed AtomicInteger pendingItems.
-        return this.capacity - this.capacityGate.available();
+        //
+        // deliveringCount is subtracted to exclude items currently mid-delivery (inside
+        // publishGroup()'s postToTarget() call), matching Buffer/Delay's raw-queue-based size()
+        // semantics — see deliveringCount's field Javadoc for the full rationale.
+        return this.capacity - this.capacityGate.available() - this.deliveringCount.get();
     }
 
     @Override
@@ -254,6 +271,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         private final GroupObserver<T, K> observer;
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
+        private final EventSource eventSource;
+        private final AtomicInteger deliveringCount;
 
         // Tracks the soonest expiry deadline across all active groups, in epoch millis.
         // Maintained as a lower-bound cache: it is only ever updated to a smaller (sooner)
@@ -275,7 +294,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                        Object source,
                        EventSource eventSource,
                        CapacityGate capacityGate,
-                       WorkerLifecycle lifecycle) {
+                       WorkerLifecycle lifecycle,
+                       AtomicInteger deliveringCount) {
             this.completableQueue = completableQueue;
             this.groupingFunction = groupingFunction;
             this.targetManager = targetManager;
@@ -289,6 +309,8 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
             this.observer = observer;
             this.capacityGate = capacityGate;
             this.lifecycle = lifecycle;
+            this.eventSource = eventSource;
+            this.deliveringCount = deliveringCount;
         }
 
         @Override
@@ -296,51 +318,62 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         public void run() {
             this.lifecycle.start();
 
-            while (true) {
-                T item = takeOrPoll();
+            try {
+                while (true) {
+                    T item = takeOrPoll();
 
-                if (null == item) {
-                    if (this.completableQueue.isCompleted()) {
-                        break;  // Normal drain: queue completed + all items consumed.
+                    if (null == item) {
+                        if (this.completableQueue.isCompleted()) {
+                            break;  // Normal drain: queue completed + all items consumed.
+                        }
+
+                        if (Thread.currentThread().isInterrupted()) {
+                            break;  // External interrupt (e.g. NamedExecutorService.shutdown()).
+                        }
+
+                        // dequeue(waitMs) timed out — a group deadline may have expired.
+                        // Fall through to flushExpiredGroups() to publish any expired groups.
+                    } else {
+                        processItem(item);
                     }
 
-                    if (Thread.currentThread().isInterrupted()) {
-                        break;  // External interrupt (e.g. NamedExecutorService.shutdown()).
-                    }
-
-                    // dequeue(waitMs) timed out — a group deadline may have expired.
-                    // Fall through to flushExpiredGroups() to publish any expired groups.
-                } else {
-                    processItem(item);
+                    flushExpiredGroups();
                 }
 
-                flushExpiredGroups();
-            }
+                // Flush any groups that have not yet been published.  The interrupt flag may be
+                // set if complete() and an external interrupt arrived concurrently; clear it
+                // before the flush so CapacityGate.acquire() inside publishGroup() does not
+                // throw, then restore it afterward.  publishGroup() logs and swallows any
+                // non-fatal Throwable, so flushAllGroups() only propagates on a genuinely fatal
+                // condition (VirtualMachineError/LinkageError) — which the outer try/finally
+                // around this method body already handles correctly via lifecycle.finish().
+                boolean interrupted = Thread.interrupted();
 
-            // Flush any groups that have not yet been published.  The interrupt flag may be
-            // set if complete() and an external interrupt arrived concurrently; clear it
-            // before the flush so CapacityGate.acquire() inside publishGroup() does not
-            // throw, then restore it afterward.  flushAllGroups() cannot itself throw
-            // (postToTarget catches all exceptions internally), so no try/finally is needed.
-            boolean interrupted = Thread.interrupted();
+                if (this.completableQueue.isCompleted()) {
+                    flushAllGroups();
+                }
 
-            if (this.completableQueue.isCompleted()) {
-                flushAllGroups();
-            }
+                if (interrupted) {
+                    Thread.currentThread().interrupt();
+                }
 
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
+                // Normal exit only — a fatal error thrown above (from publishGroup() via
+                // flushAllGroups()/flushExpiredGroups()/processItem()) propagates past this
+                // point, skipping finish() so completion() never resolves on fatal death.
+                this.lifecycle.finish();
 
-            // isRunning is set to false BEFORE the future is resolved so that any thread
-            // waiting on completion() is guaranteed to observe isRunning == false when it
-            // wakes up.
-            this.lifecycle.finish();
-
-            if (this.completableQueue.isCompleted()) {
-                this.targetManager.complete();
-                this.targetManager.completion()
-                        .thenAccept(v -> this.completionFuture.complete(null));
+                if (this.completableQueue.isCompleted()) {
+                    this.targetManager.complete();
+                    this.targetManager.completion()
+                            .thenAccept(v -> this.completionFuture.complete(null));
+                }
+            } finally {
+                // Safety net reached on every exit path, including a fatal error.  Guarantees
+                // isRunning() is never left reporting true forever, without touching the
+                // completion future — see WorkerLifecycle.stopRunning()'s Javadoc.  A harmless
+                // no-op re-affirmation on the normal exit path, where finish() above already
+                // set isRunning to false.
+                this.lifecycle.stopRunning();
             }
         }
 
@@ -452,9 +485,20 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
         private void publishGroup(K key, Group<T, K> group) {
             List<T> batch = group.toList();
 
-            this.targetManager.postToTarget(batch);
-            this.capacityGate.release(batch.size());
-            this.groups.remove(key);
+            this.deliveringCount.addAndGet(batch.size());
+
+            try {
+                this.targetManager.postToTarget(batch);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately; everything else is logged and
+                // the worker continues rather than dying silently and permanently.
+                Errors.throwIfFatal(t);
+                this.eventSource.createErrorEvent(t);
+            } finally {
+                this.deliveringCount.addAndGet(-batch.size());
+                this.capacityGate.release(batch.size());
+                this.groups.remove(key);
+            }
         }
 
         private Retention notifyObserver(Group<T, K> group) {
@@ -462,11 +506,14 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
                 if (null != this.observer) {
                     return this.observer.onModified(group);
                 }
-            } catch (Exception ex) {
-                // Exceptions thrown by the observer are caught and forwarded to the error handler
-                // rather than allowing them to crash the pipeline.  The group is retained (HOLD)
-                // when the observer throws, ensuring items are still delivered at timeout.
-                this.errorManager.sendOnErrorNotification(this.observer, group.toList(), ex);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately, killing the worker as intended.
+                // Everything else — including non-fatal Errors, not just ordinary
+                // Exceptions — is forwarded to the error handler rather than allowed to crash
+                // the worker.  The group is retained (HOLD) when the observer throws, ensuring
+                // items are still delivered at timeout.
+                Errors.throwIfFatal(t);
+                this.errorManager.sendOnErrorNotification(this.observer, group.toList(), t);
             }
 
             return Retention.HOLD;

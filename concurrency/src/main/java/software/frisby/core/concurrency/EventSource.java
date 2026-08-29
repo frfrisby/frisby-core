@@ -69,7 +69,7 @@ final class EventSource {
     // Error messages
     // -------------------------------------------------------------------------
 
-    void createOnPostedNotificationErrorEvent(Exception ex) {
+    void createOnPostedNotificationErrorEvent(Throwable t) {
         if (LOG.isLoggable(System.Logger.Level.ERROR)) {
             LOG.log(
                     System.Logger.Level.ERROR,
@@ -77,12 +77,12 @@ final class EventSource {
                             "An unexpected exception occurred in the %s while invoking the ItemPostedHandler.onPosted() method.",
                             this.source
                     ),
-                    ex
+                    t
             );
         }
     }
 
-    void createOnDeliveredNotificationErrorEvent(Exception ex) {
+    void createOnDeliveredNotificationErrorEvent(Throwable t) {
         if (LOG.isLoggable(System.Logger.Level.ERROR)) {
             LOG.log(
                     System.Logger.Level.ERROR,
@@ -90,12 +90,12 @@ final class EventSource {
                             "An unexpected exception occurred in the %s while invoking the ItemDeliveredHandler.onDelivered() method.",
                             this.source
                     ),
-                    ex
+                    t
             );
         }
     }
 
-    void createTargetPredicateErrorEvent(Object item, int link, Exception ex) {
+    void createTargetPredicateErrorEvent(Object item, int link, Throwable t) {
         if (LOG.isLoggable(System.Logger.Level.ERROR)) {
             LOG.log(
                     System.Logger.Level.ERROR,
@@ -106,7 +106,7 @@ final class EventSource {
                             link,
                             formatItemName(item)
                     ),
-                    ex
+                    t
             );
         }
     }
@@ -121,7 +121,7 @@ final class EventSource {
         }
     }
 
-    void createOnErrorNotificationErrorEvent(Exception ex) {
+    void createOnErrorNotificationErrorEvent(Throwable t) {
         if (LOG.isLoggable(System.Logger.Level.ERROR)) {
             LOG.log(
                     System.Logger.Level.ERROR,
@@ -129,7 +129,7 @@ final class EventSource {
                             "An unexpected exception occurred in the %s while invoking the ErrorOccurredHandler.onError() method.",
                             this.source
                     ),
-                    ex
+                    t
             );
         }
     }

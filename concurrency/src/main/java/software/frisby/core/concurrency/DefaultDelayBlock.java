@@ -68,7 +68,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             }
         });
 
-        this.worker = new Worker<>(queue, this.targetManager, capacityGate, this.lifecycle);
+        this.worker = new Worker<>(queue, this.targetManager, capacityGate, this.lifecycle, eventSource);
         executor.execute(this.worker);
     }
 
@@ -166,6 +166,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         private final BlockingQueue<DelayedEntry<T>> queue;
         private final CapacityGate capacityGate;
         private final WorkerLifecycle lifecycle;
+        private final EventSource eventSource;
 
         // workerThread is written once by the worker thread and read by drain() on a calling
         // thread.  AtomicReference provides the required cross-thread visibility guarantee
@@ -176,11 +177,13 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         private Worker(BlockingQueue<DelayedEntry<T>> queue,
                        TargetManager<T> targetManager,
                        CapacityGate capacityGate,
-                       WorkerLifecycle lifecycle) {
+                       WorkerLifecycle lifecycle,
+                       EventSource eventSource) {
             this.targetManager = targetManager;
             this.queue = queue;
             this.capacityGate = capacityGate;
             this.lifecycle = lifecycle;
+            this.eventSource = eventSource;
         }
 
         @Override
@@ -188,45 +191,50 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             this.workerThread.set(Thread.currentThread());
             this.lifecycle.start();
 
-            boolean exit = false;
-            while (!exit) {
-                try {
-                    // If draining, flush any remaining items without blocking in take() —
-                    // this handles both the normal drain path (draining set while we were
-                    // processing) and the race where drain() was called before this thread
-                    // started (workerThread was null so no interrupt was sent at the time).
-                    if (this.draining) {
-                        if (!this.queue.isEmpty()) {
+            try {
+                boolean exit = false;
+                while (!exit) {
+                    try {
+                        // If draining, flush any remaining items without blocking in take().
+                        //
+                        // This handles both the normal drain path (draining set while we were
+                        // processing) and the race where drain() was called before this thread
+                        // started (workerThread was null so no interrupt was sent at the time).
+                        if (this.draining) {
+                            if (!this.queue.isEmpty()) {
+                                flushRemaining();
+                            }
+
+                            break;
+                        }
+
+                        deliverAndRelease(this.queue.take().item());
+
+                        if (this.draining && this.queue.isEmpty()) {
+                            exit = true;
+                        }
+                    } catch (InterruptedException ex) {
+                        if (this.draining) {
                             flushRemaining();
                         }
 
-                        break;
-                    }
-
-                    this.targetManager.postToTarget(this.queue.take().item());
-
-                    // Release the capacity permit now that the item has been fully delivered.
-                    // This must happen after postToTarget() returns, not when take() is called,
-                    // so that downstream back-pressure is correctly propagated back to posting threads.
-                    this.capacityGate.release();
-
-                    if (this.draining && this.queue.isEmpty()) {
+                        Thread.currentThread().interrupt();
                         exit = true;
                     }
-                } catch (InterruptedException ex) {
-                    if (this.draining) {
-                        flushRemaining();
-                    }
-
-                    Thread.currentThread().interrupt();
-                    exit = true;
                 }
-            }
 
-            // WorkerLifecycle enforces the ordering invariant: isRunning is set to false
-            // BEFORE the completion future resolves, so any thread waiting on completion()
-            // is guaranteed to observe isRunning() == false when it wakes.
-            this.lifecycle.finish();
+                // Normal exit only — a fatal error thrown from deliverAndRelease() (directly,
+                // or via flushRemaining()) propagates past this point, skipping finish() so
+                // completion() never resolves on fatal death.
+                this.lifecycle.finish();
+            } finally {
+                // Safety net reached on every exit path, including a fatal error.  Guarantees
+                // isRunning() is never left reporting true forever, without touching the
+                // completion future — see WorkerLifecycle.stopRunning()'s Javadoc.  A harmless
+                // no-op re-affirmation on the normal exit path, where finish() above already
+                // set isRunning to false.
+                this.lifecycle.stopRunning();
+            }
         }
 
         private void flushRemaining() {
@@ -243,7 +251,25 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
             remaining.sort(null);
 
             for (DelayedEntry<T> entry : remaining) {
-                this.targetManager.postToTarget(entry.item());
+                deliverAndRelease(entry.item());
+            }
+        }
+
+        // Delivers a single item to the downstream target and releases its capacity permit,
+        // regardless of whether delivery succeeded.  Fatal JVM conditions propagate immediately;
+        // everything else is logged and the worker continues with the next item rather than
+        // dying silently.
+        private void deliverAndRelease(T item) {
+            try {
+                this.targetManager.postToTarget(item);
+            } catch (Throwable t) {
+                Errors.throwIfFatal(t);
+                this.eventSource.createErrorEvent(t);
+            } finally {
+                // Release the capacity permit now that delivery has been attempted.  This must
+                // happen after postToTarget() returns (or throws), not when the item was
+                // dequeued, so that downstream back-pressure is correctly propagated back to
+                // posting threads.
                 this.capacityGate.release();
             }
         }

@@ -30,8 +30,12 @@ final class ErrorOccurredManager<T> {
 
             try {
                 this.handler.onError(this.source, target, item, error);
-            } catch (Exception ex) {
-                this.eventSource.createOnErrorNotificationErrorEvent(ex);
+            } catch (Throwable t) {
+                // Fatal JVM conditions propagate immediately; everything else — including
+                // non-fatal Errors, not just ordinary Exceptions — is logged rather than
+                // allowed to escape from within the error-handling path itself.
+                Errors.throwIfFatal(t);
+                this.eventSource.createOnErrorNotificationErrorEvent(t);
             }
         }
     }

@@ -55,6 +55,11 @@ final class DefaultActionBlock<T> implements ActionBlock<T> {
     }
 
     @Override
+    public int inFlight() {
+        return this.guard.inFlight();
+    }
+
+    @Override
     public void complete() {
         this.guard.complete();
     }
