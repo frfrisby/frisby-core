@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.4.0](https://github.com/frfrisby/frisby-core/compare/v1.3.3...v1.4.0) (2026-08-31)
+
+
+### Features
+
+* **concurrency:** Add Target.post(T, Duration) bounded-wait posting across all block types. ([#82](https://github.com/frfrisby/frisby-core/issues/82)) ([a9724cc](https://github.com/frfrisby/frisby-core/commit/a9724ccdd13f2804ac1d04530f0f59f24f8e74ca))
+
 ## [1.3.3](https://github.com/frfrisby/frisby-core/compare/v1.3.2...v1.3.3) (2026-08-31)
 
 
