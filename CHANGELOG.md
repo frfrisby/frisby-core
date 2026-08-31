@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.3.3](https://github.com/frfrisby/frisby-core/compare/v1.3.2...v1.3.3) (2026-08-31)
+
+
+### Bug Fixes
+
+* **concurrency:** Prevent async worker threads from silently dying on uncaught exceptions and aligned Batch/Group size()/inFlight() with Buffer/Delay semantics. ([#78](https://github.com/frfrisby/frisby-core/issues/78)) ([26b085e](https://github.com/frfrisby/frisby-core/commit/26b085eef5384668d95b7f434eb04bd42a933aed))
+
 ## [1.3.2](https://github.com/frfrisby/frisby-core/compare/v1.3.1...v1.3.2) (2026-08-28)
 
 
