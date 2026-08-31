@@ -1,5 +1,6 @@
 package software.frisby.core.concurrency;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -45,6 +46,23 @@ public interface TapBlock<T> extends Stage<T, T> {
     static <T> TapBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }
+
+    /**
+     * Posts an item to this block.  The consumer is invoked inline on the calling thread — this
+     * block itself never blocks.  The item is then forwarded to the linked downstream target via
+     * its own {@link Target#post(Object, Duration)}.  That call waits up to {@code timeout} if
+     * the target blocks — for example, an asynchronous block whose queue is full.
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for the downstream target to accept the item.
+     * @return {@code true} if the downstream target accepted the item before {@code timeout}
+     * elapsed; {@code false} if this block has already been completed, {@code item} is
+     * {@code null}, or {@code timeout} elapsed before the downstream target accepted it.
+     * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
+     */
+    @Override
+    boolean post(T item, Duration timeout);
 
     /**
      * Signals that no more items will be posted to this block.  Since this block processes

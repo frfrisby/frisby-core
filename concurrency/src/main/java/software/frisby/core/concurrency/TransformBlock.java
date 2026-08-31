@@ -1,5 +1,6 @@
 package software.frisby.core.concurrency;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -53,6 +54,27 @@ public interface TransformBlock<T, R> extends Stage<T, R> {
     static <T, R> TransformBlockBuilder<T, R> builder(Class<T> ignoredInputType, Class<R> ignoredOutputType) {
         return builder();
     }
+
+    /**
+     * Posts an item to this block.  The transform function is applied inline on the calling
+     * thread — this block itself never blocks.  The result is then forwarded to the linked
+     * downstream target via its own {@link Target#post(Object, Duration)}.  That call waits up
+     * to {@code timeout} if the target blocks — for example, an asynchronous block whose queue
+     * is full.  If the transform function returns {@code null}, the result is silently dropped,
+     * nothing is forwarded downstream, and this method returns {@code false}.
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for the downstream target to accept the
+     *                transformed result.
+     * @return {@code true} if the downstream target accepted the transformed result before
+     * {@code timeout} elapsed; {@code false} if this block has already been completed,
+     * {@code item} is {@code null}, the transform function returned {@code null}, or
+     * {@code timeout} elapsed before the downstream target accepted the result.
+     * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
+     */
+    @Override
+    boolean post(T item, Duration timeout);
 
     /**
      * Signals that no more items will be posted to this block.  Since this block processes

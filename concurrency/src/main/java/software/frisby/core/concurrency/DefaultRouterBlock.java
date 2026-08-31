@@ -1,8 +1,10 @@
 package software.frisby.core.concurrency;
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Sequences;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -57,6 +59,38 @@ final class DefaultRouterBlock<T> implements RouterBlock<T> {
 
         try {
             boolean accepted = target.post(item);
+
+            if (accepted) {
+                this.deliveredManager.sendOnDeliveredNotification(target, item);
+            }
+
+            this.postedManager.sendOnPostedNotification(item, accepted);
+
+            return accepted;
+        } finally {
+            this.guard.end();
+        }
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        if (null == item) {
+            return false;
+        }
+
+        int index = Math.floorMod(this.routingFunction.route(item), this.targets.size());
+        Target<T> target = this.targets.get(index);
+
+        this.guard.begin();
+
+        try {
+            boolean accepted = target.post(item, timeout);
 
             if (accepted) {
                 this.deliveredManager.sendOnDeliveredNotification(target, item);

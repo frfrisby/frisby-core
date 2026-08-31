@@ -1,5 +1,6 @@
 package software.frisby.core.concurrency;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -50,6 +51,28 @@ public interface ExpandBlock<T> extends Stage<List<T>, T> {
     static <T> ExpandBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }
+
+    /**
+     * Posts a list to this block, unpacking it inline on the calling thread — this block itself
+     * never blocks.  Each non-null element is forwarded, one at a time, to the linked downstream
+     * target via its own {@link Target#post(Object, Duration)}, each call waiting up to
+     * {@code timeout} if the target blocks — for example, an asynchronous block whose queue is
+     * full.  Each element gets its own independent {@code timeout} window, so the worst-case
+     * total wait for this method is up to {@code timeout} multiplied by the number of elements in
+     * the list, not a single shared budget across the whole list.
+     *
+     * @param list    The list to post.
+     * @param timeout The maximum time to wait for the downstream target to accept each element.
+     * @return {@code true} if every non-null element was accepted by the downstream target
+     * before its own {@code timeout} window elapsed; {@code false} if this block has already
+     * been completed, {@code list} is {@code null}, or at least one element failed to be
+     * accepted within {@code timeout}.  An empty list returns {@code true} with nothing
+     * forwarded.
+     * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
+     */
+    @Override
+    boolean post(List<T> list, Duration timeout);
 
     /**
      * Signals that no more lists will be posted to this block.  Since this block processes

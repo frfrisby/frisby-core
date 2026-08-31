@@ -2,8 +2,10 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -244,6 +246,237 @@ class BranchBlockTest {
 
             assertTrue(block.post("hello"));
             assertTrue(otherwiseReceived.get());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullItem_returnsFalse() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, timeoutAwareTarget(true))
+                    .otherwise(timeoutAwareTarget(true))
+                    .build();
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, timeoutAwareTarget(true))
+                    .otherwise(timeoutAwareTarget(true))
+                    .build();
+
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void itemMatchingWhen_routedToWhenTarget() {
+            AtomicBoolean whenReceived = new AtomicBoolean(false);
+            AtomicBoolean otherwiseReceived = new AtomicBoolean(false);
+
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> item.startsWith("a"), new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            whenReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            whenReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .otherwise(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .build();
+
+            assertTrue(block.post("apple", Duration.ofSeconds(1)));
+            assertTrue(whenReceived.get());
+            assertFalse(otherwiseReceived.get());
+        }
+
+        @Test
+        void itemMatchingNoWhen_routedToOtherwiseTarget() {
+            AtomicBoolean otherwiseReceived = new AtomicBoolean(false);
+
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> item.startsWith("a"), timeoutAwareTarget(true))
+                    .otherwise(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertTrue(otherwiseReceived.get());
+        }
+
+        @Test
+        void whenPredicateThrows_itemRoutedToOtherwiseTarget() {
+            AtomicBoolean otherwiseReceived = new AtomicBoolean(false);
+
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(
+                            item -> {
+                                throw new RuntimeException("predicate error");
+                            },
+                            timeoutAwareTarget(true)
+                    )
+                    .otherwise(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            otherwiseReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertTrue(otherwiseReceived.get());
+        }
+
+        @Test
+        void whenTargetRejectsItem_returnsFalse() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, timeoutAwareTarget(false))
+                    .otherwise(timeoutAwareTarget(true))
+                    .build();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void otherwiseTargetRejectsItem_returnsFalse() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> false, timeoutAwareTarget(true))
+                    .otherwise(timeoutAwareTarget(false))
+                    .build();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, timeoutAwareTarget(true))
+                    .otherwise(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, timeoutAwareTarget(true))
+                    .otherwise(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            BranchBlock<String> block = BranchBlock.<String>builder()
+                    .when(item -> true, item -> true)
+                    .otherwise(item -> true)
+                    .build();
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("BranchBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<String> buffer = BufferBlock.<String>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                CountDownLatch delivered = new CountDownLatch(1);
+                AtomicReference<String> received = new AtomicReference<>();
+
+                buffer.linkTo(item -> {
+                    received.set(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                BranchBlock<String> block = BranchBlock.<String>builder()
+                        .when(item -> true, buffer)
+                        .otherwise(timeoutAwareTarget(true))
+                        .build();
+
+                assertTrue(block.post("hello", Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals("hello", received.get());
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

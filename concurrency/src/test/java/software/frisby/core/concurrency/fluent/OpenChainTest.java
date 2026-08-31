@@ -5,13 +5,18 @@ import org.junit.jupiter.api.Test;
 import software.frisby.core.concurrency.NamedExecutorService;
 import software.frisby.core.concurrency.Target;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenChainTest {
     private static final String ALREADY_FINALIZED_MSG =
@@ -294,6 +299,84 @@ class OpenChainTest {
             } finally {
                 executor.shutdown();
             }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration) — OpenPipeline.post(item, timeout) delegates to the head stage
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        @Test
+        void headIsAsyncBuffer_acceptsWithinTimeout_deliversToTarget() {
+            ExecutorService testExecutor = Executors.newSingleThreadExecutor();
+
+            try {
+                List<String> received = new ArrayList<>();
+
+                OpenPipeline<String, String> open = OpenPipeline.builder()
+                        .executor(testExecutor)
+                        .from(Buffer.of(String.class))
+                        .build();
+
+                open.linkTo(received::add);
+
+                assertTrue(open.post("a", Duration.ofSeconds(5)));
+
+                open.complete();
+                open.awaitCompletion();
+
+                assertEquals(List.of("a"), received);
+            } finally {
+                testExecutor.shutdown();
+            }
+        }
+
+        @Test
+        void headIsAsyncBufferFull_timeoutExpires_returnsFalse() throws Exception {
+            ExecutorService testExecutor = Executors.newSingleThreadExecutor();
+            CountDownLatch targetStarted = new CountDownLatch(1);
+            CountDownLatch targetRelease = new CountDownLatch(1);
+
+            try {
+                OpenPipeline<String, String> open = OpenPipeline.builder()
+                        .executor(testExecutor)
+                        .from(Buffer.of(String.class).capacity(1))
+                        .build();
+
+                open.linkTo(item -> {
+                    targetStarted.countDown();
+
+                    try {
+                        targetRelease.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                assertTrue(open.post("a", Duration.ofSeconds(5)));
+                assertTrue(targetStarted.await(5, TimeUnit.SECONDS));
+
+                assertFalse(open.post("b", Duration.ofMillis(50)));
+            } finally {
+                targetRelease.countDown();
+                testExecutor.shutdown();
+            }
+        }
+
+        @Test
+        void headHandWiredCustomTargetWithNoOverride_throwsUnsupportedOperationException() {
+            Target<String> customHead = item -> true;
+            OpenPipeline<String, String> open = new DefaultOpenPipeline<>(customHead, List.of(target -> {
+            }));
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> open.post("hello", Duration.ofSeconds(1))
+            );
         }
     }
 }

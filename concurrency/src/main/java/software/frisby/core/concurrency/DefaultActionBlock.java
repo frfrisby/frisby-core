@@ -1,8 +1,10 @@
 package software.frisby.core.concurrency;
 
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -47,6 +49,13 @@ final class DefaultActionBlock<T> implements ActionBlock<T> {
 
             return true;
         }
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        Durations.notNegative("timeout", timeout);
+
+        return post(item);
     }
 
     @Override

@@ -1,8 +1,10 @@
 package software.frisby.core.concurrency;
 
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -50,6 +52,31 @@ final class DefaultTransformBlock<T, R> implements TransformBlock<T, R> {
             }
 
             return true;
+        }
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        this.targetManager.awaitTargets();
+
+        if (null == item) {
+            return false;
+        } else {
+            this.postedManager.sendOnPostedNotification(item, true);
+
+            this.guard.begin();
+
+            try {
+                return this.targetManager.postToTarget(this.transform.apply(item), timeout);
+            } finally {
+                this.guard.end();
+            }
         }
     }
 

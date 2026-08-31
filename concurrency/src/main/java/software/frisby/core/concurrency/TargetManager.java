@@ -2,6 +2,7 @@ package software.frisby.core.concurrency;
 
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,6 +51,29 @@ final class TargetManager<T> {
         if (null != item) {
             this.linkedTarget.get().post(item);
         }
+    }
+
+    /**
+     * Posts {@code item} to the linked target, waiting up to {@code timeout} for it to be
+     * accepted.
+     *
+     * <p>Unlike {@link #postToTarget(Object)}, this method returns the real acceptance result —
+     * it is new code, not shared with the no-timeout path above, so it can report {@code true}/
+     * {@code false} correctly from the outset without touching that method's long-standing
+     * (unrelated) discard-the-result behavior.</p>
+     *
+     * @param item    The item to post; a {@code null} item is a no-op that returns {@code false}.
+     * @param timeout The maximum time to wait for the linked target to accept the item.
+     * @return {@code true} if the item was accepted before {@code timeout} elapsed;
+     * {@code false} if {@code item} was null, or {@code timeout} elapsed before the item could
+     * be accepted.
+     */
+    boolean postToTarget(T item, Duration timeout) {
+        if (null != item) {
+            return this.linkedTarget.get().post(item, timeout);
+        }
+
+        return false;
     }
 
     void add(Target<T> target) {
@@ -138,8 +162,11 @@ final class TargetManager<T> {
         void post(T item) {
             if (this.errorManager.hasHandler()) {
                 try {
-                    this.target.post(item);
-                    this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                    boolean accepted = this.target.post(item);
+
+                    if (accepted) {
+                        this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                    }
                 } catch (Throwable t) {
                     // Fatal JVM conditions propagate immediately; everything else is logged
                     // and, since a handler is configured, forwarded to it — consistent with
@@ -148,8 +175,45 @@ final class TargetManager<T> {
                     this.errorManager.sendOnErrorNotification(this.target, item, t);
                 }
             } else {
-                this.target.post(item);
-                this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                boolean accepted = this.target.post(item);
+
+                // Only notify on a genuine acceptance — a clean `false` return (e.g. the
+                // downstream target has already been completed) is not a delivery, and
+                // ItemDeliveredHandler's own contract promises "successfully delivered."
+                if (accepted) {
+                    this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                }
+            }
+        }
+
+        @SuppressWarnings("java:S1181")
+        boolean post(T item, Duration timeout) {
+            if (this.errorManager.hasHandler()) {
+                try {
+                    boolean accepted = this.target.post(item, timeout);
+
+                    if (accepted) {
+                        this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                    }
+
+                    return accepted;
+                } catch (Throwable t) {
+                    // Fatal JVM conditions propagate immediately; everything else is logged
+                    // and, since a handler is configured, forwarded to it — consistent with
+                    // the non-fatal/fatal split applied to worker delivery loops.
+                    Errors.throwIfFatal(t);
+                    this.errorManager.sendOnErrorNotification(this.target, item, t);
+
+                    return false;
+                }
+            } else {
+                boolean accepted = this.target.post(item, timeout);
+
+                if (accepted) {
+                    this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+                }
+
+                return accepted;
             }
         }
     }

@@ -2,9 +2,11 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullElementException;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -533,6 +535,175 @@ class RouterBlockTest {
             block.post("hello");
 
             assertTrue(firstReceived.get());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullItem_returnsFalse() {
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void routesToSelectedTarget_returnsTrueOnAccept() {
+            AtomicBoolean firstReceived = new AtomicBoolean(false);
+            AtomicBoolean secondReceived = new AtomicBoolean(false);
+
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            secondReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            secondReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .routingFunction(item -> 1)
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertFalse(firstReceived.get());
+            assertTrue(secondReceived.get());
+        }
+
+        @Test
+        void downstreamRejects_returnsFalse() {
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(timeoutAwareTarget(false))
+                    .target(timeoutAwareTarget(true))
+                    .routingFunction(item -> 0)
+                    .build();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            RouterBlock<String> block = RouterBlock.<String>builder()
+                    .target(ACCEPT)
+                    .target(ACCEPT)
+                    .build();
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("RouterBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<String> buffer = BufferBlock.<String>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                CountDownLatch delivered = new CountDownLatch(1);
+                AtomicReference<String> received = new AtomicReference<>();
+
+                buffer.linkTo(item -> {
+                    received.set(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                RouterBlock<String> block = RouterBlock.<String>builder()
+                        .target(buffer)
+                        .target(timeoutAwareTarget(true))
+                        .routingFunction(item -> 0)
+                        .build();
+
+                assertTrue(block.post("hello", Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals("hello", received.get());
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

@@ -1,7 +1,9 @@
 package software.frisby.core.concurrency;
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -50,6 +52,32 @@ final class DefaultTapBlock<T> implements TapBlock<T> {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        this.targetManager.awaitTargets();
+
+        if (null == item) {
+            return false;
+        }
+
+        this.postedManager.sendOnPostedNotification(item, true);
+
+        this.guard.begin();
+
+        try {
+            this.consumer.accept(item);
+            return this.targetManager.postToTarget(item, timeout);
+        } finally {
+            this.guard.end();
+        }
     }
 
     @Override

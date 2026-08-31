@@ -3,7 +3,10 @@ package software.frisby.core.concurrency;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import software.frisby.core.concurrency.fluent.Tap;
+import software.frisby.core.validation.DurationOutsideRangeException;
+import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -152,6 +155,197 @@ class TapBlockTest {
             block.linkTo(item -> true);
 
             assertTrue(block.post("hello"));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted, AtomicReference<String> received) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    received.set(item);
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    received.set(item);
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullItem_consumerNotInvoked_returnsFalse() {
+            AtomicInteger consumerCount = new AtomicInteger();
+            AtomicReference<String> received = new AtomicReference<>();
+
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> consumerCount.incrementAndGet())
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(true, received));
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+            assertEquals(0, consumerCount.get());
+            assertNull(received.get());
+        }
+
+        @Test
+        void validItem_consumerInvokedAndForwardedUnchanged_returnsTrue() {
+            AtomicReference<String> consumerReceived = new AtomicReference<>();
+            AtomicReference<String> downstreamReceived = new AtomicReference<>();
+            String original = "hello";
+
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(consumerReceived::set)
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(true, downstreamReceived));
+
+            assertTrue(block.post(original, Duration.ofSeconds(1)));
+            assertEquals(original, consumerReceived.get());
+            assertSame(original, downstreamReceived.get());
+        }
+
+        @Test
+        void downstreamRejects_returnsFalse() {
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                    })
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(false, new AtomicReference<>()));
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void consumerThrows_exceptionPropagatesToCallingThread() {
+            AtomicInteger downstreamCount = new AtomicInteger();
+
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                        throw new RuntimeException("consumer failure");
+                    })
+                    .build();
+
+            block.linkTo(new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    downstreamCount.incrementAndGet();
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    downstreamCount.incrementAndGet();
+                    return true;
+                }
+            });
+
+            assertThrows(
+                    RuntimeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+
+            assertEquals(0, downstreamCount.get());
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                    })
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(true, new AtomicReference<>()));
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                    })
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                    })
+                    .build();
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            TapBlock<String> block = TapBlock.<String>builder()
+                    .consumer(item -> {
+                    })
+                    .build();
+
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            block.linkTo(item -> true);
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("TapBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<String> buffer = BufferBlock.<String>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                CountDownLatch delivered = new CountDownLatch(1);
+                AtomicReference<String> received = new AtomicReference<>();
+
+                buffer.linkTo(item -> {
+                    received.set(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                TapBlock<String> block = TapBlock.<String>builder()
+                        .consumer(item -> {
+                        })
+                        .build();
+
+                block.linkTo(buffer);
+
+                assertTrue(block.post("hello", Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals("hello", received.get());
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

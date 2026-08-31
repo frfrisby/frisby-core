@@ -35,6 +35,39 @@ public interface Target<T> {
     boolean post(T item);
 
     /**
+     * Attempts to post {@code item}, waiting up to {@code timeout} for this target to accept it
+     * if it cannot do so immediately.
+     *
+     * <p>This method only ever bounds <em>waiting for capacity</em> — for example, a buffered
+     * block waiting for a free queue slot.  It never bounds the <em>execution time</em> of any
+     * user-supplied code invoked while delivering the item.  A slow downstream consumer can still
+     * take an arbitrary amount of time once an item has been accepted.  {@code Duration.ZERO}
+     * means "attempt immediately, do not wait at all" — the equivalent of
+     * {@link java.util.concurrent.BlockingQueue#offer(Object)}.</p>
+     *
+     * <p>The default implementation throws {@link UnsupportedOperationException}.  A bounded
+     * wait is only meaningful for a target with an actual capacity gate to wait on.  Silently
+     * falling back to the unbounded {@link #post(Object)} would be dangerous: a caller
+     * deliberately asking for a bounded wait could be given an unbounded one with no way to
+     * detect it.  Every block provided by this library overrides this method with a real,
+     * non-throwing implementation.  A hand-wired custom {@link Target} must opt in explicitly by
+     * overriding this method itself.</p>
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for this target to accept the item.
+     * @return {@code true} if the item was accepted before {@code timeout} elapsed;
+     * {@code false} if {@code timeout} elapsed before the item could be accepted.
+     * @throws UnsupportedOperationException if this target has not been given a timeout-aware
+     *                                        capacity gate to wait on.
+     */
+    default boolean post(T item, Duration timeout) {
+        throw new UnsupportedOperationException(
+                "This Target does not support a bounded-wait post().  It has not been given a "
+                        + "timeout-aware capacity gate."
+        );
+    }
+
+    /**
      * Returns the number of items currently waiting in this target's immediate ingress queue.
      *
      * <p>The default implementation returns {@code 0}, which is correct for lambda targets and

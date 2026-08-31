@@ -2,8 +2,10 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,6 +105,179 @@ class TransformBlockTest {
             block.complete();
 
             assertFalse(block.post("hello"));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<Integer> timeoutAwareTarget(boolean accepted, AtomicReference<Integer> received) {
+            return new Target<>() {
+                @Override
+                public boolean post(Integer item) {
+                    received.set(item);
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(Integer item, Duration timeout) {
+                    received.set(item);
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullItem_returnsFalse() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(true, new AtomicReference<>()));
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void validItem_transformsAndForwardsToTarget_returnsTrue() {
+            AtomicReference<Integer> received = new AtomicReference<>();
+
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(true, received));
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertEquals(5, received.get());
+        }
+
+        @Test
+        void transformReturningNull_doesNotDeliverToTarget_returnsFalse() {
+            // Unlike post(T) (which returns true because the item itself was accepted by this
+            // stage), the timeout-aware overload reports the real downstream outcome — and a
+            // null transform result is never forwarded, so there is nothing to accept.
+            AtomicInteger deliveryCount = new AtomicInteger(0);
+
+            TransformBlock<String, String> block = TransformBlock.<String, String>builder()
+                    .transform(item -> null)
+                    .build();
+
+            block.linkTo(new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+            });
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+            assertEquals(0, deliveryCount.get());
+        }
+
+        @Test
+        void downstreamRejects_returnsFalse() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            block.linkTo(timeoutAwareTarget(false, new AtomicReference<>()));
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                    .transform(String::length)
+                    .build();
+
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            block.linkTo(item -> true);
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("TransformBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<Integer> buffer = BufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                CountDownLatch delivered = new CountDownLatch(1);
+                AtomicReference<Integer> received = new AtomicReference<>();
+
+                buffer.linkTo(item -> {
+                    received.set(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                TransformBlock<String, Integer> block = TransformBlock.<String, Integer>builder()
+                        .transform(String::length)
+                        .build();
+
+                block.linkTo(buffer);
+
+                assertTrue(block.post("hello", Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals(5, received.get());
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

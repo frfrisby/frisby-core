@@ -1,6 +1,9 @@
 package software.frisby.core.concurrency;
 
 
+import software.frisby.core.validation.Durations;
+
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +45,39 @@ final class DefaultExpandBlock<T> implements ExpandBlock<T> {
             }
 
             return true;
+        } finally {
+            this.guard.end();
+        }
+    }
+
+    @Override
+    public boolean post(List<T> list, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        this.targetManager.awaitTargets();
+
+        if (null == list) {
+            return false;
+        }
+
+        this.postedManager.sendOnPostedNotification(list, true);
+
+        this.guard.begin();
+
+        try {
+            boolean allAccepted = true;
+
+            for (T item : list) {
+                if (null != item && !this.targetManager.postToTarget(item, timeout)) {
+                    allAccepted = false;
+                }
+            }
+
+            return allAccepted;
         } finally {
             this.guard.end();
         }
