@@ -89,7 +89,7 @@ final class DefaultPriorityBufferBlock<T> implements PriorityBufferBlock<T> {
             return false;
         }
 
-        Durations.positive("timeout", timeout);
+        Durations.notNegative("timeout", timeout);
 
         this.targetManager.awaitTargets();
 

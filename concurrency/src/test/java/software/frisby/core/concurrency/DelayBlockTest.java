@@ -463,7 +463,7 @@ class DelayBlockTest {
             }
 
             @Test
-            void nonPositiveTimeout_throwsDurationOutsideRangeException() {
+            void negativeTimeout_throwsDurationOutsideRangeException() {
                 NamedExecutorService executor = newExecutor();
 
                 try {
@@ -477,8 +477,29 @@ class DelayBlockTest {
 
                     assertThrows(
                             DurationOutsideRangeException.class,
-                            () -> block.post("hello", Duration.ZERO)
+                            () -> block.post("hello", Duration.ofSeconds(-1))
                     );
+                } finally {
+                    executor.shutdown();
+                }
+            }
+
+            @Test
+            void zeroTimeout_capacityAvailable_returnsTrueImmediately() {
+                // Duration.ZERO means "attempt immediately, do not wait at all" — it must not be
+                // rejected as an invalid argument when capacity is actually available.
+                NamedExecutorService executor = newExecutor();
+
+                try {
+                    DelayBlock<String> block = DelayBlock.<String>builder()
+                            .capacity(10)
+                            .delay(INSTANT)
+                            .executor(executor)
+                            .build();
+
+                    block.linkTo(ACCEPT);
+
+                    assertTrue(block.post("hello", Duration.ZERO));
                 } finally {
                     executor.shutdown();
                 }

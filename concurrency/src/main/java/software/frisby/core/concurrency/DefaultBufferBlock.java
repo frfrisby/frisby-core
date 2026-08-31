@@ -67,7 +67,7 @@ final class DefaultBufferBlock<T> implements BufferBlock<T> {
             return false;
         }
 
-        Durations.positive("timeout", timeout);
+        Durations.notNegative("timeout", timeout);
 
         this.targetManager.awaitTargets();
 

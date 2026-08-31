@@ -21,7 +21,6 @@ final class ItemDeliveredManager<T> {
     @SuppressWarnings("java:S1181")
     void sendOnDeliveredNotification(Object target, T output) {
         if (null != this.handler) {
-
             try {
                 this.handler.onDelivered(this.source, target, output);
             } catch (Throwable t) {

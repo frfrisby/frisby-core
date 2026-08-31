@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -235,6 +236,238 @@ class TargetManagerTest {
             waiter.join(5_000);
 
             assertTrue(awaitReturned.get());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // postToTarget() — delivered-notification gating on the target's own accepted result
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostToTarget {
+        @Test
+        void postToTarget_targetAccepts_sendsDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true)
+            );
+
+            manager.add(item -> true);
+            manager.postToTarget("hello");
+
+            assertTrue(delivered.get());
+        }
+
+        @Test
+        void postToTarget_targetRejects_doesNotSendDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true)
+            );
+
+            manager.add(item -> false);
+            manager.postToTarget("hello");
+
+            assertFalse(delivered.get());
+        }
+
+        @Test
+        void postToTarget_targetRejectsWithErrorHandlerConfigured_notifiesNeitherDeliveredNorError() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+            AtomicBoolean errored = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true),
+                    (source, target, item, ex) -> errored.set(true)
+            );
+
+            manager.add(item -> false);
+            manager.postToTarget("hello");
+
+            assertFalse(delivered.get());
+            assertFalse(errored.get());
+        }
+
+        @Test
+        void postToTarget_targetAcceptsWithErrorHandlerConfigured_sendsDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true),
+                    (source, target, item, ex) -> fail("errorOccurredHandler should not be invoked")
+            );
+
+            manager.add(item -> true);
+            manager.postToTarget("hello");
+
+            assertTrue(delivered.get());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // postToTarget(T, Duration) — new deadline-aware sibling; returns the real acceptance
+    // result and forwards the caller's Duration unmodified to the linked target.
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostToTargetWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void targetAccepts_returnsTrueAndSendsDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true)
+            );
+
+            manager.add(timeoutAwareTarget(true));
+
+            assertTrue(manager.postToTarget("hello", Duration.ofSeconds(1)));
+            assertTrue(delivered.get());
+        }
+
+        @Test
+        void targetRejects_returnsFalseAndDoesNotSendDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true)
+            );
+
+            manager.add(timeoutAwareTarget(false));
+
+            assertFalse(manager.postToTarget("hello", Duration.ofSeconds(1)));
+            assertFalse(delivered.get());
+        }
+
+        @Test
+        void targetRejectsWithErrorHandlerConfigured_notifiesNeitherDeliveredNorError() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+            AtomicBoolean errored = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true),
+                    (source, target, item, ex) -> errored.set(true)
+            );
+
+            manager.add(timeoutAwareTarget(false));
+
+            assertFalse(manager.postToTarget("hello", Duration.ofSeconds(1)));
+            assertFalse(delivered.get());
+            assertFalse(errored.get());
+        }
+
+        @Test
+        void targetAcceptsWithErrorHandlerConfigured_returnsTrueAndSendsDeliveredNotification() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, target, item) -> delivered.set(true),
+                    (source, target, item, ex) -> fail("errorOccurredHandler should not be invoked")
+            );
+
+            manager.add(timeoutAwareTarget(true));
+
+            assertTrue(manager.postToTarget("hello", Duration.ofSeconds(1)));
+            assertTrue(delivered.get());
+        }
+
+        @Test
+        void targetThrowsWithErrorHandlerConfigured_returnsFalseAndNotifiesError() {
+            AtomicBoolean errored = new AtomicBoolean(false);
+            RuntimeException thrown = new RuntimeException("boom");
+
+            Target<String> target = new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    throw thrown;
+                }
+            };
+
+            TargetManager<String> manager = new TargetManager<>(
+                    SOURCE,
+                    new EventSource("test"),
+                    (source, t, item) -> fail("itemDeliveredHandler should not be invoked"),
+                    (source, t, item, ex) -> errored.set(thrown == ex)
+            );
+
+            manager.add(target);
+
+            assertFalse(manager.postToTarget("hello", Duration.ofSeconds(1)));
+            assertTrue(errored.get());
+        }
+
+        @Test
+        void nullItem_returnsFalse() {
+            TargetManager<String> manager = newManager();
+
+            manager.add(timeoutAwareTarget(true));
+
+            assertFalse(manager.postToTarget(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void passesTimeoutThroughToTargetUnmodified() {
+            AtomicReference<Duration> received = new AtomicReference<>();
+
+            Target<String> target = new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    received.set(timeout);
+                    return true;
+                }
+            };
+
+            TargetManager<String> manager = newManager();
+            manager.add(target);
+
+            Duration timeout = Duration.ofMillis(250);
+            manager.postToTarget("hello", timeout);
+
+            assertSame(timeout, received.get());
         }
     }
 }

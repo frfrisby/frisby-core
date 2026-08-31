@@ -2,9 +2,11 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullElementException;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -240,6 +242,256 @@ class BroadcastBlockTest {
             assertNotSame(firstReceived.get(), secondReceived.get());
             assertArrayEquals(original, firstReceived.get());
             assertArrayEquals(original, secondReceived.get());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullItem_returnsFalse() {
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void validItem_deliversToAllTargets_returnsTrue() {
+            AtomicBoolean firstReceived = new AtomicBoolean(false);
+            AtomicBoolean secondReceived = new AtomicBoolean(false);
+            AtomicBoolean thirdReceived = new AtomicBoolean(false);
+
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            secondReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            secondReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            thirdReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            thirdReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertTrue(firstReceived.get());
+            assertTrue(secondReceived.get());
+            assertTrue(thirdReceived.get());
+        }
+
+        @Test
+        void whenOneTargetRejects_allOtherTargetsStillReceiveItem_returnsFalse() {
+            AtomicBoolean firstReceived = new AtomicBoolean(false);
+            AtomicBoolean thirdReceived = new AtomicBoolean(false);
+
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            firstReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .target(timeoutAwareTarget(false))
+                    .target(new Target<String>() {
+                        @Override
+                        public boolean post(String item) {
+                            thirdReceived.set(true);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(String item, Duration timeout) {
+                            thirdReceived.set(true);
+                            return true;
+                        }
+                    })
+                    .build();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+            assertTrue(firstReceived.get());
+            assertTrue(thirdReceived.get());
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(timeoutAwareTarget(true))
+                    .target(timeoutAwareTarget(true))
+                    .build();
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post("hello", Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(ACCEPT)
+                    .target(ACCEPT)
+                    .build();
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void eachTargetIndependentlyHonorsFullTimeout_worstCaseIsNTimesTimeout() {
+            // Documented, deliberate semantic: the same plain Duration is forwarded to every
+            // sequential target, each getting its own fresh budget — not a single shared budget
+            // across the whole broadcast call. Proven here by having two targets each block for
+            // the *entire* timeout window before rejecting; the total elapsed time must be at
+            // least 2 x timeout, not ~1 x timeout.
+            Duration timeout = Duration.ofMillis(100);
+
+            Target<String> alwaysTimesOut = new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return false;
+                }
+
+                @Override
+                public boolean post(String item, Duration t) {
+                    try {
+                        Thread.sleep(t.toMillis());
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return false;
+                }
+            };
+
+            BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                    .target(alwaysTimesOut)
+                    .target(alwaysTimesOut)
+                    .build();
+
+            long start = System.nanoTime();
+            assertFalse(block.post("hello", timeout));
+            long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+
+            assertTrue(elapsedMillis >= 2 * timeout.toMillis());
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("BroadcastBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<String> buffer = BufferBlock.<String>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                java.util.concurrent.CountDownLatch delivered = new java.util.concurrent.CountDownLatch(1);
+                AtomicReference<String> received = new AtomicReference<>();
+
+                buffer.linkTo(item -> {
+                    received.set(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                BroadcastBlock<String> block = BroadcastBlock.<String>builder()
+                        .target(buffer)
+                        .target(timeoutAwareTarget(true))
+                        .build();
+
+                assertTrue(block.post("hello", Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals("hello", received.get());
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

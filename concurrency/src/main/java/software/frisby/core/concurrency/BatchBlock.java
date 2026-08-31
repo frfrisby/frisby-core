@@ -89,11 +89,13 @@ public interface BatchBlock<T> extends Stage<T, List<T>> {
      *
      * @param item    The item to post.
      * @param timeout The maximum time to wait for capacity to become available.
-     * @return {@code true} if the item was accepted before the timeout expired;
-     * {@code false} if the timeout elapsed before capacity became available.
+     * @return {@code true} if the item was accepted before {@code timeout} elapsed;
+     * {@code false} if this block has already been completed, {@code item} is {@code null},
+     * or {@code timeout} elapsed before capacity became available.
      * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
-     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is not positive.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
      */
+    @Override
     boolean post(T item, Duration timeout);
 
     /**

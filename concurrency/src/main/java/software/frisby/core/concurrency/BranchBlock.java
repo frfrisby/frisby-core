@@ -1,5 +1,7 @@
 package software.frisby.core.concurrency;
 
+import java.time.Duration;
+
 /**
  * Provides a block that routes posted items to one of several configured targets based on predicate
  * matching. Routing targets and their predicates are configured at build time through the builder;
@@ -47,4 +49,22 @@ public interface BranchBlock<T> extends Target<T> {
     static <T> BranchBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }
+
+    /**
+     * Posts an item to this block.  The matching target is selected inline on the calling
+     * thread — this block itself never blocks.  The item is then forwarded to the selected
+     * target via its own {@link Target#post(Object, Duration)}.  That call waits up to
+     * {@code timeout} if the target blocks — for example, an asynchronous block whose queue is
+     * full.
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for the selected target to accept the item.
+     * @return {@code true} if the selected target accepted the item before {@code timeout}
+     * elapsed; {@code false} if this block has already been completed, {@code item} is
+     * {@code null}, or {@code timeout} elapsed before the selected target accepted it.
+     * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
+     */
+    @Override
+    boolean post(T item, Duration timeout);
 }

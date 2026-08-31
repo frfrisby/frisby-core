@@ -5,6 +5,7 @@ import software.frisby.core.concurrency.Target;
 import software.frisby.core.validation.Sequences;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,6 +24,11 @@ final class DefaultOpenPipeline<I, O> implements OpenPipeline<I, O> {
     @Override
     public boolean post(I item) {
         return this.head.post(item);
+    }
+
+    @Override
+    public boolean post(I item, Duration timeout) {
+        return this.head.post(item, timeout);
     }
 
     @Override

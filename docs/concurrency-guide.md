@@ -325,6 +325,53 @@ sum of the `capacity` values configured across all async stages in the chain.
 > callbacks, not backpressure tools.  Use `inFlight()` for capacity decisions and the
 > handlers for metrics, logging, and auditing.
 
+### Bounded-wait posting — `post(item, Duration)`
+
+Every `Target` — and therefore every `Pipeline` and `OpenPipeline` — also exposes a timed
+overload as a direct alternative to the pre-post pattern above:
+
+```java
+boolean accepted = pipeline.post(item, Duration.ofMillis(250));
+
+if (!accepted) {
+    // handle overflow: drop, reroute, record a metric, disconnect the producer, etc.
+}
+```
+
+This waits up to the given `Duration` for the item to be accepted, then returns `false`
+instead of blocking indefinitely.  `Duration.ZERO` means "attempt immediately, do not
+wait at all" — the equivalent of `BlockingQueue.offer(E)`.
+
+**How far the timeout reaches depends on the pipeline's head stage:**
+- If the head is an async block (`Buffer`, `Batch`, `Group`, `PriorityBuffer`, `Delay`),
+  the timeout bounds how long the caller waits for a free queue slot.
+- If the head is a synchronous stage (`Transform`, `Tap`, `Router`, `Branch`, `Expand`,
+  `Broadcast`, or a bare lambda), the timeout carries through until it reaches whichever
+  async block appears next downstream — even several sync stages later.
+- If the whole pipeline is synchronous, there is nothing to wait for, and
+  `post(item, timeout)` behaves exactly like `post(item)`.
+
+In every case this only bounds **waiting for capacity** — it never bounds the
+**execution time** of user-supplied code invoked while delivering the item.
+
+`Broadcast` and `Expand` are the one exception to "one shared budget": since both post
+to multiple targets or list elements sequentially within a single call, each individual
+`post()` gets its own full timeout window.  The worst case for the whole call is
+`timeout × N` (the number of targets, or the number of elements in the list posted to
+`Expand`), not a single shared budget across all of them.
+
+**A hand-wired custom `Target` must opt in.** The default implementation of
+`post(T, Duration)` throws `UnsupportedOperationException` — silently falling back to
+the unbounded `post(item)` would defeat the entire point of asking for a bounded wait.
+Every block built into this library already overrides it correctly; a custom `Target`
+implementation needs its own override to support this call — see "Implementing a custom
+Target" in `docs/ai/concurrency.md`.
+
+Pick whichever tool fits: `post(item, timeout)` is atomic (no check-then-act race) but
+only bounds the wait for capacity at whichever stage would otherwise block;
+`inFlight()` gives full visibility into total pipeline load — including every arm of a
+`Router` or `OpenRouter` — but requires a separate check before posting.
+
 ---
 
 ## Completion and Drain Lifecycle

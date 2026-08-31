@@ -1,8 +1,10 @@
 package software.frisby.core.concurrency;
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Sequences;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -79,6 +81,44 @@ final class DefaultBranchBlock<T> implements BranchBlock<T> {
             }
 
             boolean accepted = this.otherwiseTarget.post(item);
+
+            if (accepted) {
+                this.deliveredManager.sendOnDeliveredNotification(this.otherwiseTarget, item);
+            }
+
+            this.postedManager.sendOnPostedNotification(item, accepted);
+
+            return accepted;
+        } finally {
+            this.guard.end();
+        }
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        if (null == item) {
+            return false;
+        }
+
+        this.guard.begin();
+
+        try {
+            for (Filter<T> filter : this.filterList) {
+                if (filter.matchesCriteria(item)) {
+                    boolean accepted = filter.post(item, timeout);
+                    this.postedManager.sendOnPostedNotification(item, accepted);
+
+                    return accepted;
+                }
+            }
+
+            boolean accepted = this.otherwiseTarget.post(item, timeout);
 
             if (accepted) {
                 this.deliveredManager.sendOnDeliveredNotification(this.otherwiseTarget, item);
@@ -173,6 +213,16 @@ final class DefaultBranchBlock<T> implements BranchBlock<T> {
         boolean post(T item) {
 
             boolean accepted = this.target.post(item);
+            if (accepted) {
+                this.deliveredManager.sendOnDeliveredNotification(this.target, item);
+            }
+
+            return accepted;
+        }
+
+        boolean post(T item, Duration timeout) {
+            boolean accepted = this.target.post(item, timeout);
+
             if (accepted) {
                 this.deliveredManager.sendOnDeliveredNotification(this.target, item);
             }

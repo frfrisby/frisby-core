@@ -2,6 +2,7 @@ package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.Target;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -49,6 +50,31 @@ public interface Pipeline<T> extends Target<T> {
      */
     @Override
     boolean post(T item);
+
+    /**
+     * Posts an item to the head of this pipeline, waiting up to {@code timeout} for the head
+     * stage to accept it if it cannot do so immediately.
+     *
+     * <p>Whether this method can ever actually wait depends on the pipeline's head stage.  If the
+     * head is one of this library's asynchronous blocks ({@code Buffer}, {@code Batch}, {@code
+     * Group}, {@code PriorityBuffer}, {@code Delay}), {@code timeout} bounds how long the caller
+     * waits for a free queue slot.  If the head is a synchronous stage ({@code Transform}, {@code
+     * Tap}, {@code Router}, {@code Branch}, {@code Broadcast}, or a bare lambda), there is nothing
+     * to wait for, and this method behaves exactly like {@link #post(Object)}.  Either way, this
+     * method never bounds the execution time of any user-supplied code invoked while delivering
+     * the item.</p>
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for the head stage to accept the item.
+     * @return {@code true} if the item was accepted before {@code timeout} elapsed;
+     * {@code false} if {@code timeout} elapsed before the item could be accepted.
+     * @throws UnsupportedOperationException if the head stage does not support a bounded-wait
+     *                                        {@code post} — this never happens for a pipeline
+     *                                        assembled entirely from this library's own stage
+     *                                        builders, only for a hand-wired custom head.
+     */
+    @Override
+    boolean post(T item, Duration timeout);
 
     /**
      * Returns the number of items currently queued at the head of this pipeline.

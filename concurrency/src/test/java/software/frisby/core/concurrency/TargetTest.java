@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the default methods on the {@link Target} interface: {@link Target#size()},
- * {@link Target#inFlight()}, {@link Target#awaitCompletion()}, and
- * {@link Target#awaitCompletion(Duration)}.
+ * {@link Target#inFlight()}, {@link Target#awaitCompletion()},
+ * {@link Target#awaitCompletion(Duration)}, and {@link Target#post(Object, Duration)}.
  */
 class TargetTest {
     // -------------------------------------------------------------------------
@@ -203,6 +203,42 @@ class TargetTest {
         void awaitCompletion_withTimeout_executionException_returnsTrue() {
             // Same defensive path as the no-timeout overload — must return true.
             assertTrue(failedTarget().awaitCompletion(Duration.ofSeconds(5)));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration) default
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeoutDefault {
+        @Test
+        void post_withTimeout_notOverridden_throwsUnsupportedOperationException() {
+            // A hand-wired custom Target that has not opted in by overriding post(T, Duration).
+            Target<String> target = item -> true;
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> target.post("hello", Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void post_withTimeout_overridden_returnsOverriddenValue() {
+            Target<String> target = new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return "hello".equals(item);
+                }
+            };
+
+            assertTrue(target.post("hello", Duration.ofSeconds(1)));
+            assertFalse(target.post("goodbye", Duration.ofSeconds(1)));
         }
     }
 }

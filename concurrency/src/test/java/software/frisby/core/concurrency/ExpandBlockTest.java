@@ -2,8 +2,10 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -110,6 +112,218 @@ class ExpandBlockTest {
             block.linkTo(item -> false);  // target always rejects
 
             assertTrue(block.post(List.of("a", "b")));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(List<T>, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        // A Target that also implements post(T, Duration) — plain lambda targets only
+        // implement the SAM and would hit Target's throwing default otherwise.
+        private static Target<String> timeoutAwareTarget(boolean accepted) {
+            return new Target<>() {
+                @Override
+                public boolean post(String item) {
+                    return accepted;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    return accepted;
+                }
+            };
+        }
+
+        @Test
+        void nullList_returnsFalse() {
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(timeoutAwareTarget(true));
+
+            assertFalse(block.post(null, Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void emptyList_returnsTrueAndNothingForwarded() {
+            AtomicInteger deliveryCount = new AtomicInteger(0);
+
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(new Target<String>() {
+                @Override
+                public boolean post(String item) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+            });
+
+            assertTrue(block.post(List.of(), Duration.ofSeconds(1)));
+            assertEquals(0, deliveryCount.get());
+        }
+
+        @Test
+        void listWithNullElements_nullsSkipped_nonNullDelivered() {
+            AtomicInteger deliveryCount = new AtomicInteger(0);
+            AtomicReference<String> received = new AtomicReference<>();
+
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(new Target<String>() {
+                @Override
+                public boolean post(String item) {
+                    received.set(item);
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    received.set(item);
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+            });
+
+            // Arrays.asList allows null elements; List.of does not.
+            assertTrue(block.post(Arrays.asList(null, "hello", null), Duration.ofSeconds(1)));
+            assertEquals(1, deliveryCount.get());
+            assertEquals("hello", received.get());
+        }
+
+        @Test
+        void validList_eachElementForwardedIndividually_returnsTrue() {
+            AtomicInteger deliveryCount = new AtomicInteger(0);
+
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(new Target<String>() {
+                @Override
+                public boolean post(String item) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    deliveryCount.incrementAndGet();
+                    return true;
+                }
+            });
+
+            assertTrue(block.post(List.of("a", "b", "c"), Duration.ofSeconds(1)));
+            assertEquals(3, deliveryCount.get());
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.complete();
+
+            assertFalse(block.post(List.of("hello"), Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void targetRejectsAnyElement_returnsFalse() {
+            // Unlike post(List) (which always returns true because TargetManager.postToTarget(T)
+            // discards the target's boolean result), the timeout-aware overload reports the real
+            // outcome: if any element is rejected, the whole call reports false — even though
+            // every non-null element is still attempted.
+            AtomicInteger deliveryCount = new AtomicInteger(0);
+
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(new Target<String>() {
+                @Override
+                public boolean post(String item) {
+                    return true;
+                }
+
+                @Override
+                public boolean post(String item, Duration timeout) {
+                    deliveryCount.incrementAndGet();
+                    return !"b".equals(item);
+                }
+            });
+
+            assertFalse(block.post(List.of("a", "b", "c"), Duration.ofSeconds(1)));
+            assertEquals(3, deliveryCount.get());
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(timeoutAwareTarget(true));
+
+            assertThrows(NullValueException.class, () -> block.post(List.of("hello"), null));
+        }
+
+        @Test
+        void negativeTimeout_throwsDurationOutsideRangeException() {
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(timeoutAwareTarget(true));
+
+            assertThrows(
+                    DurationOutsideRangeException.class,
+                    () -> block.post(List.of("hello"), Duration.ofSeconds(-1))
+            );
+        }
+
+        @Test
+        void downstreamDoesNotSupportTimeout_throwsUnsupportedOperationException() {
+            // A plain lambda target only implements the SAM post(T) — it has not opted into
+            // bounded-wait posting, so the inherited Target default must throw.
+            ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+
+            block.linkTo(item -> true);
+
+            assertThrows(
+                    UnsupportedOperationException.class,
+                    () -> block.post(List.of("hello"), Duration.ofSeconds(1))
+            );
+        }
+
+        @Test
+        void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
+            NamedExecutorService executor = NamedExecutorService.builder()
+                    .threadPrefix("ExpandBlockTest")
+                    .build();
+
+            try {
+                BufferBlock<String> buffer = BufferBlock.<String>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                CountDownLatch delivered = new CountDownLatch(3);
+                List<String> received = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+                buffer.linkTo(item -> {
+                    received.add(item);
+                    delivered.countDown();
+                    return true;
+                });
+
+                ExpandBlock<String> block = ExpandBlock.<String>builder().build();
+                block.linkTo(buffer);
+
+                assertTrue(block.post(List.of("a", "b", "c"), Duration.ofSeconds(5)));
+                assertTrue(delivered.await(5, TimeUnit.SECONDS));
+                assertEquals(List.of("a", "b", "c"), received);
+            } finally {
+                executor.shutdown();
+            }
         }
     }
 

@@ -164,7 +164,7 @@ final class DefaultGroupBlock<T, K> implements GroupBlock<T> {
             return false;
         }
 
-        Durations.positive("timeout", timeout);
+        Durations.notNegative("timeout", timeout);
 
         this.targetManager.awaitTargets();
 

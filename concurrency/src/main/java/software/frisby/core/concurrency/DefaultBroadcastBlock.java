@@ -1,7 +1,9 @@
 package software.frisby.core.concurrency;
 
+import software.frisby.core.validation.Durations;
 import software.frisby.core.validation.Sequences;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
@@ -52,6 +54,42 @@ final class DefaultBroadcastBlock<T> implements BroadcastBlock<T> {
             for (Target<T> target : this.targets) {
                 T payload = null == this.cloningFunction ? item : this.cloningFunction.apply(item);
                 boolean accepted = target.post(payload);
+
+                if (accepted) {
+                    this.deliveredManager.sendOnDeliveredNotification(target, item);
+                } else {
+                    allAccepted = false;
+                }
+            }
+
+            this.postedManager.sendOnPostedNotification(item, allAccepted);
+
+            return allAccepted;
+        } finally {
+            this.guard.end();
+        }
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        if (this.guard.isCompleted()) {
+            return false;
+        }
+
+        Durations.notNegative("timeout", timeout);
+
+        if (null == item) {
+            return false;
+        }
+
+        this.guard.begin();
+
+        try {
+            boolean allAccepted = true;
+
+            for (Target<T> target : this.targets) {
+                T payload = null == this.cloningFunction ? item : this.cloningFunction.apply(item);
+                boolean accepted = target.post(payload, timeout);
 
                 if (accepted) {
                     this.deliveredManager.sendOnDeliveredNotification(target, item);

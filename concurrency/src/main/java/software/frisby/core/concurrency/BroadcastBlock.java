@@ -1,5 +1,6 @@
 package software.frisby.core.concurrency;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
@@ -64,6 +65,26 @@ public interface BroadcastBlock<T> extends Target<T> {
     static <T> BroadcastBlockBuilder<T> builder(Class<T> ignored) {
         return builder();
     }
+
+    /**
+     * Posts an item to this block, delivering a copy to every pre-configured downstream target
+     * in turn.  Each target's own {@link Target#post(Object, Duration)} is called with the same
+     * {@code timeout} value, independently of every other target.  If an earlier target blocks
+     * for the full {@code timeout} before accepting (or rejecting) the item, later targets are
+     * only attempted afterward.  The worst-case total wait for this method is therefore up to
+     * {@code timeout} multiplied by the number of configured targets, not a single shared budget
+     * across all of them.
+     *
+     * @param item    The item to post.
+     * @param timeout The maximum time to wait for each individual target to accept the item.
+     * @return {@code true} if every target accepted the item before its own {@code timeout}
+     * window elapsed; {@code false} if this block has already been completed, {@code item} is
+     * {@code null}, or at least one target failed to accept the item within {@code timeout}.
+     * @throws software.frisby.core.validation.NullValueException            if {@code timeout} is null.
+     * @throws software.frisby.core.validation.DurationOutsideRangeException if {@code timeout} is negative.
+     */
+    @Override
+    boolean post(T item, Duration timeout);
 
     /**
      * Signals that no more items will be posted to this block.  All pre-configured downstream

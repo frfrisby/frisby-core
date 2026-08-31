@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import software.frisby.core.validation.NullValueException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -93,6 +94,61 @@ class ActionBlockTest {
             block.complete();
 
             assertFalse(block.post("hello"));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // post(T, Duration)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class PostWithTimeout {
+        @Test
+        void validItem_invokesActionAndReturnsTrue() {
+            AtomicReference<String> received = new AtomicReference<>();
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(received::set)
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ofSeconds(1)));
+            assertEquals("hello", received.get());
+        }
+
+        @Test
+        void afterComplete_returnsFalse() {
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                    })
+                    .build();
+
+            block.complete();
+
+            assertFalse(block.post("hello", Duration.ofSeconds(1)));
+        }
+
+        @Test
+        void nullTimeout_throwsNullValueException() {
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                    })
+                    .build();
+
+            assertThrows(NullValueException.class, () -> block.post("hello", null));
+        }
+
+        @Test
+        void neverBlocks_regardlessOfTimeoutValue() {
+            // This block has no internal queue and no capacity gate — even a Duration.ZERO
+            // timeout must still succeed instantly, proving there is nothing to wait for.
+            AtomicReference<String> received = new AtomicReference<>();
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(received::set)
+                    .build();
+
+            assertTrue(block.post("hello", Duration.ZERO));
+            assertEquals("hello", received.get());
         }
     }
 

@@ -3,6 +3,7 @@ package software.frisby.core.concurrency.fluent;
 import software.frisby.core.concurrency.Target;
 import software.frisby.core.validation.Values;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 final class DefaultPipeline<T> implements Pipeline<T> {
@@ -16,6 +17,11 @@ final class DefaultPipeline<T> implements Pipeline<T> {
     @Override
     public boolean post(T item) {
         return this.head.post(item);
+    }
+
+    @Override
+    public boolean post(T item, Duration timeout) {
+        return this.head.post(item, timeout);
     }
 
     @Override
