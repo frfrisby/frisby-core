@@ -58,7 +58,7 @@ final class EventSource {
             LOG.log(
                     System.Logger.Level.WARNING,
                     String.format(
-                            "The '%s' block received an item but has no downstream target linked.  Posting is blocked until linkTo() is called.",
+                            "The '%s' block received an item but has no downstream target linked. Posting is blocked until linkTo() is called.",
                             this.source
                     )
             );

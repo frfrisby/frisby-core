@@ -240,7 +240,7 @@ class NamedExecutorServiceTest {
         }
 
         @Test
-        void isTerminated_returnsTrueAfterDrain() throws Exception {
+        void isTerminated_returnsTrueAfterDrain() {
             NamedExecutorService executor = NamedExecutorService.builder()
                     .threadPrefix("TestPrefix")
                     .build();

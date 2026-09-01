@@ -204,7 +204,7 @@ public final class Chain<H, O> {
     private void throwIfBuilt() {
         if (this.start.built) {
             throw new IllegalStateException(
-                    "This pipeline chain has already been finalized.  Call to() only once per chain."
+                    "This pipeline chain has already been finalized. Call to() only once per chain."
             );
         }
     }

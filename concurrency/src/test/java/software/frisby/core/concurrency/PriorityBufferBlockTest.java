@@ -2,6 +2,7 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.NumericValueOutsideRangeException;
@@ -26,9 +27,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class PriorityBufferBlockTest {
     private static final String PREFIX = "TestPriorityBuffer";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'PriorityBufferBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'PriorityBufferBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A no-op target that accepts every item.
     private static final Target<String> ACCEPT = item -> true;
@@ -1328,6 +1329,49 @@ class PriorityBufferBlockTest {
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first item's exception and delivered the second item");
             } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void executorShutdownWithoutComplete_stopsWorkerCleanlyButLeavesCompletionUnresolved() throws Exception {
+            // Confirmatory test — PriorityBufferBlock shares AsyncBuffer.Worker with BufferBlock,
+            // whose WorkerResilience suite covers this scenario exhaustively; this proves the
+            // shared fix applies through PriorityBufferBlock's own construction path too.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                PriorityBufferBlock<Integer> block = PriorityBufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .comparator(Comparator.naturalOrder())
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                executor.shutdown();
+
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)),
+                        "completion() must not resolve for a hard stop with no complete() ever called");
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
                 executor.shutdown();
             }
         }

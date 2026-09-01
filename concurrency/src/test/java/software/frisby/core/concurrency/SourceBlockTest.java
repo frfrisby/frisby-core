@@ -30,11 +30,11 @@ class SourceBlockTest {
     private static final String PREFIX = "TestSource";
 
     private static final String NO_SUPPLIER_MSG =
-            "A supplier must be configured.  Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode.";
+            "A supplier must be configured. Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode.";
     private static final String SUPPLIER_ALREADY_CONFIGURED_MSG =
-            "The 'SourceBlock' block already has a supplier configured.  Call only one of supplier(...) or batchSupplier(...).";
+            "The 'SourceBlock' block already has a supplier configured. Call only one of supplier(...) or batchSupplier(...).";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'SourceBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'SourceBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
 
     private static NamedExecutorService newExecutor() {
         return NamedExecutorService.builder()
@@ -995,6 +995,55 @@ class SourceBlockTest {
                 }
                 assertFalse(block.isRunning());
             } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void executorShutdownWithoutComplete_resolvesCompletionSinceInterruptIsTheOnlyStopSignal() throws Exception {
+            // Unlike the four queue-based blocks (Buffer, Batch, Group, Delay), a SourceBlock's
+            // worker is producer-driven and has no complete()/drain analog — interruption is its
+            // *only* stop signal, so WorkerLifecycle is constructed with
+            // interruptionSignalsCompletion == true for this block. A hard shutdown must therefore
+            // still resolve completion(), the opposite contract from the other four blocks' hard-stop
+            // behavior. This test documents that deliberate asymmetry so a future change does not
+            // accidentally "fix" it to match the other four blocks.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultSourceBlock<String> block = (DefaultSourceBlock<String>) SourceBlock.<String>builder()
+                        .supplier(() -> "item")
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                executor.shutdown();
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning(), "the worker must stop once the executor is shut down");
+
+                block.completion().get(5, TimeUnit.SECONDS);
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
                 executor.shutdown();
             }
         }

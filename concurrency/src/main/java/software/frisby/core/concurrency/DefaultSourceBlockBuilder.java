@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 final class DefaultSourceBlockBuilder<T> implements SourceBlockBuilder<T> {
     private static final String SUPPLIER_ALREADY_CONFIGURED_MSG =
-            "The 'SourceBlock' block already has a supplier configured.  Call only one of supplier(...) or batchSupplier(...).";
+                "The 'SourceBlock' block already has a supplier configured. Call only one of supplier(...) or batchSupplier(...).";
 
     private Supplier<T> singleItemSupplier;
     private Supplier<List<T>> batchSupplier;
@@ -71,7 +71,7 @@ final class DefaultSourceBlockBuilder<T> implements SourceBlockBuilder<T> {
     public SourceBlock<T> build() {
         if (null == this.singleItemSupplier && null == this.batchSupplier) {
             throw new IllegalStateException(
-                    "A supplier must be configured.  Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode."
+                    "A supplier must be configured. Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode."
             );
         }
 

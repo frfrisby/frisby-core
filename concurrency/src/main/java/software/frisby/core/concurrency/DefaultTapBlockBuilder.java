@@ -32,7 +32,7 @@ final class DefaultTapBlockBuilder<T> implements TapBlockBuilder<T> {
     public TapBlock<T> build() {
         if (null == this.consumer) {
             throw new IllegalStateException(
-                    "The 'TapBlock' block requires a consumer.  Call consumer(consumer) before calling build()."
+                    "The 'TapBlock' block requires a consumer. Call consumer(consumer) before calling build()."
             );
         }
 

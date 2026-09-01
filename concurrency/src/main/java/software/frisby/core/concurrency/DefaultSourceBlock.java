@@ -5,6 +5,7 @@ import software.frisby.core.validation.Values;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
@@ -40,7 +41,10 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
         this.lifecycles = new ArrayList<>(threadCount);
 
         for (int i = 0; i < threadCount; i++) {
-            WorkerLifecycle lifecycle = new WorkerLifecycle();
+            // Producer-driven — interruption is this worker's only exit condition, so it must
+            // always count as a legitimate completion signal. See WorkerLifecycle's
+            // "Interruption" Javadoc section.
+            WorkerLifecycle lifecycle = new WorkerLifecycle(true);
             this.lifecycles.add(lifecycle);
 
             Runnable worker;
@@ -83,6 +87,18 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
         }
 
         return false;
+    }
+
+    // Package-private, test-support only. SourceBlock exposes no completion() on its public
+    // interface — a producer-driven source has no complete()/drain concept — but tests still
+    // need to observe each worker's WorkerLifecycle.completion() to verify the
+    // interruptionSignalsCompletion == true contract described in WorkerLifecycle's Javadoc.
+    CompletableFuture<Void> completion() {
+        return CompletableFuture.allOf(
+                this.lifecycles.stream()
+                        .map(WorkerLifecycle::completion)
+                        .toArray(CompletableFuture[]::new)
+        );
     }
 
     // Controls adaptive concurrency: gates worker threads behind a Semaphore whose permit count

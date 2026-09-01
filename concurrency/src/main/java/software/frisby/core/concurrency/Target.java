@@ -62,7 +62,7 @@ public interface Target<T> {
      */
     default boolean post(T item, Duration timeout) {
         throw new UnsupportedOperationException(
-                "This Target does not support a bounded-wait post().  It has not been given a "
+                "This Target does not support a bounded-wait post(). It has not been given a "
                         + "timeout-aware capacity gate."
         );
     }

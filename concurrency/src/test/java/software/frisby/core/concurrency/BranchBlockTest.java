@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class BranchBlockTest {
     private static final String NO_WHEN_MSG =
-            "The 'BranchBlock' block requires at least one 'when' clause.  Call when(predicate, target) before calling build().";
+            "The 'BranchBlock' block requires at least one 'when' clause. Call when(predicate, target) before calling build().";
 
     private static final String NO_OTHERWISE_MSG =
-            "The 'BranchBlock' block requires an 'otherwise' target.  Call otherwise(target) before calling build().";
+            "The 'BranchBlock' block requires an 'otherwise' target. Call otherwise(target) before calling build().";
 
     private static final String DOUBLE_OTHERWISE_MSG =
-            "The 'BranchBlock' block already has an otherwise target configured.  The otherwise() method may only be called once.";
+            "The 'BranchBlock' block already has an otherwise target configured. The otherwise() method may only be called once.";
 
     // -------------------------------------------------------------------------
     // Builder
@@ -299,7 +299,7 @@ class BranchBlockTest {
             AtomicBoolean otherwiseReceived = new AtomicBoolean(false);
 
             BranchBlock<String> block = BranchBlock.<String>builder()
-                    .when(item -> item.startsWith("a"), new Target<String>() {
+                    .when(item -> item.startsWith("a"), new Target<>() {
                         @Override
                         public boolean post(String item) {
                             whenReceived.set(true);
@@ -312,7 +312,7 @@ class BranchBlockTest {
                             return true;
                         }
                     })
-                    .otherwise(new Target<String>() {
+                    .otherwise(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             otherwiseReceived.set(true);
@@ -338,7 +338,7 @@ class BranchBlockTest {
 
             BranchBlock<String> block = BranchBlock.<String>builder()
                     .when(item -> item.startsWith("a"), timeoutAwareTarget(true))
-                    .otherwise(new Target<String>() {
+                    .otherwise(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             otherwiseReceived.set(true);
@@ -368,7 +368,7 @@ class BranchBlockTest {
                             },
                             timeoutAwareTarget(true)
                     )
-                    .otherwise(new Target<String>() {
+                    .otherwise(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             otherwiseReceived.set(true);

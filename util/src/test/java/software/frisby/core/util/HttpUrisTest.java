@@ -107,7 +107,7 @@ class HttpUrisTest {
             );
 
             assertEquals(
-                    "The 'uri' value of 'http://host_name/path' is invalid.  The URI must have a resolvable host component.",
+                    "The 'uri' value of 'http://host_name/path' is invalid. The URI must have a resolvable host component.",
                     ex.getMessage()
             );
         }

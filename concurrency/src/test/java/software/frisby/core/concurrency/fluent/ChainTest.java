@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChainTest {
     private static final String ALREADY_FINALIZED_MSG =
-            "This pipeline chain has already been finalized.  Call to() only once per chain.";
+            "This pipeline chain has already been finalized. Call to() only once per chain.";
 
     @Nested
     class Finalization {

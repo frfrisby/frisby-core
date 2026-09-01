@@ -30,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class DelayBlockTest {
     private static final String PREFIX = "TestDelay";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'DelayBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'DelayBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A short delay used wherever near-instant delivery is needed.
     private static final Duration INSTANT = Duration.ofMillis(1);
@@ -1450,7 +1450,7 @@ class DelayBlockTest {
         }
 
         @Test
-        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
             NamedExecutorService executor = newExecutor();
             StackOverflowError fatal = new StackOverflowError("fatal boom");
 
@@ -1480,6 +1480,59 @@ class DelayBlockTest {
                 // deliberately skipped so this documented trade-off remains observable.
                 assertFalse(block.awaitCompletion(Duration.ofMillis(200)));
             } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void executorShutdownWithoutComplete_stopsWorkerCleanlyButLeavesCompletionUnresolved() throws Exception {
+            // A hard shutdown with complete() never called — this.draining stays false, so the
+            // catch (InterruptedException) branch in Worker.run() takes the "genuine external
+            // interrupt" path (restores the flag, does NOT flush) rather than the graceful-drain
+            // path already covered by the drainCalledDuring*/naturalExpiryWithDrain* tests above.
+            // Must be a genuinely clean stop — no uncaught exception — while leaving completion()
+            // unresolved.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultDelayBlock<Integer> block = (DefaultDelayBlock<Integer>) DelayBlock.<Integer>builder()
+                        .delay(INSTANT)
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                // Hard stop — no complete() call at all.
+                executor.shutdown();
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning(), "the worker must stop once the executor is shut down");
+
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)),
+                        "completion() must not resolve for a hard stop with no complete() ever called");
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
                 executor.shutdown();
             }
         }

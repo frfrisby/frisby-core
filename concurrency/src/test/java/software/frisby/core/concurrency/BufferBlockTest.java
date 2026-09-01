@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class BufferBlockTest {
     private static final String PREFIX = "TestBuffer";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'BufferBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'BufferBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A no-op target that accepts every item.
     private static final Target<String> ACCEPT = item -> true;
@@ -1175,7 +1175,7 @@ class BufferBlockTest {
         }
 
         @Test
-        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
             NamedExecutorService executor = newExecutor();
             StackOverflowError fatal = new StackOverflowError("fatal boom");
 
@@ -1206,6 +1206,57 @@ class BufferBlockTest {
                 // is deliberately skipped so this documented trade-off remains observable.
                 assertFalse(block.awaitCompletion(Duration.ofMillis(200)));
             } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void executorShutdownWithoutComplete_stopsWorkerCleanlyButLeavesCompletionUnresolved() throws Exception {
+            // A hard shutdown (no prior complete()/awaitCompletion() drain) interrupts the
+            // worker mid-delivery. Unlike the fatal-error case above, this must be a genuinely
+            // clean stop — no uncaught exception — while still leaving completion() unresolved,
+            // matching WorkerLifecycle's "interruptionSignalsCompletion == false" contract for
+            // queue-based workers: interruption is never a legitimate "done" signal here.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultBufferBlock<Integer> block = (DefaultBufferBlock<Integer>) BufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                // Hard stop — no complete() call at all.
+                executor.shutdown();
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning(), "the worker must stop once the executor is shut down");
+
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)),
+                        "completion() must not resolve for a hard stop with no complete() ever called");
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
                 executor.shutdown();
             }
         }
