@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.4.1](https://github.com/frfrisby/frisby-core/compare/v1.4.0...v1.4.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **concurrency:** Prevent a hard executor shutdown from being mistaken for a successful drain. ([#85](https://github.com/frfrisby/frisby-core/issues/85)) ([6d238e7](https://github.com/frfrisby/frisby-core/commit/6d238e77448fd9156fe6a31c26a630299ddcac6e))
+
 ## [1.4.0](https://github.com/frfrisby/frisby-core/compare/v1.3.3...v1.4.0) (2026-08-31)
 
 
