@@ -1959,6 +1959,57 @@ class GroupBlockTest {
         }
 
         @Test
+        void executorShutdownWithoutComplete_stopsWorkerCleanlyButLeavesCompletionUnresolved() throws Exception {
+            // A hard shutdown (no prior complete()/awaitCompletion() drain) interrupts the
+            // worker mid-delivery. Unlike the fatal-error case above, this must be a genuinely
+            // clean stop — no uncaught exception — while still leaving completion() unresolved.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                DefaultGroupBlock<Integer, Integer> block =
+                        (DefaultGroupBlock<Integer, Integer>) GroupBlock.<Integer, Integer>builder()
+                                .groupingFunction(item -> item)
+                                .maxGroupSize(1)
+                                .capacity(10)
+                                .executor(executor)
+                                .build();
+
+                block.linkTo(batch -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                executor.shutdown();
+
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (block.isRunning() && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertFalse(block.isRunning(), "the worker must stop once the executor is shut down");
+
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)),
+                        "completion() must not resolve for a hard stop with no complete() ever called");
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
+                executor.shutdown();
+            }
+        }
+
+        @Test
         void runtimeExceptionFromTarget_capacityPermitsAreReleasedForNextGroup() throws Exception {
             NamedExecutorService executor = newExecutor();
             CountDownLatch secondGroupDelivered = new CountDownLatch(1);

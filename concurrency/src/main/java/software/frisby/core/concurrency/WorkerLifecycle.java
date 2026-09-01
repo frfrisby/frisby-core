@@ -64,17 +64,67 @@ import java.util.concurrent.CompletableFuture;
  * {@code awaitCompletion()} hangs indefinitely.  Callers whose shutdown path must not hang
  * indefinitely should use {@code awaitCompletion(Duration)} rather than the no-argument
  * overload.
+ *
+ * <h2>Interruption</h2>
+ * <p>
+ * {@code NamedExecutorService.shutdown()} interrupts every worker thread so that a blocked
+ * worker exits promptly rather than hanging.  For a queue-based worker (backed by a
+ * {@code CompletableQueue}), the worker's dequeue loop reliably detects a lingering interrupt
+ * on its very next iteration and exits through the same code path used for a genuine drain —
+ * calling {@link #finish()} either way.  Left unhandled, this would resolve
+ * {@link #completion()} identically whether the worker actually drained its queue or merely
+ * gave up early because it was interrupted mid-shutdown, silently discarding whatever was
+ * still queued.
+ * <p>
+ * {@code WorkerLifecycle} distinguishes the two cases via the {@code interruptionSignalsCompletion}
+ * constructor flag:
+ * <ul>
+ *   <li><b>{@code false} (the default, via {@link #WorkerLifecycle()}) — for queue-based workers</b>
+ *       ({@code AsyncBuffer}, {@code AsyncBatch}, {@code DefaultGroupBlock},
+ *       {@code DefaultDelayBlock}). Interruption is never a legitimate "done" signal for these
+ *       workers; a genuine drain is always reachable via {@code complete()} +
+ *       {@code awaitCompletion()} first. {@link #finish()} called with the current thread
+ *       already interrupted leaves {@link #completion()} unresolved — mirroring the fatal-error
+ *       contract above — while still correctly setting {@code isRunning()} to {@code false}.</li>
+ *   <li><b>{@code true}, via {@link #WorkerLifecycle(boolean)} — for {@code DefaultSourceBlock}
+ *       only</b>, whose worker loop is producer-driven and has no other exit condition;
+ *       interruption <em>is</em> its normal, sole completion signal, so {@link #finish()} always
+ *       resolves {@link #completion()} regardless of interrupt status.</li>
+ * </ul>
  */
 final class WorkerLifecycle {
     private final CompletableFuture<Void> completionFuture;
+    private final boolean interruptionSignalsCompletion;
 
     // Volatile: written by the worker thread, read by external observers on other threads.
     // Without volatile the JVM may cache the value in a register and external readers
     // may never observe the update.
     private volatile boolean isRunning;
 
+    /**
+     * Constructs a lifecycle for a queue-based worker, where interruption is never a
+     * legitimate completion signal.  Equivalent to {@code WorkerLifecycle(false)}.
+     */
     WorkerLifecycle() {
+        this(false);
+    }
+
+    /**
+     * Constructs a lifecycle with explicit control over how {@link #finish()} treats an
+     * already-interrupted calling thread.
+     *
+     * @param interruptionSignalsCompletion {@code true} if this worker's loop has no exit
+     *                                      condition other than interruption (as with
+     *                                      {@code DefaultSourceBlock}), so {@link #finish()}
+     *                                      must always resolve {@link #completion()};
+     *                                      {@code false} if a genuine drain is always
+     *                                      reachable some other way, so {@link #finish()}
+     *                                      should leave {@link #completion()} unresolved
+     *                                      when called with the thread already interrupted.
+     */
+    WorkerLifecycle(boolean interruptionSignalsCompletion) {
         this.completionFuture = new CompletableFuture<>();
+        this.interruptionSignalsCompletion = interruptionSignalsCompletion;
     }
 
     /**
@@ -91,11 +141,19 @@ final class WorkerLifecycle {
      * waiting on {@code completion().get()} will observe {@code isRunning() == false}
      * when it unblocks.
      *
+     * <p>If this lifecycle was constructed with {@code interruptionSignalsCompletion == false}
+     * (the default) and the calling thread is currently interrupted, {@link #completion()} is
+     * deliberately left unresolved — see the "Interruption" section of the class-level
+     * Javadoc.  {@code isRunning()} is still set to {@code false} either way.</p>
+     *
      * <p>This method is idempotent: calling it more than once is safe.
      */
     void finish() {
         this.isRunning = false;
-        this.completionFuture.complete(null);
+
+        if (this.interruptionSignalsCompletion || !Thread.currentThread().isInterrupted()) {
+            this.completionFuture.complete(null);
+        }
     }
 
     /**

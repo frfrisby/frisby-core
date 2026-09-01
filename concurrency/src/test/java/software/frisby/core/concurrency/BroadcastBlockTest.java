@@ -461,6 +461,52 @@ class BroadcastBlockTest {
         }
 
         @Test
+        void cloningFunction_eachTargetReceivesIndependentCopy() {
+            AtomicReference<int[]> firstReceived = new AtomicReference<>();
+            AtomicReference<int[]> secondReceived = new AtomicReference<>();
+
+            BroadcastBlock<int[]> block = BroadcastBlock.<int[]>builder()
+                    .target(new Target<int[]>() {
+                        @Override
+                        public boolean post(int[] item) {
+                            firstReceived.set(item);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(int[] item, Duration timeout) {
+                            firstReceived.set(item);
+                            return true;
+                        }
+                    })
+                    .target(new Target<int[]>() {
+                        @Override
+                        public boolean post(int[] item) {
+                            secondReceived.set(item);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean post(int[] item, Duration timeout) {
+                            secondReceived.set(item);
+                            return true;
+                        }
+                    })
+                    .cloningFunction(int[]::clone)
+                    .build();
+
+            int[] original = {1, 2, 3};
+
+            assertTrue(block.post(original, Duration.ofSeconds(1)));
+
+            assertNotSame(original, firstReceived.get());
+            assertNotSame(original, secondReceived.get());
+            assertNotSame(firstReceived.get(), secondReceived.get());
+            assertArrayEquals(original, firstReceived.get());
+            assertArrayEquals(original, secondReceived.get());
+        }
+
+        @Test
         void downstreamIsAsyncBuffer_boundedByBufferCapacity() throws Exception {
             NamedExecutorService executor = NamedExecutorService.builder()
                     .threadPrefix("BroadcastBlockTest")

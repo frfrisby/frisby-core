@@ -2,6 +2,7 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
 import software.frisby.core.validation.NullValueException;
 import software.frisby.core.validation.NumericValueOutsideRangeException;
@@ -1328,6 +1329,49 @@ class PriorityBufferBlockTest {
                 assertTrue(secondItemDelivered.await(5, TimeUnit.SECONDS),
                         "worker thread should have survived the first item's exception and delivered the second item");
             } finally {
+                executor.shutdown();
+            }
+        }
+
+        @Test
+        void executorShutdownWithoutComplete_stopsWorkerCleanlyButLeavesCompletionUnresolved() throws Exception {
+            // Confirmatory test — PriorityBufferBlock shares AsyncBuffer.Worker with BufferBlock,
+            // whose WorkerResilience suite covers this scenario exhaustively; this proves the
+            // shared fix applies through PriorityBufferBlock's own construction path too.
+            NamedExecutorService executor = newExecutor();
+            CountDownLatch deliveryStarted = new CountDownLatch(1);
+            CountDownLatch releaseDelivery = new CountDownLatch(1);
+
+            try (UncaughtExceptionCapture capture = new UncaughtExceptionCapture()) {
+                PriorityBufferBlock<Integer> block = PriorityBufferBlock.<Integer>builder()
+                        .capacity(10)
+                        .comparator(Comparator.naturalOrder())
+                        .executor(executor)
+                        .build();
+
+                block.linkTo(item -> {
+                    deliveryStarted.countDown();
+
+                    try {
+                        releaseDelivery.await();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    return true;
+                });
+
+                block.post(1);
+
+                assertTrue(deliveryStarted.await(5, TimeUnit.SECONDS));
+
+                executor.shutdown();
+
+                assertFalse(block.awaitCompletion(Duration.ofMillis(200)),
+                        "completion() must not resolve for a hard stop with no complete() ever called");
+                assertFalse(capture.await(1), "an ordinary interrupt must never surface as an uncaught exception");
+            } finally {
+                releaseDelivery.countDown();
                 executor.shutdown();
             }
         }

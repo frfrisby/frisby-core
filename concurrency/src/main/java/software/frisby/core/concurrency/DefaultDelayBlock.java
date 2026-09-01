@@ -58,14 +58,18 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
 
         // Wire: when the worker thread exits after a drain, propagate completion downstream.
         // The lambda runs on the worker thread immediately after lifecycle.finish() resolves
-        // its future.  completed.get() distinguishes a graceful drain from an external
-        // executor shutdown — only the former propagates to downstream targets.
+        // its future. WorkerLifecycle.finish() is constructed with interruptionSignalsCompletion
+        // == false (see the no-arg WorkerLifecycle() below), so it only ever resolves
+        // completion() via the graceful drain path — which always sets this.completed = true
+        // (in complete(), strictly before drain() runs) before that path can be reached. A hard
+        // executor shutdown with no prior complete() call instead leaves the calling thread
+        // interrupted at finish() time, so completion() is deliberately left unresolved and this
+        // callback never runs at all.  There is no live case where this callback observes
+        // this.completed == false.
         this.lifecycle.completion().thenRun(() -> {
-            if (this.completed.get()) {
-                this.targetManager.complete();
-                this.targetManager.completion()
-                        .thenAccept(v -> this.completionFuture.complete(null));
-            }
+            this.targetManager.complete();
+            this.targetManager.completion()
+                    .thenAccept(v -> this.completionFuture.complete(null));
         });
 
         this.worker = new Worker<>(queue, this.targetManager, capacityGate, this.lifecycle, eventSource);
@@ -215,10 +219,21 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
                         }
                     } catch (InterruptedException ex) {
                         if (this.draining) {
+                            // Our own drain()-triggered wake-up — already fully handled by
+                            // flushRemaining() above. The JDK clears the interrupt status as
+                            // part of throwing InterruptedException; deliberately leave it
+                            // cleared here (do NOT restore it) so this fully successful,
+                            // graceful drain lets WorkerLifecycle.finish() resolve completion()
+                            // normally, rather than being mistaken for an abnormal early exit.
                             flushRemaining();
+                        } else {
+                            // A genuine external interrupt with no drain ever requested (e.g. a
+                            // hard executor shutdown) — restore the flag so finish() correctly
+                            // treats this as an abnormal early exit and leaves completion()
+                            // unresolved.
+                            Thread.currentThread().interrupt();
                         }
 
-                        Thread.currentThread().interrupt();
                         exit = true;
                     }
                 }
@@ -226,6 +241,20 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
                 // Normal exit only — a fatal error thrown from deliverAndRelease() (directly,
                 // or via flushRemaining()) propagates past this point, skipping finish() so
                 // completion() never resolves on fatal death.
+                //
+                // A graceful, requested drain (this.draining == true) may still leave the
+                // interrupt flag set here even without going through the catch block above —
+                // drain() unconditionally interrupts this thread as its only way to wake a
+                // take() call blocked on an unexpired delay, but if this thread wasn't actually
+                // blocked in take() at that exact instant (e.g. it observed the draining flag
+                // at the top of the loop instead), that interrupt is never consumed by a thrown
+                // InterruptedException and would otherwise linger here. Clear it so a fully
+                // successful drain always lets finish() resolve completion() normally, rather
+                // than being mistaken for an abnormal early exit.
+                if (this.draining) {
+                    Thread.interrupted();
+                }
+
                 this.lifecycle.finish();
             } finally {
                 // Safety net reached on every exit path, including a fatal error.  Guarantees
