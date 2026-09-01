@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TransformBlockTest {
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'TransformBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'TransformBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // -------------------------------------------------------------------------
     // Builder

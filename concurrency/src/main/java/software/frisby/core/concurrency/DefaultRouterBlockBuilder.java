@@ -10,10 +10,10 @@ import java.util.function.Function;
 
 final class DefaultRouterBlockBuilder<T> implements RouterBlockBuilder<T> {
     private static final String TOO_FEW_TARGETS_MSG =
-            "The 'RouterBlock' block requires at least two targets.  Call target() or targets() before calling build().";
+                "The 'RouterBlock' block requires at least two targets. Call target() or targets() before calling build().";
 
     private static final String ROUTING_STRATEGY_ALREADY_CONFIGURED_MSG =
-            "The 'RouterBlock' block already has a routing function configured.  Call only one of roundRobin(), balanced(), sticky(...), or routingFunction(...).";
+                "The 'RouterBlock' block already has a routing function configured. Call only one of roundRobin(), balanced(), sticky(...), or routingFunction(...).";
 
     private final List<Target<T>> targets = new ArrayList<>();
     private RoutingFunction<T> routingFunction;

@@ -26,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TapBlockTest {
     private static final String NO_CONSUMER_MSG =
-            "The 'TapBlock' block requires a consumer.  Call consumer(consumer) before calling build().";
+            "The 'TapBlock' block requires a consumer. Call consumer(consumer) before calling build().";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'TapBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'TapBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
 
     // -------------------------------------------------------------------------
     // Builder

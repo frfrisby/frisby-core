@@ -131,7 +131,7 @@ public final class Branch<T> implements PipelineTarget<T>, ObservableBlockBuilde
 
         if (null != this.otherwise) {
             throw new IllegalStateException(
-                    "The 'BranchBlock' block already has an otherwise target configured.  The otherwise() method may only be called once."
+                    "The 'BranchBlock' block already has an otherwise target configured. The otherwise() method may only be called once."
             );
         }
 

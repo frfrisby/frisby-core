@@ -9,7 +9,7 @@ import java.util.function.UnaryOperator;
 
 final class DefaultBroadcastBlockBuilder<T> implements BroadcastBlockBuilder<T> {
     private static final String TOO_FEW_TARGETS_MSG =
-            "The 'BroadcastBlock' block requires at least two targets.  Call target() or targets() before calling build().";
+                "The 'BroadcastBlock' block requires at least two targets. Call target() or targets() before calling build().";
 
     private final List<Target<T>> targets = new ArrayList<>();
     private UnaryOperator<T> cloningFunction;

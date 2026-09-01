@@ -27,9 +27,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class PriorityBufferBlockTest {
     private static final String PREFIX = "TestPriorityBuffer";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'PriorityBufferBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'PriorityBufferBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A no-op target that accepts every item.
     private static final Target<String> ACCEPT = item -> true;

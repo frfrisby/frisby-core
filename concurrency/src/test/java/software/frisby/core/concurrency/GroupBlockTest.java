@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class GroupBlockTest {
     private static final String PREFIX = "TestGroup";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'GroupBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'GroupBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
 
     // A no-op target that accepts every batch.
     private static final Target<List<String>> ACCEPT = batch -> true;
@@ -1922,7 +1922,7 @@ class GroupBlockTest {
         }
 
         @Test
-        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
             NamedExecutorService executor = newExecutor();
             StackOverflowError fatal = new StackOverflowError("fatal boom");
 

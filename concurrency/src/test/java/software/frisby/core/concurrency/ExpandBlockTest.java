@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ExpandBlockTest {
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'ExpandBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'ExpandBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
 
     // -------------------------------------------------------------------------
     // post(List<T>)
@@ -152,7 +152,7 @@ class ExpandBlockTest {
 
             ExpandBlock<String> block = ExpandBlock.<String>builder().build();
 
-            block.linkTo(new Target<String>() {
+            block.linkTo(new Target<>() {
                 @Override
                 public boolean post(String item) {
                     deliveryCount.incrementAndGet();
@@ -177,7 +177,7 @@ class ExpandBlockTest {
 
             ExpandBlock<String> block = ExpandBlock.<String>builder().build();
 
-            block.linkTo(new Target<String>() {
+            block.linkTo(new Target<>() {
                 @Override
                 public boolean post(String item) {
                     received.set(item);
@@ -205,7 +205,7 @@ class ExpandBlockTest {
 
             ExpandBlock<String> block = ExpandBlock.<String>builder().build();
 
-            block.linkTo(new Target<String>() {
+            block.linkTo(new Target<>() {
                 @Override
                 public boolean post(String item) {
                     deliveryCount.incrementAndGet();
@@ -242,7 +242,7 @@ class ExpandBlockTest {
 
             ExpandBlock<String> block = ExpandBlock.<String>builder().build();
 
-            block.linkTo(new Target<String>() {
+            block.linkTo(new Target<>() {
                 @Override
                 public boolean post(String item) {
                     return true;

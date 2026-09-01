@@ -25,7 +25,7 @@ class BroadcastBlockTest {
     private static final Target<String> ACCEPT = item -> true;
 
     private static final String TOO_FEW_TARGETS_MSG =
-            "The 'BroadcastBlock' block requires at least two targets.  Call target() or targets() before calling build().";
+            "The 'BroadcastBlock' block requires at least two targets. Call target() or targets() before calling build().";
 
     // -------------------------------------------------------------------------
     // Builder
@@ -296,7 +296,7 @@ class BroadcastBlockTest {
             AtomicBoolean thirdReceived = new AtomicBoolean(false);
 
             BroadcastBlock<String> block = BroadcastBlock.<String>builder()
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             firstReceived.set(true);
@@ -309,7 +309,7 @@ class BroadcastBlockTest {
                             return true;
                         }
                     })
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             secondReceived.set(true);
@@ -322,7 +322,7 @@ class BroadcastBlockTest {
                             return true;
                         }
                     })
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             thirdReceived.set(true);
@@ -349,7 +349,7 @@ class BroadcastBlockTest {
             AtomicBoolean thirdReceived = new AtomicBoolean(false);
 
             BroadcastBlock<String> block = BroadcastBlock.<String>builder()
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             firstReceived.set(true);
@@ -363,7 +363,7 @@ class BroadcastBlockTest {
                         }
                     })
                     .target(timeoutAwareTarget(false))
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             thirdReceived.set(true);
@@ -466,7 +466,7 @@ class BroadcastBlockTest {
             AtomicReference<int[]> secondReceived = new AtomicReference<>();
 
             BroadcastBlock<int[]> block = BroadcastBlock.<int[]>builder()
-                    .target(new Target<int[]>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(int[] item) {
                             firstReceived.set(item);
@@ -479,7 +479,7 @@ class BroadcastBlockTest {
                             return true;
                         }
                     })
-                    .target(new Target<int[]>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(int[] item) {
                             secondReceived.set(item);

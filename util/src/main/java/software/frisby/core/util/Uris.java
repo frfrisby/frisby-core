@@ -29,9 +29,9 @@ public final class Uris {
     private static final String PATH_ARGUMENT_NAME = "path";
     private static final String SEGMENT_ARGUMENT_NAME = "segment";
     private static final String NO_AUTHORITY_MSG =
-            "The 'uri' value of '%s' is invalid.  The URI must be hierarchical and have an authority component.";
+                "The 'uri' value of '%s' is invalid. The URI must be hierarchical and have an authority component.";
     private static final String INVALID_URI_MSG =
-            "The 'uri' value of '%s' is invalid.  The value is not a valid URI.";
+                "The 'uri' value of '%s' is invalid. The value is not a valid URI.";
 
     private Uris() {
     }

@@ -30,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class DelayBlockTest {
     private static final String PREFIX = "TestDelay";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'DelayBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'DelayBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A short delay used wherever near-instant delivery is needed.
     private static final Duration INSTANT = Duration.ofMillis(1);
@@ -1450,7 +1450,7 @@ class DelayBlockTest {
         }
 
         @Test
-        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
             NamedExecutorService executor = newExecutor();
             StackOverflowError fatal = new StackOverflowError("fatal boom");
 

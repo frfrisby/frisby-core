@@ -46,7 +46,7 @@ public final class HttpUris {
     private static final String URI_ARGUMENT_NAME = "uri";
     private static final String SCHEME_ARGUMENT_NAME = "scheme";
     private static final String NO_HOST_MSG =
-            "The 'uri' value of '%s' is invalid.  The URI must have a resolvable host component.";
+                "The 'uri' value of '%s' is invalid. The URI must have a resolvable host component.";
     private static final int HTTP_DEFAULT_PORT = 80;
     private static final int HTTPS_DEFAULT_PORT = 443;
 

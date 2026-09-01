@@ -33,7 +33,7 @@ final class DefaultBranchBlockBuilder<T> implements BranchBlockBuilder<T> {
 
         if (null != this.otherwiseTarget) {
             throw new IllegalStateException(
-                    "The 'BranchBlock' block already has an otherwise target configured.  The otherwise() method may only be called once."
+                    "The 'BranchBlock' block already has an otherwise target configured. The otherwise() method may only be called once."
             );
         }
 
@@ -58,13 +58,13 @@ final class DefaultBranchBlockBuilder<T> implements BranchBlockBuilder<T> {
     public BranchBlock<T> build() {
         if (this.predicates.isEmpty()) {
             throw new IllegalStateException(
-                    "The 'BranchBlock' block requires at least one 'when' clause.  Call when(predicate, target) before calling build()."
+                    "The 'BranchBlock' block requires at least one 'when' clause. Call when(predicate, target) before calling build()."
             );
         }
 
         if (null == this.otherwiseTarget) {
             throw new IllegalStateException(
-                    "The 'BranchBlock' block requires an 'otherwise' target.  Call otherwise(target) before calling build()."
+                    "The 'BranchBlock' block requires an 'otherwise' target. Call otherwise(target) before calling build()."
             );
         }
 

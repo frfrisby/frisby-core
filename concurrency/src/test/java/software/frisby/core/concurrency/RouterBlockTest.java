@@ -26,10 +26,10 @@ class RouterBlockTest {
     private static final Target<String> ACCEPT = item -> true;
 
     private static final String TOO_FEW_TARGETS_MSG =
-            "The 'RouterBlock' block requires at least two targets.  Call target() or targets() before calling build().";
+            "The 'RouterBlock' block requires at least two targets. Call target() or targets() before calling build().";
 
     private static final String ROUTING_STRATEGY_ALREADY_CONFIGURED_MSG =
-            "The 'RouterBlock' block already has a routing function configured.  Call only one of roundRobin(), balanced(), sticky(...), or routingFunction(...).";
+            "The 'RouterBlock' block already has a routing function configured. Call only one of roundRobin(), balanced(), sticky(...), or routingFunction(...).";
 
     // -------------------------------------------------------------------------
     // Builder
@@ -588,7 +588,7 @@ class RouterBlockTest {
             AtomicBoolean secondReceived = new AtomicBoolean(false);
 
             RouterBlock<String> block = RouterBlock.<String>builder()
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             firstReceived.set(true);
@@ -601,7 +601,7 @@ class RouterBlockTest {
                             return true;
                         }
                     })
-                    .target(new Target<String>() {
+                    .target(new Target<>() {
                         @Override
                         public boolean post(String item) {
                             secondReceived.set(true);

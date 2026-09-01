@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenChainTest {
     private static final String ALREADY_FINALIZED_MSG =
-            "This open pipeline chain has already been finalized.  Call build() only once per chain.";
+            "This open pipeline chain has already been finalized. Call build() only once per chain.";
 
     @Nested
     class Finalization {

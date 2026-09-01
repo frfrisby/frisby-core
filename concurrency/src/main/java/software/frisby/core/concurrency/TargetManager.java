@@ -80,7 +80,7 @@ final class TargetManager<T> {
         Values.notNull("target", target);
 
         if (source == target) {
-            throw new IllegalArgumentException("The 'target' value is invalid.  A block cannot be linked to itself.");
+            throw new IllegalArgumentException("The 'target' value is invalid. A block cannot be linked to itself.");
         }
 
         Link<T> newLink = new Link<>(this.deliveredManager, this.errorManager, target);
@@ -88,7 +88,7 @@ final class TargetManager<T> {
         if (!this.linkedTarget.compareAndSet(null, newLink)) {
             throw new IllegalStateException(
                     String.format(
-                            "The '%s' block already has a linked target.  A single-target block may only be linked to one downstream target.",
+                            "The '%s' block already has a linked target. A single-target block may only be linked to one downstream target.",
                             this.blockName
                     )
             );

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BranchTest {
     private static final String OTHERWISE_ALREADY_CONFIGURED_MSG =
-            "The 'BranchBlock' block already has an otherwise target configured.  The otherwise() method may only be called once.";
+            "The 'BranchBlock' block already has an otherwise target configured. The otherwise() method may only be called once.";
 
     // ---------------------------------------------------------------------------
     // Helpers

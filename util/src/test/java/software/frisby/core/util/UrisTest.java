@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UrisTest {
     private static final String OPAQUE_NO_AUTHORITY_MSG =
-            "The 'uri' value of 'mailto:user@example.com' is invalid.  The URI must be hierarchical and have an authority component.";
+            "The 'uri' value of 'mailto:user@example.com' is invalid. The URI must be hierarchical and have an authority component.";
 
     @Nested
     class WithoutPath {
@@ -213,7 +213,7 @@ class UrisTest {
     @Nested
     class Parse {
         private static final String INVALID_URI_MSG =
-                "The 'uri' value of 'http://[invalid' is invalid.  The value is not a valid URI.";
+                "The 'uri' value of 'http://[invalid' is invalid. The value is not a valid URI.";
 
         @Test
         void nullUri_throwsNullValueException() {

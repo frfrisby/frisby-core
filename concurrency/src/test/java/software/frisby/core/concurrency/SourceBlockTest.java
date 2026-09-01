@@ -30,11 +30,11 @@ class SourceBlockTest {
     private static final String PREFIX = "TestSource";
 
     private static final String NO_SUPPLIER_MSG =
-            "A supplier must be configured.  Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode.";
+            "A supplier must be configured. Call supplier(Supplier<T>) for single-item mode or supplier(Supplier<List<T>>) for batch mode.";
     private static final String SUPPLIER_ALREADY_CONFIGURED_MSG =
-            "The 'SourceBlock' block already has a supplier configured.  Call only one of supplier(...) or batchSupplier(...).";
+            "The 'SourceBlock' block already has a supplier configured. Call only one of supplier(...) or batchSupplier(...).";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'SourceBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'SourceBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
 
     private static NamedExecutorService newExecutor() {
         return NamedExecutorService.builder()

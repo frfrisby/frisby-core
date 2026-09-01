@@ -183,7 +183,7 @@ public final class OpenChain<H, I, O> {
     private void throwIfBuilt() {
         if (this.start.built) {
             throw new IllegalStateException(
-                    "This open pipeline chain has already been finalized.  Call build() only once per chain."
+                    "This open pipeline chain has already been finalized. Call build() only once per chain."
             );
         }
     }

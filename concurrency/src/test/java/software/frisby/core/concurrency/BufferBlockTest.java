@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class BufferBlockTest {
     private static final String PREFIX = "TestBuffer";
     private static final String LINK_TO_CALLED_TWICE_MSG =
-            "The 'BufferBlock' block already has a linked target.  A single-target block may only be linked to one downstream target.";
+            "The 'BufferBlock' block already has a linked target. A single-target block may only be linked to one downstream target.";
     private static final String LINK_TO_SELF_MSG =
-            "The 'target' value is invalid.  A block cannot be linked to itself.";
+            "The 'target' value is invalid. A block cannot be linked to itself.";
 
     // A no-op target that accepts every item.
     private static final Target<String> ACCEPT = item -> true;
@@ -1175,7 +1175,7 @@ class BufferBlockTest {
         }
 
         @Test
-        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() throws Exception {
+        void fatalErrorFromTarget_propagatesAsUncaughtExceptionAndKillsWorker() {
             NamedExecutorService executor = newExecutor();
             StackOverflowError fatal = new StackOverflowError("fatal boom");
 
