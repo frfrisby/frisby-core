@@ -200,6 +200,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         }
 
         @Override
+        @SuppressWarnings("java:S3776")
         public void run() {
             this.workerThread.set(Thread.currentThread());
             this.lifecycle.start();
