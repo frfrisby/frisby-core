@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,7 +33,7 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
     DefaultDelayBlock(BlockingQueue<DelayedEntry<T>> queue,
                       int capacity,
                       Function<T, Duration> delayFunction,
-                      Executor executor,
+                      ExecutorService executor,
                       ItemPostedHandler<T> itemPostedHandler,
                       ItemDeliveredHandler<T> itemDeliveredHandler,
                       ErrorOccurredHandler<T> errorOccurredHandler) {
@@ -175,6 +175,15 @@ final class DefaultDelayBlock<T> implements DelayBlock<T> {
         // workerThread is written once by the worker thread and read by drain() on a calling
         // thread.  AtomicReference provides the required cross-thread visibility guarantee
         // without the false-positive Sonar S3077 warning that volatile triggers on object refs.
+        //
+        // Deliberately NOT tracked via ExecutorService.submit() + Future.cancel(true): FutureTask
+        // (the Future implementation submit() wraps every task in) catches every Throwable —
+        // including fatal VirtualMachineError/LinkageError — and stores it via setException()
+        // rather than letting it propagate, which would silently defeat this module's
+        // "fatal errors escape as genuinely uncaught exceptions" contract (see Errors.throwIfFatal
+        // and WorkerLifecycle's class-level Javadoc).  execute() plus a manually tracked Thread
+        // has no such wrapper, so a fatal error thrown from deliverAndRelease() still propagates
+        // straight out of run() exactly as it does for every other async block.
         private final AtomicReference<Thread> workerThread = new AtomicReference<>();
         private volatile boolean draining;
 

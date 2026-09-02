@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import software.frisby.core.concurrency.log.LogExpectation;
 import software.frisby.core.concurrency.log.SystemLogVerifier;
+import software.frisby.core.concurrency.mocks.DeferredExecutorService;
 import software.frisby.core.concurrency.mocks.MockInterruptedQueue;
 import software.frisby.core.concurrency.mocks.UncaughtExceptionCapture;
 import software.frisby.core.validation.DurationOutsideRangeException;
@@ -13,7 +14,7 @@ import software.frisby.core.validation.NumericValueOutsideRangeException;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -973,16 +974,7 @@ class DelayBlockTest {
             CountDownLatch workerStart = new CountDownLatch(1);
 
             try {
-                Executor deferredExecutor = task -> executor.execute(() -> {
-                    try {
-                        workerStart.await();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-
-                    task.run();
-                });
+                ExecutorService deferredExecutor = new DeferredExecutorService(executor, workerStart);
 
                 DefaultDelayBlock<String> block = new DefaultDelayBlock<>(
                         new DelayQueue<>(),

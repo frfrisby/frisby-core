@@ -6,7 +6,7 @@ import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
@@ -39,7 +39,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, AsyncObserv
     private Integer maxGroupSize;
     private Integer capacity;
     private GroupObserver<T, K> observer;
-    private Executor executor;
+    private ExecutorService executor;
     private ErrorOccurredHandler<List<T>> errorOccurredHandler;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<List<T>> itemDeliveredHandler;
@@ -232,7 +232,7 @@ public final class Group<T, K> implements PipelineStage<T, List<T>>, AsyncObserv
      *
      * @param executor The executor to use.
      */
-    void executor(Executor executor) {
+    void executor(ExecutorService executor) {
         this.executor = executor;
     }
 

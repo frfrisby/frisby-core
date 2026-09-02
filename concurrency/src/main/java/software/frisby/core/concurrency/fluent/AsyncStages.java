@@ -1,6 +1,6 @@
 package software.frisby.core.concurrency.fluent;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Internal helper that configures the shared pipeline executor on stage builders that
@@ -27,7 +27,7 @@ final class AsyncStages {
      * @param executor The shared executor configured on the pipeline builder; may be
      *                 {@code null} if the pipeline has no asynchronous stages.
      */
-    static void configureExecutorIfAsync(PipelineTarget<?> target, Executor executor) {
+    static void configureExecutorIfAsync(PipelineTarget<?> target, ExecutorService executor) {
         if (target instanceof Batch<?> batchStage) {
             batchStage.executor(executor);
         } else if (target instanceof Buffer<?> bufferStage) {

@@ -3,7 +3,7 @@ package software.frisby.core.concurrency;
 import software.frisby.core.validation.Values;
 
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 final class DefaultSourceBlockBuilder<T> implements SourceBlockBuilder<T> {
@@ -12,7 +12,7 @@ final class DefaultSourceBlockBuilder<T> implements SourceBlockBuilder<T> {
 
     private Supplier<T> singleItemSupplier;
     private Supplier<List<T>> batchSupplier;
-    private Executor executor;
+    private ExecutorService executor;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
     private ErrorOccurredHandler<T> errorOccurredHandler;
     private SourceConcurrencyPolicy concurrencyPolicy;
@@ -42,7 +42,7 @@ final class DefaultSourceBlockBuilder<T> implements SourceBlockBuilder<T> {
     }
 
     @Override
-    public SourceBlockBuilder<T> executor(Executor executor) {
+    public SourceBlockBuilder<T> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

@@ -7,7 +7,7 @@ import software.frisby.core.validation.Values;
 import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 @SuppressWarnings("ALL")
@@ -19,7 +19,7 @@ final class AsyncBuffer<T> {
     AsyncBuffer(BlockingQueue<T> queue,
                 int capacity,
                 Consumer<T> consumer,
-                Executor executor,
+                ExecutorService executor,
                 EventSource eventSource) {
         Sequences.notNull("queue", queue);
         Numbers.positive("capacity", capacity);

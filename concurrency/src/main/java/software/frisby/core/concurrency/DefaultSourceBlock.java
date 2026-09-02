@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ final class DefaultSourceBlock<T> implements SourceBlock<T> {
     DefaultSourceBlock(Supplier<T> singleItemSupplier,
                        Supplier<List<T>> batchSupplier,
                        SourceConcurrencyPolicy policy,
-                       Executor executor,
+                       ExecutorService executor,
                        ItemDeliveredHandler<T> itemDeliveredHandler,
                        ErrorOccurredHandler<T> errorOccurredHandler) {
         Values.notNull("executor", executor);

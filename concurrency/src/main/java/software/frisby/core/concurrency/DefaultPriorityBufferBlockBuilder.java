@@ -1,12 +1,12 @@
 package software.frisby.core.concurrency;
 
 import java.util.Comparator;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 final class DefaultPriorityBufferBlockBuilder<T> implements PriorityBufferBlockBuilder<T> {
     private int capacity;
     private Comparator<T> comparator;
-    private Executor executor;
+    private ExecutorService executor;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
     private ErrorOccurredHandler<T> errorOccurredHandler;
@@ -28,7 +28,7 @@ final class DefaultPriorityBufferBlockBuilder<T> implements PriorityBufferBlockB
     }
 
     @Override
-    public PriorityBufferBlockBuilder<T> executor(Executor executor) {
+    public PriorityBufferBlockBuilder<T> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

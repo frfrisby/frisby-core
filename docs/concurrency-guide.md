@@ -445,7 +445,7 @@ Pipeline<Order> pipeline = Pipeline.<Order>builder()
 ```
 
 Use `Executors.newVirtualThreadPerTaskExecutor()` on Java 21+ when thread-per-task
-semantics are preferred; any `Executor` implementation is accepted.
+semantics are preferred; any `ExecutorService` implementation is accepted.
 
 ---
 

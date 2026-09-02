@@ -1,12 +1,12 @@
 package software.frisby.core.concurrency.fluent;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 final class DefaultOpenPipelineBuilder implements OpenPipelineBuilder {
-    private Executor executor;
+    private ExecutorService executor;
 
     @Override
-    public OpenPipelineBuilder executor(Executor executor) {
+    public OpenPipelineBuilder executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

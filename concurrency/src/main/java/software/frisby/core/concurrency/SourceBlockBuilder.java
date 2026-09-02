@@ -1,7 +1,7 @@
 package software.frisby.core.concurrency;
 
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -12,15 +12,15 @@ import java.util.function.Supplier;
  */
 public interface SourceBlockBuilder<T> {
     /**
-     * Sets the {@link Executor} that will run the worker thread driving this block.  Any
-     * {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread driving this block.  Any
+     * {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    SourceBlockBuilder<T> executor(Executor executor);
+    SourceBlockBuilder<T> executor(ExecutorService executor);
 
     /**
      * Sets the single-item supplier that will be invoked on each iteration to produce one item.

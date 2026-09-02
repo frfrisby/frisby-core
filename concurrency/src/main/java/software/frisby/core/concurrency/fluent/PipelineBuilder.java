@@ -2,7 +2,7 @@ package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.NamedExecutorService;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 /**
@@ -19,18 +19,18 @@ import java.util.function.Consumer;
  */
 public interface PipelineBuilder<T> {
     /**
-     * Sets the {@link Executor} that will run the worker thread for all asynchronous
-     * pipeline stages.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread for all asynchronous
+     * pipeline stages.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      * <p>
-     * The {@link Executor} is <b>required</b> when constructing pipelines consisting of asynchronous stages
+     * The {@link ExecutorService} is <b>required</b> when constructing pipelines consisting of asynchronous stages
      * such as {@link Batch}, {@link Buffer}, {@link Delay}, {@link Group}, or {@link PriorityBuffer}.
      *
      * @param executor The executor that will run async stage worker threads.
      * @return This builder, for method chaining.
      */
-    PipelineBuilder<T> executor(Executor executor);
+    PipelineBuilder<T> executor(ExecutorService executor);
 
     /**
      * Sets the first stage of the pipeline and returns the chain builder for adding further

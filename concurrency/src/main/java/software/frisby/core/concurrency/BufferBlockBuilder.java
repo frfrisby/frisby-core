@@ -1,6 +1,6 @@
 package software.frisby.core.concurrency;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Builder for constructing a {@link BufferBlock}.  Obtain an instance via
@@ -10,15 +10,15 @@ import java.util.concurrent.Executor;
  */
 public interface BufferBlockBuilder<T> extends AsyncObservableBlockBuilder<T, T, BufferBlockBuilder<T>> {
     /**
-     * Sets the {@link Executor} that will run the worker thread delivering items to the
-     * downstream target.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread delivering items to the
+     * downstream target.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    BufferBlockBuilder<T> executor(Executor executor);
+    BufferBlockBuilder<T> executor(ExecutorService executor);
 
     /**
      * Optional. Sets the maximum number of items the internal queue can hold before backpressure is

@@ -6,7 +6,7 @@ import software.frisby.core.validation.Values;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Fluent builder for an async priority-ordered pass-through stage.
@@ -29,7 +29,7 @@ import java.util.concurrent.Executor;
 public final class PriorityBuffer<T> implements PipelineStage<T, T>, AsyncObservableBlockBuilder<T, T, PriorityBuffer<T>> {
     private Integer capacity;
     private Comparator<T> comparator;
-    private Executor executor;
+    private ExecutorService executor;
     private ErrorOccurredHandler<T> errorOccurredHandler;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
@@ -157,7 +157,7 @@ public final class PriorityBuffer<T> implements PipelineStage<T, T>, AsyncObserv
      *
      * @param executor The executor to use.
      */
-    void executor(Executor executor) {
+    void executor(ExecutorService executor) {
         this.executor = executor;
     }
 

@@ -2,7 +2,7 @@ package software.frisby.core.concurrency;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Builder for constructing a {@link BatchBlock}.  Obtain an instance via
@@ -12,15 +12,15 @@ import java.util.concurrent.Executor;
  */
 public interface BatchBlockBuilder<T> extends AsyncObservableBlockBuilder<T, List<T>, BatchBlockBuilder<T>> {
     /**
-     * Sets the {@link Executor} that will run the worker thread batching and delivering items
-     * to the downstream target.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread batching and delivering items
+     * to the downstream target.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    BatchBlockBuilder<T> executor(Executor executor);
+    BatchBlockBuilder<T> executor(ExecutorService executor);
 
     /**
      * Optional. Sets the maximum number of items the internal queue can hold before backpressure is

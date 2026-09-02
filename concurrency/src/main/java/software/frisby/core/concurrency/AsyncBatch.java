@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -38,7 +38,7 @@ final class AsyncBatch<T> {
                Consumer<List<T>> consumer,
                int batchSize,
                Duration timeout,
-               Executor executor,
+               ExecutorService executor,
                EventSource eventSource) {
         Sequences.notNull("queue", queue);
         Numbers.positive("capacity", capacity);

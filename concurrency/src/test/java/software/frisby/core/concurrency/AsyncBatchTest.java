@@ -2,6 +2,7 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.mocks.DeferredExecutorService;
 import software.frisby.core.concurrency.mocks.MockInterruptedQueue;
 
 import java.time.Duration;
@@ -373,16 +374,7 @@ class AsyncBatchTest {
             NamedExecutorService executor = newExecutor();
 
             try {
-                Executor delayedStart = task -> executor.execute(() -> {
-                    try {
-                        workerStart.await();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-
-                    task.run();
-                });
+                ExecutorService delayedStart = new DeferredExecutorService(executor, workerStart);
 
                 AsyncBatch<String> batch = new AsyncBatch<>(
                         new ArrayBlockingQueue<>(10),

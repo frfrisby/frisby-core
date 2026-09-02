@@ -6,7 +6,7 @@ import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Fluent builder for an async batching stage.
@@ -34,7 +34,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, AsyncObservabl
     private Integer capacity;
     private Integer batchSize;
     private Duration timeout;
-    private Executor executor;
+    private ExecutorService executor;
     private ErrorOccurredHandler<List<T>> errorOccurredHandler;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<List<T>> itemDeliveredHandler;
@@ -161,7 +161,7 @@ public final class Batch<T> implements PipelineStage<T, List<T>>, AsyncObservabl
      *
      * @param executor The executor to use.
      */
-    void executor(Executor executor) {
+    void executor(ExecutorService executor) {
         this.executor = executor;
     }
 

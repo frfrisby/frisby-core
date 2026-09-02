@@ -6,7 +6,7 @@ import software.frisby.core.validation.Values;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
@@ -31,7 +31,7 @@ public final class Delay<T> implements PipelineStage<T, T>, AsyncObservableBlock
     private Duration fixedDelay;
     private Function<T, Duration> delayFunction;
     private Integer capacity;
-    private Executor executor;
+    private ExecutorService executor;
     private ErrorOccurredHandler<T> errorOccurredHandler;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
@@ -175,7 +175,7 @@ public final class Delay<T> implements PipelineStage<T, T>, AsyncObservableBlock
      *
      * @param executor The executor to use.
      */
-    void executor(Executor executor) {
+    void executor(ExecutorService executor) {
         this.executor = executor;
     }
 
