@@ -2,6 +2,7 @@ package software.frisby.core.concurrency;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import software.frisby.core.concurrency.mocks.DeferredExecutorService;
 import software.frisby.core.concurrency.mocks.MockInterruptedQueue;
 
 import java.time.Duration;
@@ -315,16 +316,7 @@ class AsyncBufferTest {
             CountDownLatch workerStart = new CountDownLatch(1);
 
             try {
-                Executor deferredExecutor = task -> executor.execute(() -> {
-                    try {
-                        workerStart.await();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-
-                    task.run();
-                });
+                ExecutorService deferredExecutor = new DeferredExecutorService(executor, workerStart);
 
                 AsyncBuffer<String> buffer = new AsyncBuffer<>(
                         new ArrayBlockingQueue<>(10),

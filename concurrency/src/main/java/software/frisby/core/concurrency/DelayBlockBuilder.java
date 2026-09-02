@@ -1,7 +1,7 @@
 package software.frisby.core.concurrency;
 
 import java.time.Duration;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
@@ -12,15 +12,15 @@ import java.util.function.Function;
  */
 public interface DelayBlockBuilder<T> extends AsyncObservableBlockBuilder<T, T, DelayBlockBuilder<T>> {
     /**
-     * Sets the {@link Executor} that will run the worker thread delivering delayed items to the
-     * downstream target.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread delivering delayed items to the
+     * downstream target.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    DelayBlockBuilder<T> executor(Executor executor);
+    DelayBlockBuilder<T> executor(ExecutorService executor);
 
     /**
      * Sets a fixed delay that will be applied to every item posted to the block.

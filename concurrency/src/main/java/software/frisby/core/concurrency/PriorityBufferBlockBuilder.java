@@ -1,7 +1,7 @@
 package software.frisby.core.concurrency;
 
 import java.util.Comparator;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Builder for constructing a {@link PriorityBufferBlock}.  Obtain an instance via
@@ -11,15 +11,15 @@ import java.util.concurrent.Executor;
  */
 public interface PriorityBufferBlockBuilder<T> extends AsyncObservableBlockBuilder<T, T, PriorityBufferBlockBuilder<T>> {
     /**
-     * Sets the {@link Executor} that will run the worker thread delivering items to the
-     * downstream target.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread delivering items to the
+     * downstream target.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    PriorityBufferBlockBuilder<T> executor(Executor executor);
+    PriorityBufferBlockBuilder<T> executor(ExecutorService executor);
 
     /**
      * Sets the comparator used to determine the delivery order of queued items.  The item

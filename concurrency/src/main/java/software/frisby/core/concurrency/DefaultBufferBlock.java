@@ -7,7 +7,7 @@ import software.frisby.core.validation.Values;
 import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,7 +24,7 @@ final class DefaultBufferBlock<T> implements BufferBlock<T> {
     private final CompletableFuture<Void> completionFuture;
 
     DefaultBufferBlock(int capacity,
-                       Executor executor,
+                       ExecutorService executor,
                        ItemPostedHandler<T> itemPostedHandler,
                        ItemDeliveredHandler<T> itemDeliveredHandler,
                        ErrorOccurredHandler<T> errorOccurredHandler) {

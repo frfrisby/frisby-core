@@ -1,10 +1,10 @@
 package software.frisby.core.concurrency;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 final class DefaultBufferBlockBuilder<T> implements BufferBlockBuilder<T> {
     private int capacity;
-    private Executor executor;
+    private ExecutorService executor;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
     private ErrorOccurredHandler<T> errorOccurredHandler;
@@ -20,7 +20,7 @@ final class DefaultBufferBlockBuilder<T> implements BufferBlockBuilder<T> {
     }
 
     @Override
-    public BufferBlockBuilder<T> executor(Executor executor) {
+    public BufferBlockBuilder<T> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

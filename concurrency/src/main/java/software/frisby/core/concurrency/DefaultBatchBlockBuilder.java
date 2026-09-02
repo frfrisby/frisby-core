@@ -2,14 +2,14 @@ package software.frisby.core.concurrency;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 final class DefaultBatchBlockBuilder<T> implements BatchBlockBuilder<T> {
 
     private int capacity;
     private int batchSize;
     private Duration timeout;
-    private Executor executor;
+    private ExecutorService executor;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<List<T>> itemDeliveredHandler;
     private ErrorOccurredHandler<List<T>> errorOccurredHandler;
@@ -39,7 +39,7 @@ final class DefaultBatchBlockBuilder<T> implements BatchBlockBuilder<T> {
     }
 
     @Override
-    public BatchBlockBuilder<T> executor(Executor executor) {
+    public BatchBlockBuilder<T> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

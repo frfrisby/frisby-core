@@ -2,7 +2,7 @@ package software.frisby.core.concurrency;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
@@ -14,15 +14,15 @@ import java.util.function.Function;
  */
 public interface GroupBlockBuilder<T, K> extends AsyncObservableBlockBuilder<T, List<T>, GroupBlockBuilder<T, K>> {
     /**
-     * Sets the {@link Executor} that will run the worker thread grouping and delivering items
-     * to the downstream target.  Any {@link Executor} implementation is accepted, including
+     * Sets the {@link ExecutorService} that will run the worker thread grouping and delivering items
+     * to the downstream target.  Any {@link ExecutorService} implementation is accepted, including
      * {@code Executors.newVirtualThreadPerTaskExecutor()} on Java 21+.  Shutdown coordination
      * for executors not managed by {@link NamedExecutorService} is the caller's responsibility.
      *
      * @param executor The executor that will execute the worker task.
      * @return This builder, for method chaining.
      */
-    GroupBlockBuilder<T, K> executor(Executor executor);
+    GroupBlockBuilder<T, K> executor(ExecutorService executor);
 
     /**
      * Sets the function that extracts a group key from each posted item.  Items that return

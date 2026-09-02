@@ -9,7 +9,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,7 +30,7 @@ final class DefaultBatchBlock<T> implements BatchBlock<T> {
     DefaultBatchBlock(int capacity,
                       int batchSize,
                       Duration timeout,
-                      Executor executor,
+                      ExecutorService executor,
                       ItemPostedHandler<T> itemPostedHandler,
                       ItemDeliveredHandler<List<T>> itemDeliveredHandler,
                       ErrorOccurredHandler<List<T>> errorOccurredHandler) {

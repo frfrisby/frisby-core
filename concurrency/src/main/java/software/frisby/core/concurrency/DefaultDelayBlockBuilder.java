@@ -2,12 +2,12 @@ package software.frisby.core.concurrency;
 
 import java.time.Duration;
 import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 final class DefaultDelayBlockBuilder<T> implements DelayBlockBuilder<T> {
     private int capacity;
-    private Executor executor;
+    private ExecutorService executor;
     private Function<T, Duration> delayFunction;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<T> itemDeliveredHandler;
@@ -36,7 +36,7 @@ final class DefaultDelayBlockBuilder<T> implements DelayBlockBuilder<T> {
     }
 
     @Override
-    public DelayBlockBuilder<T> executor(Executor executor) {
+    public DelayBlockBuilder<T> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

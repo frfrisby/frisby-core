@@ -3,7 +3,7 @@ package software.frisby.core.concurrency.fluent;
 import software.frisby.core.concurrency.Source;
 import software.frisby.core.concurrency.Target;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 /**
@@ -33,7 +33,7 @@ public final class Chain<H, O> {
     private Chain<H, ?> previous;
     private Chain<H, ?> next;
 
-    private Executor executor;
+    private ExecutorService executor;
     private boolean built;
 
     private Chain(PipelineTarget<?> target, PipelineSource<O> source) {
@@ -46,7 +46,7 @@ public final class Chain<H, O> {
         return (Target<T>) t;
     }
 
-    static <I, N> Chain<I, N> from(PipelineStage<I, N> source, Executor executor) {
+    static <I, N> Chain<I, N> from(PipelineStage<I, N> source, ExecutorService executor) {
         Chain<I, N> chain = new Chain<>(source, source);
 
         chain.executor = executor;
@@ -55,7 +55,7 @@ public final class Chain<H, O> {
         return chain;
     }
 
-    static <I, N> Chain<I, N> from(OpenPipeline<I, N> pipeline, Executor executor) {
+    static <I, N> Chain<I, N> from(OpenPipeline<I, N> pipeline, ExecutorService executor) {
         Chain<I, N> chain = new Chain<>((PipelineTarget<I>) () -> pipeline, () -> pipeline);
 
         chain.executor = executor;
@@ -163,7 +163,7 @@ public final class Chain<H, O> {
      * @param executor The executor to use for all async stages in this chain.
      * @return This chain, for method chaining.
      */
-    public Chain<H, O> executor(Executor executor) {
+    public Chain<H, O> executor(ExecutorService executor) {
         this.start.executor = executor;
         return this;
     }

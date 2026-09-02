@@ -2,7 +2,7 @@ package software.frisby.core.concurrency;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 final class DefaultGroupBlockBuilder<T, K> implements GroupBlockBuilder<T, K> {
@@ -11,7 +11,7 @@ final class DefaultGroupBlockBuilder<T, K> implements GroupBlockBuilder<T, K> {
     private Duration idleTimeout;
     private int capacity;
     private int maxGroupSize;
-    private Executor executor;
+    private ExecutorService executor;
     private ItemPostedHandler<T> itemPostedHandler;
     private ItemDeliveredHandler<List<T>> itemDeliveredHandler;
     private ErrorOccurredHandler<List<T>> errorOccurredHandler;
@@ -55,7 +55,7 @@ final class DefaultGroupBlockBuilder<T, K> implements GroupBlockBuilder<T, K> {
     }
 
     @Override
-    public GroupBlockBuilder<T, K> executor(Executor executor) {
+    public GroupBlockBuilder<T, K> executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }

@@ -4,7 +4,7 @@ import software.frisby.core.concurrency.Source;
 import software.frisby.core.concurrency.Target;
 
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -31,7 +31,7 @@ public final class OpenChain<H, I, O> {
     private OpenChain<H, ?, ?> previous;
     private OpenChain<H, ?, ?> next;
 
-    private Executor executor;
+    private ExecutorService executor;
     private boolean built;
 
     private OpenChain(PipelineTarget<I> target, PipelineSource<O> source) {
@@ -49,7 +49,7 @@ public final class OpenChain<H, I, O> {
         return (Source<T>) s;
     }
 
-    static <I, N> OpenChain<I, I, N> from(PipelineStage<I, N> source, Executor executor) {
+    static <I, N> OpenChain<I, I, N> from(PipelineStage<I, N> source, ExecutorService executor) {
         OpenChain<I, I, N> chain = new OpenChain<>(source, source);
 
         chain.executor = executor;
@@ -58,7 +58,7 @@ public final class OpenChain<H, I, O> {
         return chain;
     }
 
-    static <I, N> OpenChain<I, I, N> from(OpenPipeline<I, N> pipeline, Executor executor) {
+    static <I, N> OpenChain<I, I, N> from(OpenPipeline<I, N> pipeline, ExecutorService executor) {
         OpenChain<I, I, N> chain = new OpenChain<>(() -> pipeline, () -> pipeline);
 
         chain.executor = executor;
@@ -166,7 +166,7 @@ public final class OpenChain<H, I, O> {
      * @param executor The executor to use for all async stages in this chain.
      * @return This chain, for method chaining.
      */
-    public OpenChain<H, I, O> executor(Executor executor) {
+    public OpenChain<H, I, O> executor(ExecutorService executor) {
         this.start.executor = executor;
         return this;
     }
