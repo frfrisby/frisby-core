@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.4.2](https://github.com/frfrisby/frisby-core/compare/v1.4.1...v1.4.2) (2026-09-02)
+
+
+### Bug Fixes
+
+* **concurrency:** Widen executor(...) builder parameters from Executor to ExecutorService. ([#88](https://github.com/frfrisby/frisby-core/issues/88)) ([5386f44](https://github.com/frfrisby/frisby-core/commit/5386f44297c9fa00297147da72225777b59cc3d1))
+
 ## [1.4.1](https://github.com/frfrisby/frisby-core/compare/v1.4.0...v1.4.1) (2026-09-01)
 
 
