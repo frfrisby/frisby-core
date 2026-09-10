@@ -65,7 +65,10 @@ Never use `cat > file << EOF`, `tee << EOF`, or any multi-line heredoc/here-stri
 create or modify file content — this has reliably corrupted files or wedged the
 terminal in this environment (blank lines dropped, quoting mangled, shell left waiting
 for a phantom `EOF`). Use `insert_edit_into_file` / `replace_string_in_file` for all
-file content changes instead.
+file content changes instead. This applies even to a *read-only* diagnostic script
+(e.g. a `python3 - <<'EOF' ... EOF` one-off) — use a single-line `python3 -c "..."`
+invocation instead if a script is genuinely needed; don't reach for heredoc just
+because nothing is being written to the target file.
 
 The terminal is fine for single-line, non-content operations: `git`, `mvn`, `ls`/`find`/
 `grep`/`cat`/`wc` (read-only inspection), and plain output redirection like `... 2>&1 |
@@ -74,8 +77,54 @@ content authored via the shell, not redirection in general.
 
 If a file-reading tool's output looks suspicious (wrong line count vs. a file you just
 wrote, garbled or reordered text), verify with `wc -l` / `cat -n` before trusting it —
-this has been observed to be a stale-read glitch rather than actual on-disk corruption,
-so don't assume the worst without checking.
+`read_file` has, on at least one occasion, returned scrambled/duplicated content for a
+file that was completely untouched and clean on disk. This isn't limited to reads right
+after an edit; treat any suspicious `read_file` output as unverified until double-checked
+in the terminal.
+
+### ⚠️ Edit Tools Can Silently Corrupt Files — Verify, Don't Trust the Preview
+
+Both `insert_edit_into_file` **and** `replace_string_in_file` have been observed to
+report success while actually reordering, merging, or dropping surrounding content — not
+limited to the unanchored-edit case below. One observed incident: a
+`replace_string_in_file` call with the old/new strings fully anchored on both sides
+(real, pre-existing text on both edges) reported success, but the resulting file had
+whole sections deleted and another relocated and corrupted. Retrying the *exact same
+call* immediately after restoring from git succeeded cleanly — this looks like genuine
+nondeterministic flakiness in the edit tools, not something anchoring alone reliably
+prevents.
+
+**After every edit to a file of non-trivial size, verify the actual result — don't trust
+the tool's own "success" response or its returned "file after edit" preview, and don't
+fully trust the IDE's diff viewer either** (it may be rendering the same tool-reported
+diff rather than a fresh re-diff of on-disk content, so it can look correct even when the
+file is not). For a git-tracked file, `git diff --stat <file>` immediately after the edit
+is the fastest real check — a pure addition should show 0 (or a small, expected) deletion
+count; a surprising deletion count is an immediate red flag, often faster to catch than
+rereading the whole file. For an untracked file, fall back to `wc -l` plus `cat -n` on
+the affected region. Prefer verifying after *each* individual edit rather than batching
+several edits and checking only at the end — that's what makes it possible to tell which
+specific edit introduced a problem.
+
+If corruption is confirmed on a git-tracked file, the fastest recovery is
+`git checkout -- <file>` to restore the last-committed version, then reissue the edit —
+sometimes verbatim — rather than trying to hand-patch the scrambled result.
+
+If `replace_string_in_file` rejects an old-string with "Could not find the specified
+text" even though `grep_search`/`cat -n` confirm it exists verbatim (including
+whitespace), this is not necessarily a real mismatch — it has been observed to fail and
+then succeed on an identical retry, with no consistent rule for whether more or less
+surrounding context helps. A plain retry, or falling back to a targeted single-line
+`sed -i ''` substitution via the terminal (not a heredoc — see above), is a reasonable
+next step before spending much time hunting for a hidden character.
+
+When a special/non-ASCII character (e.g. `§`, `×`, an em dash) looks like it went
+missing after an edit, don't conclude that from `cat`/`sed`/`grep` terminal output alone
+— terminal font rendering of some characters is unreliable and can make a correctly
+present character look absent or garbled. Confirm with `hexdump -C` / `od -c` (checking
+for the actual UTF-8 byte sequence, e.g. `c2 a7` for `§`) before concluding the edit tool
+mangled it — chasing a phantom encoding bug this way has cost real time in this
+environment.
 
 ### ⚠️ File-Editing Tools — Anchor Both Sides of an Edit
 
@@ -87,12 +136,30 @@ file — the tool interprets an unanchored block as "this is the whole file" rat
 "splice this in, then resume the original content." This applies to both
 `insert_edit_into_file` and `replace_string_in_file` — a `replace_string_in_file` call
 whose `oldString` doesn't uniquely and precisely match the surrounding lines has also
-been observed to corrupt a file rather than simply fail cleanly.
+been observed to corrupt a file rather than simply fail cleanly. As covered above, even a
+fully anchored edit is not guaranteed safe — anchoring reduces the risk, but the
+verification steps above are still required regardless.
 
-After any edit to a file of non-trivial size, verify the real line count with `wc -l`
-(or reread the affected region) rather than trusting a tool's own "file after edit"
-preview — the preview can look entirely correct even when the on-disk file was
-truncated.
+### ⚠️ Git Commands That Invoke a Pager Will Hang the Terminal on Long Output
+
+`git diff`, `git log`, `git show`, and `git blame` all pipe through the user's configured
+pager (typically `less`) when run interactively and the output is long enough to need
+scrolling. In this environment that pager waits for the user to page through or quit it
+— from the user's side, the agent silently stalls, which is easy to mistake for a
+long-running command rather than a terminal waiting on keyboard input the agent will
+never send. Always disable the pager for these commands:
+
+```bash
+git --no-pager diff
+git --no-pager log
+git --no-pager show
+git --no-pager blame -- <file>
+```
+
+Piping to `cat` (e.g. `git diff | cat`) also works and is fine when `--no-pager` isn't
+convenient to place. `git diff --stat` (see above) is usually short enough to avoid the
+pager entirely, but prefer `--no-pager` on any `git diff`/`log`/`show` call as a matter
+of habit rather than relying on output length to stay under the pager threshold.
 
 ---
 
