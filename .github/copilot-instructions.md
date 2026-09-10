@@ -4,10 +4,19 @@ This file is the authoritative style and convention reference for this repositor
 It is automatically loaded by GitHub Copilot on every session.
 
 The **general Java style rules** (sections 2–8 below) are maintained as a portable
-template in `.github/docs/java-coding-style.md`.  Section 1 (Language & Toolchain) is this
-project's own toolchain declaration, not part of the portable template.  When starting a new
-project, copy `.github/docs/java-coding-style.md` and append a project-specific section like the
-one at the end of this file.
+template in `.github/docs/java-coding-style.md`.  Section 1 (Language & Toolchain) and the
+**Agent Operating Notes** section immediately following it are this project's own
+declarations, not part of the portable template.  When starting a new project, copy
+`.github/docs/java-coding-style.md` and append a project-specific section like the one at
+the end of this file.
+
+**⚠️ These sections are a duplicate, not a reference — there is no automated sync.**
+Sections 2–8 are inlined here (rather than referenced live) so the rules are guaranteed
+to auto-load every session. That means an edit to one copy does not update the other. If
+you edit a rule in sections 2–8, also apply the same edit to
+`.github/docs/java-coding-style.md` in the same change, and vice versa — see the
+propagation note at the top of that file for the full obligation (it is also copied into
+other projects on a manual, human-driven basis).
 
 ---
 
@@ -16,6 +25,74 @@ one at the end of this file.
 - Java 17+
 - Maven (multi-module: `bom/`, `validation/`, `util/`, `concurrency/`)
 - JUnit 5 (Jupiter) for tests
+
+---
+
+## Agent Operating Notes
+
+### ⚠️ Reference Docs — Self-Fetch, Don't Wait to Be Attached
+
+None of the reference docs below are fetched automatically just because they're
+mentioned by path in this file — a path reference in markdown does not pull in file
+contents. If a relevant doc isn't already visible in the conversation (whether attached
+by the user or already read earlier in this session), **read it yourself with your
+file-reading tool before writing code that depends on it.** Don't wait for the user to
+remember to attach it, and don't guess at method signatures/behavior you could just read.
+
+The general Java style rules (sections 2–8 below, and their portable source
+`.github/docs/java-coding-style.md`) are already inlined in this file, so no self-fetch
+is needed for those. The following docs are **not** inlined — they exist only as files on
+disk, and must be read explicitly whenever the task touches that area:
+
+- `docs/ai/validation.md` and `docs/validation-guide.md` — full API reference for
+  `software.frisby.core.validation` (`Strings`, `Numbers`, `Durations`, temporal
+  validators, `FieldGroup`, exception hierarchy, anti-patterns).
+- `docs/ai/concurrency.md` and `docs/concurrency-guide.md` — full API reference for
+  `software.frisby.core.concurrency` (`Pipeline`, blocks, fluent builders,
+  `NamedExecutorService`, anti-patterns).
+- `docs/ai/util.md` and `docs/util-guide.md` — full API reference for
+  `software.frisby.core.util` (`StopWatch`, `Decimals`, etc.).
+- `docs/field-groups-guide.md` — `FieldGroup` deep dive, only needed when a task
+  specifically touches field-group validation.
+
+Don't front-load every doc in this list regardless of relevance — that wastes context on
+docs the task doesn't need. Read only the doc(s) that actually match the module/area
+being touched.
+
+### ⚠️ Terminal File Edits — Do Not Use Heredoc
+
+Never use `cat > file << EOF`, `tee << EOF`, or any multi-line heredoc/here-string to
+create or modify file content — this has reliably corrupted files or wedged the
+terminal in this environment (blank lines dropped, quoting mangled, shell left waiting
+for a phantom `EOF`). Use `insert_edit_into_file` / `replace_string_in_file` for all
+file content changes instead.
+
+The terminal is fine for single-line, non-content operations: `git`, `mvn`, `ls`/`find`/
+`grep`/`cat`/`wc` (read-only inspection), and plain output redirection like `... 2>&1 |
+tail -100` when capturing command output — the problem is specifically multi-line
+content authored via the shell, not redirection in general.
+
+If a file-reading tool's output looks suspicious (wrong line count vs. a file you just
+wrote, garbled or reordered text), verify with `wc -l` / `cat -n` before trusting it —
+this has been observed to be a stale-read glitch rather than actual on-disk corruption,
+so don't assume the worst without checking.
+
+### ⚠️ File-Editing Tools — Anchor Both Sides of an Edit
+
+When replacing or inserting content anywhere other than the very start/end of a file,
+include a `// ...existing code...` (or the file format's equivalent comment syntax)
+marker **after** your new content, not just before it. Supplying only the new content
+with no trailing anchor has been observed to silently truncate the entire rest of the
+file — the tool interprets an unanchored block as "this is the whole file" rather than
+"splice this in, then resume the original content." This applies to both
+`insert_edit_into_file` and `replace_string_in_file` — a `replace_string_in_file` call
+whose `oldString` doesn't uniquely and precisely match the surrounding lines has also
+been observed to corrupt a file rather than simply fail cleanly.
+
+After any edit to a file of non-trivial size, verify the real line count with `wc -l`
+(or reread the affected region) rather than trusting a tool's own "file after edit"
+preview — the preview can look entirely correct even when the on-disk file was
+truncated.
 
 ---
 
@@ -585,10 +662,9 @@ if (null == value) throw nullValue(name);
 
 ### Worker / Runnable nested classes
 
-Nested classes that implement `Runnable` and run on a separate thread must always be
-declared `private static`.  All collaborators they need must be passed as explicit
-constructor parameters — never let the worker access outer class state via an implicit
-`OuterClass.this.*` reference.
+**Long-lived or reusable workers in non-static contexts** must be declared `private static`
+with all collaborators passed as explicit constructor parameters — never let the worker
+access outer class state via an implicit `OuterClass.this.*` reference.
 
 - **Explicitness** — the constructor signature is the complete record of everything the
   thread can touch.  No reader needs to scan the outer class to understand the worker's
@@ -637,6 +713,22 @@ this.capacityGate = new CapacityGate(capacity);
 this.worker = new Worker<>(queue, this.capacityGate);
 ```
 
+**Simple one-shot tasks in static contexts** (e.g. a JVM shutdown hook registered from
+a `static void main`) may use a lambda when the captured variables are few, obvious, and
+local to the enclosing static method.  There is no enclosing instance to capture, so the
+hidden-reference concern does not apply:
+
+```java
+// Fine — static context, two obvious local variables, runs once
+Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+    server.stop();
+    application.close();
+}));
+
+// Also fine — named class adds clarity when the intent benefits from a name
+Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownTask(server, application)));
+```
+
 ---
 
 ## 5 — JavaDoc
@@ -681,23 +773,46 @@ self-contained.
 ### Language
 
 All prose — Javadoc comments, inline comments, and commit messages — must use
-**American English** spelling.  Common British/Commonwealth variants to avoid:
+**American English** spelling. When in doubt, [Merriam-Webster](https://www.merriam-webster.com)
+is the authoritative reference.
+
+Most British/American divergence follows a small set of predictable patterns.  Apply
+these rules to any word, including ones not listed below:
+
+| Pattern                          | British ending            | American ending           | Examples                                                                                                                           |
+|----------------------------------|---------------------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| Verb/adjective suffix            | `-ise`, `-ising`, `-ised` | `-ize`, `-izing`, `-ized` | organise → organize, initialise → initialize, normalise → normalize, analyse → analyze, optimise → optimize, recognise → recognize |
+| `-our` nouns                     | `-our`                    | `-or`                     | behaviour → behavior, colour → color, honour → honor                                                                               |
+| Consonant doubling before suffix | doubled (`-ll-`, `-tt-`)  | single (`-l-`, `-t-`)     | signalled → signaled, signalling → signaling, travelling → traveling, labelled → labeled, cancelled → canceled                     |
+| Noun ending                      | `-re`                     | `-er`                     | centre → center, theatre → theater                                                                                                 |
+| Noun ending                      | `-ogue`                   | `-og`                     | catalogue → catalog, dialogue → dialog                                                                                             |
+| Standalone exception             | `artefact`                | `artifact`                | —                                                                                                                                  |
+
+Common words that come up in technical writing — shown here as a quick-reference
+reminder of the rules above:
 
 | Use (American) | Avoid (British) |
 |----------------|-----------------|
-| behavior       | behaviour       |
 | artifact       | artefact        |
+| behavior       | behaviour       |
+| behavioral     | behavioural     |
 | color          | colour          |
 | honor          | honour          |
 | initialize     | initialise      |
 | recognize      | recognise       |
 | organize       | organise        |
 | analyze        | analyse         |
-| optimized      | optimised       |
-| normalized     | normalised      |
-| normalizes     | normalises      |
+| optimize       | optimise        |
+| normalize      | normalise       |
 | signaled       | signalled       |
 | signaling      | signalling      |
+| canceled       | cancelled       |
+| labeled        | labelled        |
+| traveling      | travelling      |
+| center         | centre          |
+| dialog         | dialogue        |
+| catalog        | catalogue       |
+| unrecognized   | unrecognised    |
 
 ---
 
@@ -819,11 +934,17 @@ private static final String NULL_VALUE_MSG = "The 'field' value is invalid. The 
 
 ### Exception message assertions
 
-**Always assert `getMessage()`** for exceptions thrown by the project's own code —
-`IllegalStateException` from builder guards, `TargetManager`, etc.  Asserting only the
-exception type leaves the guard message untested; a mistyped or missing message would
-pass the test.  Declare the expected string as a `private static final String` constant
-and use `assertEquals`:
+`assertThrows(SomeException.class, () -> ...)` is a minimum viable assertion: it only
+confirms that *a* matching exception was thrown, not that it was thrown *for the right
+reason*.  Always capture the return value and assert the most meaningful diagnostic
+property available.
+
+**What to assert beyond type** depends on the exception's origin:
+
+**Exceptions you own** — those your own code constructs and throws — carry a message that
+is part of the API contract.  Assert it.  Declare the expected string as a
+`private static final String` constant so it is maintained in one place and reads
+clearly at every assertion site:
 
 ```java
 private static final String SUPPLIER_ALREADY_CONFIGURED_MSG =
@@ -842,10 +963,34 @@ void supplierThenBatchSupplier_throwsIllegalStateException() {
 }
 ```
 
+This applies to `IllegalStateException` from builder guards, `TargetManager`, etc. —
+asserting only the exception type leaves the guard message untested; a mistyped or
+missing message would still pass the test.
+
+**Exceptions mapping an external signal** — those created by mapping an external code
+(HTTP status, OS error number, database error code, etc.) to a typed exception — carry
+a message derived from that signal.  The signal value is deterministic and meaningful;
+the message text is secondary.  Assert the signal instead of the message text.
+
+**Exceptions from third-party libraries** — those thrown internally by the JDK, a
+framework, or any other dependency you do not own — may have messages that change across
+library versions without being a bug.  A type assertion is usually sufficient; never
+assert the message text:
+
+```java
+// Fine — type-only for a JDK or framework exception
+assertThrows(CompletionException.class, () -> future.join());
+```
+
+**When detail assertions are intentionally omitted**, explain why in the Javadoc comment
+so the next reader understands the omission is deliberate rather than lazy, not an
+oversight.
+
 **Do not assert messages** for exceptions thrown by the `validation` module validators
 (`NullValueException`, `DurationOutsideRangeException`, `NumericValueOutsideRangeException`,
-etc.).  Those message formats are owned and tested by the validation module's own test
-suite; asserting them from a consumer module creates a fragile cross-module coupling.
+etc.) — a project-specific instance of the "third-party" category above.  Those message
+formats are owned and tested by the validation module's own test suite; asserting them
+from a consumer module creates a fragile cross-module coupling.
 
 ---
 
@@ -1087,8 +1232,8 @@ as the fixed clock for clock-relative tests.
 ## Validation
 
 This project uses `software.frisby.core:validation` for argument validation.
-When generating validation code, attach `docs/ai/validation.md` from the
-frisby-core repository for the full API reference.
+If `docs/ai/validation.md` isn't already in context, read it yourself before generating
+validation code — see **Agent Operating Notes → Reference Docs** above.
 
 Key conventions:
 - Every validation method takes `(String name, T value, ...)` and returns `value` unchanged.
@@ -1114,8 +1259,8 @@ Key conventions:
 ## Concurrency
 
 This project uses `software.frisby.core:concurrency` for async pipeline blocks.
-When generating pipeline code, attach `docs/ai/concurrency.md` from the
-frisby-core repository for the full API reference.
+If `docs/ai/concurrency.md` isn't already in context, read it yourself before generating
+pipeline code — see **Agent Operating Notes → Reference Docs** above.
 
 Key conventions:
 - **Always prefer the fluent API** — `Pipeline.builder()` and `OpenPipeline.builder()`

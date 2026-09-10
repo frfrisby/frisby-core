@@ -4,6 +4,26 @@ Portable style guide for Java projects. Copy this file into any project as a sta
 point. Project-specific details (package names, module structure, class patterns) belong
 in `.github/copilot-instructions.md`.
 
+> **⚠️ Editing this file? Propagate the change — there is no automated sync.**
+> This file is the canonical master copy of these style rules. Projects that adopt it
+> (including the one this copy may itself live in) typically **inline a duplicate of
+> these rules directly into their own `.github/copilot-instructions.md`**, rather than
+> referencing this file live — that's the only way to guarantee the rules auto-load
+> every session regardless of which AI tool or editor is in use.
+>
+> That means every edit here creates drift until it's manually re-copied. Whenever you
+> change a rule in this file:
+> 1. Check whether the project containing this copy also inlines these sections in its
+>    own `.github/copilot-instructions.md` (frisby-core does, as sections 2–8). If so,
+>    apply the same edit there, in the same change.
+> 2. If you know this file has been copied into other projects, apply the same edit to
+>    each of their `.github/copilot-instructions.md` inlined copies too, on your own
+>    schedule — this is a manual, human-driven distribution process, not automated.
+>
+> An AI agent asked to edit this file should proactively check for and update a sibling
+> `.github/copilot-instructions.md` in the same repository before considering the task
+> done, rather than editing only this file and stopping.
+
 > **Java version baseline:** this guide assumes **Java 17 or later**.  Sections that
 > require a newer release note the minimum version explicitly.  For projects on older
 > versions, skip or adapt those sections.
