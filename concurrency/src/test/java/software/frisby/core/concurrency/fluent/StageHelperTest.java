@@ -621,6 +621,26 @@ class StageHelperTest {
             assertNotNull(Action.of(new GenericType<String>() {
             }));
         }
+
+        @Test
+        void itemDeliveredHandler_isAccepted() {
+            assertNotNull(Action.of(String.class).itemDeliveredHandler((src, tgt, item) -> {
+            }));
+        }
+
+        @Test
+        void itemDeliveredHandler_isInvokedAfterActionCompletes() {
+            List<String> events = new CopyOnWriteArrayList<>();
+
+            Action<String> action = Action.of(String.class)
+                    .action(item -> events.add("action"))
+                    .itemPostedHandler((src, item, accepted) -> events.add("posted"))
+                    .itemDeliveredHandler((src, tgt, item) -> events.add("delivered"));
+
+            action.toTarget().post("hello");
+
+            assertEquals(List.of("posted", "action", "delivered"), events);
+        }
     }
 }
 

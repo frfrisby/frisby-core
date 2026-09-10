@@ -144,6 +144,16 @@ Buffer.of(Message.class)
         .errorOccurredHandler((source, item, error) -> deadLetter.send(item))
 ```
 
+> **`itemDeliveredHandler` fires on success only** — it is never invoked if delivery
+> throws.  For the async blocks above, pair it with `errorOccurredHandler` for full
+> success/failure telemetry.  Synchronous terminal/routing stages (`Action`, `Tap`,
+> `Branch`, `Broadcast`, `Router`) have no `errorOccurredHandler`; a failure propagates as
+> an exception on the calling thread instead, so failure telemetry for those stages must
+> be instrumented inside the `Consumer`/`Function` you supply — `itemDeliveredHandler`
+> alone does not cover it. For example, `Action<T>` invokes `itemDeliveredHandler` only
+> after its configured `action` returns without throwing; publish failure metrics from
+> inside the `action` `Consumer` itself, not from a delegate handler.
+
 ---
 
 ## SourceBlock — Async Producer

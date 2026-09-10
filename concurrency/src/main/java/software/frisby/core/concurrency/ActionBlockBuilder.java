@@ -6,9 +6,13 @@ import java.util.function.Consumer;
  * Builder for constructing an {@link ActionBlock}.  Obtain an instance via
  * {@link ActionBlock#builder()}.
  *
+ * <p>{@code ActionBlock} is a terminal, queue-less block with no downstream target, so
+ * {@link ItemDeliveredHandler} here reports that the configured {@link Consumer} completed
+ * successfully for a given item — it is never invoked if the action throws.</p>
+ *
  * @param <T> The type of items consumed by the block.
  */
-public interface ActionBlockBuilder<T> {
+public interface ActionBlockBuilder<T> extends ObservableBlockBuilder<T, T, ActionBlockBuilder<T>> {
     /**
      * Sets the consumer that will be invoked for each item received by the block.
      *
@@ -18,14 +22,6 @@ public interface ActionBlockBuilder<T> {
      */
     ActionBlockBuilder<T> action(Consumer<T> action);
 
-    /**
-     * Optional. Sets the handler that will receive a notification each time an item is posted
-     * to the block. If not configured, no posted-item notifications are generated.
-     *
-     * @param handler The handler to notify when items are posted.
-     * @return This builder, for method chaining.
-     */
-    ActionBlockBuilder<T> itemPostedHandler(ItemPostedHandler<T> handler);
 
     /**
      * Returns a new {@link ActionBlock} configured by this builder.
