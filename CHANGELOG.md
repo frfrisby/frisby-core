@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.4.3](https://github.com/frfrisby/frisby-core/compare/v1.4.2...v1.4.3) (2026-09-10)
+
+
+### Bug Fixes
+
+* **concurrency:** Align ActionBlock observer callback ordering with the rest of the library. ([#92](https://github.com/frfrisby/frisby-core/issues/92)) ([a33ae73](https://github.com/frfrisby/frisby-core/commit/a33ae737bd33da6c0f5598315b32a10516a03824))
+
 ## [1.4.2](https://github.com/frfrisby/frisby-core/compare/v1.4.1...v1.4.2) (2026-09-02)
 
 
