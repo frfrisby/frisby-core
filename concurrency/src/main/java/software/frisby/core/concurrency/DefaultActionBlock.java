@@ -12,17 +12,20 @@ import java.util.function.Consumer;
 final class DefaultActionBlock<T> implements ActionBlock<T> {
     private final Consumer<T> action;
     private final ItemPostedManager<T> postedManager;
+    private final ItemDeliveredManager<T> deliveredManager;
     private final CompletableFuture<Void> completionFuture;
     private final SyncCompletionGuard guard;
 
     DefaultActionBlock(Consumer<T> action,
-                       ItemPostedHandler<T> itemPostedHandler) {
+                       ItemPostedHandler<T> itemPostedHandler,
+                       ItemDeliveredHandler<T> itemDeliveredHandler) {
         Values.notNull("action", action);
 
         EventSource eventSource = new EventSource(ActionBlock.class.getSimpleName());
         this.action = action;
 
         this.postedManager = new ItemPostedManager<>(this, eventSource, itemPostedHandler);
+        this.deliveredManager = new ItemDeliveredManager<>(this, eventSource, itemDeliveredHandler);
 
         this.completionFuture = new CompletableFuture<>();
         this.guard = new SyncCompletionGuard(() -> this.completionFuture.complete(null));
@@ -34,15 +37,16 @@ final class DefaultActionBlock<T> implements ActionBlock<T> {
             return false;
         }
 
-
         if (null == item) {
             return false;
         } else {
+            this.postedManager.sendOnPostedNotification(item, true);
+
             this.guard.begin();
 
             try {
                 this.action.accept(item);
-                this.postedManager.sendOnPostedNotification(item, true);
+                this.deliveredManager.sendOnDeliveredNotification(this, item);
             } finally {
                 this.guard.end();
             }

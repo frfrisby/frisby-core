@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 final class DefaultActionBlockBuilder<T> implements ActionBlockBuilder<T> {
     private Consumer<T> action;
     private ItemPostedHandler<T> itemPostedHandler;
+    private ItemDeliveredHandler<T> itemDeliveredHandler;
 
     DefaultActionBlockBuilder() {
     }
@@ -22,7 +23,13 @@ final class DefaultActionBlockBuilder<T> implements ActionBlockBuilder<T> {
     }
 
     @Override
+    public ActionBlockBuilder<T> itemDeliveredHandler(ItemDeliveredHandler<T> handler) {
+        this.itemDeliveredHandler = handler;
+        return this;
+    }
+
+    @Override
     public ActionBlock<T> build() {
-        return new DefaultActionBlock<>(this.action, this.itemPostedHandler);
+        return new DefaultActionBlock<>(this.action, this.itemPostedHandler, this.itemDeliveredHandler);
     }
 }

@@ -17,7 +17,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link ActionBlock} and its builder.  Covers builder validation, {@code post}
- * behaviour, the completion lifecycle, and the {@code itemPostedHandler} delegate callback.
+ * behaviour, the completion lifecycle, and the {@code itemPostedHandler}/{@code itemDeliveredHandler}
+ * delegate callbacks.
  *
  * <p>{@code ActionBlock} is a terminal synchronous consumer: it invokes its {@code Consumer} for
  * every accepted item on the posting thread and has no downstream target or internal queue.
@@ -230,6 +231,93 @@ class ActionBlockTest {
             assertTrue(notified.await(5, TimeUnit.SECONDS));
             assertEquals("hello", postedItem.get());
             assertTrue(accepted.get());
+        }
+
+        @Test
+        void itemPostedHandler_isCalledBeforeAction() {
+            List<String> events = new CopyOnWriteArrayList<>();
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> events.add("action"))
+                    .itemPostedHandler((source, item, wasAccepted) -> events.add("posted"))
+                    .build();
+
+            block.post("hello");
+
+            assertEquals(List.of("posted", "action"), events);
+        }
+
+        @Test
+        void itemDeliveredHandler_isCalledAfterActionCompletes() {
+            List<String> events = new CopyOnWriteArrayList<>();
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> events.add("action"))
+                    .itemPostedHandler((source, item, wasAccepted) -> events.add("posted"))
+                    .itemDeliveredHandler((source, target, item) -> events.add("delivered"))
+                    .build();
+
+            block.post("hello");
+
+            assertEquals(List.of("posted", "action", "delivered"), events);
+        }
+
+        @Test
+        void itemDeliveredHandler_receivesBlockAsSourceAndTarget() throws Exception {
+            CountDownLatch notified = new CountDownLatch(1);
+            AtomicReference<Object> source = new AtomicReference<>();
+            AtomicReference<Object> target = new AtomicReference<>();
+            AtomicReference<String> deliveredItem = new AtomicReference<>();
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                    })
+                    .itemDeliveredHandler((src, tgt, item) -> {
+                        source.set(src);
+                        target.set(tgt);
+                        deliveredItem.set(item);
+                        notified.countDown();
+                    })
+                    .build();
+
+            block.post("hello");
+
+            assertTrue(notified.await(5, TimeUnit.SECONDS));
+            assertSame(block, source.get());
+            assertSame(block, target.get());
+            assertEquals("hello", deliveredItem.get());
+        }
+
+        @Test
+        void itemDeliveredHandler_notCalledWhenActionThrows() {
+            AtomicBoolean delivered = new AtomicBoolean(false);
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                        throw new RuntimeException("boom");
+                    })
+                    .itemDeliveredHandler((source, target, item) -> delivered.set(true))
+                    .build();
+
+            assertThrows(RuntimeException.class, () -> block.post("hello"));
+
+            assertFalse(delivered.get());
+        }
+
+        @Test
+        void itemPostedHandler_isCalledEvenWhenActionThrows() {
+            AtomicBoolean posted = new AtomicBoolean(false);
+
+            ActionBlock<String> block = ActionBlock.<String>builder()
+                    .action(item -> {
+                        throw new RuntimeException("boom");
+                    })
+                    .itemPostedHandler((source, item, wasAccepted) -> posted.set(true))
+                    .build();
+
+            assertThrows(RuntimeException.class, () -> block.post("hello"));
+
+            assertTrue(posted.get());
         }
     }
 

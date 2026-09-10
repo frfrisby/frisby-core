@@ -2,6 +2,7 @@ package software.frisby.core.concurrency.fluent;
 
 import software.frisby.core.concurrency.ActionBlock;
 import software.frisby.core.concurrency.GenericType;
+import software.frisby.core.concurrency.ItemDeliveredHandler;
 import software.frisby.core.concurrency.ItemPostedHandler;
 import software.frisby.core.concurrency.Target;
 import software.frisby.core.validation.NullValueException;
@@ -31,6 +32,7 @@ import java.util.function.Consumer;
 public final class Action<T> implements PipelineTarget<T> {
     private Consumer<T> consumer;
     private ItemPostedHandler<T> itemPostedHandler;
+    private ItemDeliveredHandler<T> itemDeliveredHandler;
 
     private ActionBlock<T> block;
 
@@ -114,6 +116,23 @@ public final class Action<T> implements PipelineTarget<T> {
         return this;
     }
 
+    /**
+     * Optional. Sets the handler that will receive a notification after the configured action
+     * successfully completes for an item. If not configured, no delivered-item notifications
+     * are generated.
+     *
+     * <p>Because this stage is terminal, "delivered" here means the action completed without
+     * throwing. It is never invoked if the action throws — instrument failure telemetry inside
+     * the {@code Consumer} itself if that is needed.</p>
+     *
+     * @param handler The handler to notify on successful completion of the action.
+     * @return This builder, for method chaining.
+     */
+    public Action<T> itemDeliveredHandler(ItemDeliveredHandler<T> handler) {
+        this.itemDeliveredHandler = handler;
+        return this;
+    }
+
     @Override
     public Target<T> toTarget() {
         return toBlock();
@@ -123,6 +142,7 @@ public final class Action<T> implements PipelineTarget<T> {
         if (null == this.block) {
             this.block = ActionBlock.<T>builder()
                     .itemPostedHandler(itemPostedHandler)
+                    .itemDeliveredHandler(itemDeliveredHandler)
                     .action(consumer)
                     .build();
         }
