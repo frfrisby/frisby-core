@@ -17,6 +17,7 @@ public interface ObservableBlockBuilder<T, R, B> {
      *
      * @param handler The handler to notify when items are posted.
      * @return This builder, for method chaining.
+     * @see ItemPostedHandler
      */
     B itemPostedHandler(ItemPostedHandler<T> handler);
 
