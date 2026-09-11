@@ -10,7 +10,11 @@
 
     <artifactId>util</artifactId>
     <packaging>jar</packaging>
-    <name>${project.artifactId}</name>
+    <name>frisby-core :: Util</name>
+    <description>
+        General-purpose utilities for Java 17+ applications, including StopWatch for
+        elapsed-time measurement and Decimals for precise decimal arithmetic helpers.
+    </description>
     <url>https://github.com/frfrisby/frisby-core</url>
 
     <properties>
