@@ -8,10 +8,13 @@
 		<version>1.4.4-SNAPSHOT</version>
     </parent>
 
-	
     <artifactId>bom</artifactId>
     <packaging>pom</packaging>
-    <name>${project.artifactId}</name>
+    <name>frisby-core :: BOM</name>
+    <description>
+        Bill of Materials for frisby-core, providing consistent, aligned version management for
+        applications that depend on the validation, util, and concurrency modules together.
+    </description>
     <url>https://github.com/frfrisby/frisby-core</url>
 
     <dependencyManagement>

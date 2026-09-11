@@ -10,7 +10,12 @@
 
     <artifactId>concurrency</artifactId>
     <packaging>jar</packaging>
-    <name>${project.artifactId}</name>
+    <name>frisby-core :: Concurrency</name>
+    <description>
+        Asynchronous pipeline building blocks for Java 17+.  Provides composable buffer,
+        batch, group, delay, transform, and routing stages — wired via a fluent builder
+        API — for constructing high-throughput, low-latency data-processing pipelines.
+    </description>
     <url>https://github.com/frfrisby/frisby-core</url>
 
     <properties>

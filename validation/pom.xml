@@ -10,7 +10,13 @@
 
     <artifactId>validation</artifactId>
     <packaging>jar</packaging>
-    <name>${project.artifactId}</name>
+    <name>frisby-core :: Validation</name>
+    <description>
+        Zero-dependency argument and value validation utilities for Java 17+.  Provides
+        type-safe validators for strings, numbers, durations, periods, and temporal types
+        (Instant, LocalDate, LocalDateTime, and more), backed by a dedicated exception
+        hierarchy with descriptive, consistent failure messages.
+    </description>
     <url>https://github.com/frfrisby/frisby-core</url>
 
     <properties>
