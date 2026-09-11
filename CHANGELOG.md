@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.4.4](https://github.com/frfrisby/frisby-core/compare/v1.4.3...v1.4.4) (2026-09-11)
+
+
+### Documentation
+
+* **concurrency:** Document the itemPostedHandler ordering race for async blocks. ([#98](https://github.com/frfrisby/frisby-core/issues/98)) ([99a6746](https://github.com/frfrisby/frisby-core/commit/99a674643ad5434c483098a39f12ef37d7cb156d))
+
 ## [1.4.3](https://github.com/frfrisby/frisby-core/compare/v1.4.2...v1.4.3) (2026-09-10)
 
 
