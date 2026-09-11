@@ -154,6 +154,20 @@ Buffer.of(Message.class)
 > after its configured `action` returns without throwing; publish failure metrics from
 > inside the `action` `Consumer` itself, not from a delegate handler.
 
+> **`itemPostedHandler` means "accepted," not "consumed" — don't use it as a
+> happens-before signal.** For the async blocks (`Buffer`, `Batch`, `Group`,
+> `PriorityBuffer`, `Delay`), this handler fires on the posting thread right after the
+> item is enqueued, while the item itself is picked up and processed by a separate
+> worker thread running concurrently. There's no guarantee which one finishes first —
+> under load, a downstream consumer can complete (and signal its own latch, counter, or
+> callback) *before* `itemPostedHandler` ever fires. This mainly bites test code: don't
+> write a test that posts an item, waits on a latch counted down by the downstream
+> consumer, and then asserts something that `itemPostedHandler` was supposed to have
+> already recorded — that assertion will be flaky under load. If you need to know "this
+> item was accepted" independent of whether it's finished processing, count down your
+> own dedicated latch from inside `itemPostedHandler` itself, rather than inferring it
+> from a signal raised later by the consumer.
+
 ---
 
 ## SourceBlock — Async Producer
