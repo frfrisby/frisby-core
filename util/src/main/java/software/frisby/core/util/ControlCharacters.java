@@ -101,9 +101,17 @@ public final class ControlCharacters {
     }
 
     private static boolean isControl(char c) {
-        if (c == '\t' || c == '\n') return false;
-        if (c <= 0x1F) return true;
-        if (c == 0x7F) return true;
+        if (c == '\t' || c == '\n') {
+            return false;
+        }
+
+        if (c <= 0x1F) {
+            return true;
+        }
+
+        if (c == 0x7F) {
+            return true;
+        }
 
         return c >= 0x80 && c <= 0x9F;
     }
@@ -115,4 +123,3 @@ public final class ControlCharacters {
                 .append(HEX_DIGITS[c & 0xF]);
     }
 }
-
