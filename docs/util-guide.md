@@ -272,3 +272,75 @@ HttpUris.origin(URI.create("ftp://files.example.com")); // DisallowedValueExcept
 HttpUris.origin(URI.create("/relative/path"));          // NullValueException (no scheme)
 ```
 
+---
+
+## ControlCharacters
+
+`ControlCharacters` provides a single utility for making arbitrary text safe to write
+to a raw terminal or log file.
+
+### The problem it solves
+
+Untrusted text — HTTP request/response bodies, header values, user input — can contain
+terminal control characters (ANSI/VT100 escape sequences, bell, backspace tricks, and
+similar). If such text is ever viewed with a raw tool (`cat`, `tail`) rather than a
+viewer that renders plain text, an attacker-controlled control sequence can manipulate
+the terminal: move the cursor, overwrite prior lines, change colors, and so on.
+
+`ControlCharacters.escape(String)` neutralizes this risk by replacing every control
+character with a visible, unambiguous escape sequence, leaving everything else
+untouched. Apply it as a final pass over an assembled log message before handing it to
+a logger:
+
+```java
+log.error("Request failed. Body={}", ControlCharacters.escape(requestBody));
+```
+
+### What gets escaped
+
+| Range                  | Escaped? | Notes                                                                                             |
+|------------------------|----------|---------------------------------------------------------------------------------------------------|
+| `\u0000`–`\u001F` (C0) | Yes      | Except `\t` (`\u0009`) and `\n` (`\u000A`).                                                       |
+| `\t` (`\u0009`)        | No       | Passed through unchanged — purely structural for multi-line text.                                 |
+| `\n` (`\u000A`)        | No       | Passed through unchanged — purely structural for multi-line text.                                 |
+| `\r` (`\u000D`)        | Yes      | Not exempted — has a terminal side effect (cursor-to-column-0), enabling line-overwrite/spoofing. |
+| `\u007F` (DEL)         | Yes      |                                                                                                   |
+| `\u0080`–`\u009F` (C1) | Yes      |                                                                                                   |
+| Everything else        | No       | Printable ASCII and all non-control Unicode pass through unchanged.                               |
+
+### Escape format
+
+Each escaped character becomes the literal four-character text `\xHH`, where `HH` is
+the character's two-digit lowercase hexadecimal code point:
+
+```java
+ControlCharacters.escape("a\rb");     // "a\\x0db"
+ControlCharacters.escape("a\u0000b"); // "a\\x00b"
+ControlCharacters.escape("a\u001Bb"); // "a\\x1bb"  (ESC)
+ControlCharacters.escape("a\u007Fb"); // "a\\x7fb"  (DEL)
+ControlCharacters.escape("a\u009Bb"); // "a\\x9bb"  (C1 control)
+```
+
+Every escapable code point is at most `\u009F`, so the two-digit hex format is always
+unambiguous.
+
+### Performance and null handling
+
+If `value` contains no control characters — the overwhelmingly common case in
+practice — `escape` returns `value` itself unchanged with no new allocation:
+
+```java
+String value = "plain text";
+ControlCharacters.escape(value) == value; // true
+```
+
+`escape(null)` returns `null`, which is convenient when assembling a log message from
+possibly-null fields. The method never throws.
+
+### Not losslessly reversible
+
+`escape` is a "make this safe to display" transform, not a serialization format, and
+is not intended to be undone. A string that already contains the literal text `\x1b`
+is indistinguishable, after escaping, from one that contained an actual ESC character —
+both produce the same output. This is an accepted trade-off, not a defect.
+
