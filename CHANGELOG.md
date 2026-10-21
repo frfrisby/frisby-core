@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.5.0](https://github.com/frfrisby/frisby-core/compare/v1.4.4...v1.5.0) (2026-10-21)
+
+
+### Features
+
+* **util:** Add ControlCharacters.escape() for safe log/terminal output. ([#103](https://github.com/frfrisby/frisby-core/issues/103)) ([57d9faa](https://github.com/frfrisby/frisby-core/commit/57d9faa2f6e239ded7e19758537d559ee7d7f605))
+
 ## [1.4.4](https://github.com/frfrisby/frisby-core/compare/v1.4.3...v1.4.4) (2026-09-21)
 
 
