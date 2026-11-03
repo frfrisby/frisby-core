@@ -45,7 +45,7 @@ final class DefaultPriorityBufferBlock<T> implements PriorityBufferBlock<T> {
         // the ordering logic; Payload no longer needs to implement Comparable.
         Comparator<Payload<T>> payloadComparator = (a, b) -> {
             int v = comparator.compare(a.item, b.item);
-            return v != 0 ? v : Long.compare(a.createdWhen, b.createdWhen);
+            return v == 0 ? Long.compare(a.createdWhen, b.createdWhen) : v;
         };
 
         this.buffer = new AsyncBuffer<>(
