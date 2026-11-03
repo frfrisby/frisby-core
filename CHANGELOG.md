@@ -9,6 +9,14 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.5.1](https://github.com/frfrisby/frisby-core/compare/v1.5.0...v1.5.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **validation:** Stop rejecting empty collections/arrays in StringSequences unless the method's name requires it. ([#110](https://github.com/frfrisby/frisby-core/issues/110)) ([907fd64](https://github.com/frfrisby/frisby-core/commit/907fd64ae87735a20bb6a123b0ef05790971b3ed))
+* **validation:** Stop rejecting empty collections/maps unless size lower bound requires it. ([#107](https://github.com/frfrisby/frisby-core/issues/107)) ([5173fe6](https://github.com/frfrisby/frisby-core/commit/5173fe65c3fc6d2cd228f1e34f45d235f0d058fb))
+
 ## [1.5.0](https://github.com/frfrisby/frisby-core/compare/v1.4.4...v1.5.0) (2026-10-21)
 
 
