@@ -9,6 +9,13 @@ This file is managed by [release-please](https://github.com/googleapis/release-p
 Do not edit it manually — new entries are prepended automatically when a release PR is merged.
 
 <!-- releasing: start -->
+## [1.5.2](https://github.com/frfrisby/frisby-core/compare/v1.5.1...v1.5.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **concurrency:** Un-negate ternary condition in DefaultPriorityBufferBlock comparator. ([#112](https://github.com/frfrisby/frisby-core/issues/112)) ([d6a4d02](https://github.com/frfrisby/frisby-core/commit/d6a4d02a4ea92cf8bbbc996dc2cd6b794c8965b3))
+
 ## [1.5.1](https://github.com/frfrisby/frisby-core/compare/v1.5.0...v1.5.1) (2026-11-03)
 
 
