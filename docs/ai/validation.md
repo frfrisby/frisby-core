@@ -400,16 +400,16 @@ All methods throw `NullPointerException` if `name` is null or blank, or if the `
 
 All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family        | `NullValueException`    | `MissingElementsException`           | `NullElementException` | `SequenceSizeOutsideRangeException`                                                      | `DuplicateElementsException` | `IllegalConfigurationException` |
-|----------------------|--------------------------|----------------------------------------|-------------------------|---------------------------------------------------------------------------------------------|-------------------------------|------------------------------------|
-| `notNull`            | container is null       | —                                      | —                      | —                                                                                           | —                            | —                                  |
-| `noNullElements`     | container is null       | —                                      | element is null        | —                                                                                           | —                            | —                                  |
-| `notEmpty`           | container is null       | container is empty                     | element is null        | —                                                                                           | —                            | —                                  |
-| `minSize`            | container is null       | — (empty fails as a range error instead; see below) | element is null        | size < minSize (empty fails here when minSize >= 1; empty is valid when minSize = 0)       | —                            | minSize < 0                        |
-| `maxSize`            | container is null       | — (empty is always valid)             | element is null        | size > maxSize                                                                               | —                            | maxSize < 1                        |
-| `size`               | container is null       | — (empty fails as a range error instead; see below) | element is null        | size outside [min,max] (empty fails here when minSize >= 1; empty is valid when minSize = 0) | —                            | minSize < 0, or max < min           |
-| `noDuplicates`       | container is null       | — (empty is always valid)             | element is null        | —                                                                                           | duplicate element found      | —                                  |
-| `optional*` variants | — (null passes through) | same if non-null                    | same if non-null       | same if non-null                                                                             | same if non-null             | same bound checks always apply     |
+| Method family        | `NullValueException`    | `MissingElementsException`                          | `NullElementException` | `SequenceSizeOutsideRangeException`                                                          | `DuplicateElementsException` | `IllegalConfigurationException` |
+|----------------------|-------------------------|-----------------------------------------------------|------------------------|----------------------------------------------------------------------------------------------|------------------------------|---------------------------------|
+| `notNull`            | container is null       | —                                                   | —                      | —                                                                                            | —                            | —                               |
+| `noNullElements`     | container is null       | —                                                   | element is null        | —                                                                                            | —                            | —                               |
+| `notEmpty`           | container is null       | container is empty                                  | element is null        | —                                                                                            | —                            | —                               |
+| `minSize`            | container is null       | — (empty fails as a range error instead; see below) | element is null        | size < minSize (empty fails here when minSize >= 1; empty is valid when minSize = 0)         | —                            | minSize < 0                     |
+| `maxSize`            | container is null       | — (empty is always valid)                           | element is null        | size > maxSize                                                                               | —                            | maxSize < 1                     |
+| `size`               | container is null       | — (empty fails as a range error instead; see below) | element is null        | size outside [min,max] (empty fails here when minSize >= 1; empty is valid when minSize = 0) | —                            | minSize < 0, or max < min       |
+| `noDuplicates`       | container is null       | — (empty is always valid)                           | element is null        | —                                                                                            | duplicate element found      | —                               |
+| `optional*` variants | — (null passes through) | same if non-null                                    | same if non-null       | same if non-null                                                                             | same if non-null             | same bound checks always apply  |
 
 `notEmpty` is the only method that unconditionally rejects an empty container.
 `minSize`/`size` reject empty only when `minSize >= 1` (via `SequenceSizeOutsideRangeException`,
@@ -438,14 +438,14 @@ Every method first applies the full `notEmpty` check on the container, then vali
 
 All methods throw `NullPointerException` if `name` is null or blank.
 
-| Method family        | `NullValueException`    | `MissingElementsException`             | `NullMapKeyException` | `NullMapValueException` | `MapSizeOutsideRangeException`                                                      | `IllegalConfigurationException` |
-|----------------------|--------------------------|-------------------------------------------|-------------------------|----------------------------|-----------------------------------------------------------------------------------------|------------------------------------|
-| `notNull`            | map is null             | —                                        | —                      | —                        | —                                                                                       | —                                  |
-| `notEmpty`           | map is null             | map is empty                             | null key found        | null value found        | —                                                                                       | —                                  |
-| `minSize`            | map is null             | — (empty fails as a range error instead; see below) | null key found        | null value found        | entry count < minSize (empty fails here when minSize >= 1; empty is valid when minSize = 0) | minSize < 0                        |
-| `maxSize`            | map is null             | — (empty is always valid)               | null key found        | null value found        | entry count > maxSize                                                                   | maxSize < 1                        |
-| `size`               | map is null             | — (empty fails as a range error instead; see below) | null key found        | null value found        | count outside [min,max] (empty fails here when minSize >= 1; empty is valid when minSize = 0) | minSize < 0, or max < min           |
-| `optional*` variants | — (null passes through) | same if non-null                       | same if non-null      | same if non-null        | same if non-null                                                                         | same bound checks always apply     |
+| Method family        | `NullValueException`    | `MissingElementsException`                          | `NullMapKeyException` | `NullMapValueException` | `MapSizeOutsideRangeException`                                                                | `IllegalConfigurationException` |
+|----------------------|-------------------------|-----------------------------------------------------|-----------------------|-------------------------|-----------------------------------------------------------------------------------------------|---------------------------------|
+| `notNull`            | map is null             | —                                                   | —                     | —                       | —                                                                                             | —                               |
+| `notEmpty`           | map is null             | map is empty                                        | null key found        | null value found        | —                                                                                             | —                               |
+| `minSize`            | map is null             | — (empty fails as a range error instead; see below) | null key found        | null value found        | entry count < minSize (empty fails here when minSize >= 1; empty is valid when minSize = 0)   | minSize < 0                     |
+| `maxSize`            | map is null             | — (empty is always valid)                           | null key found        | null value found        | entry count > maxSize                                                                         | maxSize < 1                     |
+| `size`               | map is null             | — (empty fails as a range error instead; see below) | null key found        | null value found        | count outside [min,max] (empty fails here when minSize >= 1; empty is valid when minSize = 0) | minSize < 0, or max < min       |
+| `optional*` variants | — (null passes through) | same if non-null                                    | same if non-null      | same if non-null        | same if non-null                                                                              | same bound checks always apply  |
 
 `notEmpty` is the only method that unconditionally rejects an empty map.
 `minSize`/`size` reject empty only when `minSize >= 1` (via `MapSizeOutsideRangeException`,
@@ -558,7 +558,7 @@ Sequences.size("tags", tags, 1, 10);
 
 This does **not** apply to `maxSize`, `noDuplicates`, or `minSize`/`size` called with a
 bound of `0` — none of those reject an empty container, so if emptiness must always be
-rejected, `notEmpty()` is required and is not redundant. See the next anti-pattern.
+rejected, `notEmpty()` is required and is not redundant. See the next antipattern.
 
 ### ❌ Assuming `maxSize`/`noDuplicates`/`minSize(..., 0)` reject an empty container
 
