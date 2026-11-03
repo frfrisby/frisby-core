@@ -268,9 +268,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.minSize("field", List.of("a"), 0));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.minSize("field", List.of("a"), -1));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -280,9 +280,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.minSize("field", List.of(), 1));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.minSize("field", list, 0));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.minSize("field", List.of(), 1));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -325,9 +331,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.minSize("field", new String[]{"a"}, 0));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.minSize("field", new String[]{"a"}, -1));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -337,9 +343,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.minSize("field", new String[0], 1));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.minSize("field", array, 0));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.minSize("field", new String[0], 1));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -401,9 +413,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.maxSize("field", List.of(), 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.maxSize("field", list, 5));
             }
 
             @Test
@@ -458,9 +470,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.maxSize("field", new String[0], 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.maxSize("field", array, 5));
             }
 
             @Test
@@ -510,9 +522,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.size("field", List.of("a"), 0, 5));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.size("field", List.of("a"), -1, 5));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -528,9 +540,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.size("field", List.of(), 1, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.size("field", list, 0, 5));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.size("field", List.of(), 1, 5));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -585,9 +603,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.size("field", new String[]{"a"}, 0, 5));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.size("field", new String[]{"a"}, -1, 5));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -603,9 +621,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.size("field", new String[0], 1, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.size("field", array, 0, 5));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.size("field", new String[0], 1, 5));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -673,9 +697,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.noDuplicates("field", List.of()));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.noDuplicates("field", list));
             }
 
             @Test
@@ -718,9 +742,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.noDuplicates("field", new String[0]));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.noDuplicates("field", array));
             }
 
             @Test
@@ -776,9 +800,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.noDuplicates("field", List.of(), String::length));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.noDuplicates("field", list, String::length));
             }
 
             @Test
@@ -828,9 +852,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.noDuplicates("field", new String[0], String::length));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.noDuplicates("field", array, String::length));
             }
 
             @Test
@@ -1040,9 +1064,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalMinSize("field", List.of("a"), 0));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalMinSize("field", List.of("a"), -1));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -1051,9 +1075,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalMinSize("field", List.of(), 2));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.optionalMinSize("field", list, 0));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.optionalMinSize("field", List.of(), 2));
+                assertEquals("The 'field' value is invalid. The value must contain at least '2' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -1096,9 +1126,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalMinSize("field", new String[]{"a"}, 0));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalMinSize("field", new String[]{"a"}, -1));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -1107,9 +1137,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalMinSize("field", new String[0], 2));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalMinSize("field", array, 0));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.optionalMinSize("field", new String[0], 2));
+                assertEquals("The 'field' value is invalid. The value must contain at least '2' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -1170,9 +1206,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalMaxSize("field", List.of(), 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.optionalMaxSize("field", list, 5));
             }
 
             @Test
@@ -1226,9 +1262,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalMaxSize("field", new String[0], 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalMaxSize("field", array, 5));
             }
 
             @Test
@@ -1278,9 +1314,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalSize("field", List.of("a"), 0, 5));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalSize("field", List.of("a"), -1, 5));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -1295,9 +1331,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalSize("field", List.of(), 1, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.optionalSize("field", list, 0, 5));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.optionalSize("field", List.of(), 1, 5));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -1346,9 +1388,9 @@ class SequencesTest {
             }
 
             @Test
-            void zeroMinSize_throwsIllegalConfigurationException() {
-                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalSize("field", new String[]{"a"}, 0, 5));
-                assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+            void negativeMinSize_throwsIllegalConfigurationException() {
+                var ex = assertThrows(IllegalConfigurationException.class, () -> Sequences.optionalSize("field", new String[]{"a"}, -1, 5));
+                assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
             }
 
             @Test
@@ -1363,9 +1405,15 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalSize("field", new String[0], 1, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValueWithZeroMinSize_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalSize("field", array, 0, 5));
+            }
+
+            @Test
+            void emptyValueWithPositiveMinSize_throwsSequenceSizeOutsideRangeException() {
+                var ex = assertThrows(SequenceSizeOutsideRangeException.class, () -> Sequences.optionalSize("field", new String[0], 1, 5));
+                assertEquals("The 'field' value is invalid. The value must contain at least '1' elements but contained '0'.", ex.getMessage());
             }
 
             @Test
@@ -1426,9 +1474,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalNoDuplicates("field", List.of()));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.optionalNoDuplicates("field", list));
             }
 
             @Test
@@ -1470,9 +1518,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalNoDuplicates("field", new String[0]));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalNoDuplicates("field", array));
             }
 
             @Test
@@ -1527,9 +1575,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalNoDuplicates("field", List.of(), String::length));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, Sequences.optionalNoDuplicates("field", list, String::length));
             }
 
             @Test
@@ -1577,9 +1625,9 @@ class SequencesTest {
             }
 
             @Test
-            void emptyValue_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> Sequences.optionalNoDuplicates("field", new String[0], String::length));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, Sequences.optionalNoDuplicates("field", array, String::length));
             }
 
             @Test
