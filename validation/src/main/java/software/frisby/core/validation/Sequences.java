@@ -14,9 +14,11 @@ import java.util.function.Function;
  *       used solely to produce meaningful exception messages. It must never be null or
  *       blank; passing an invalid {@code name} is an API misuse and throws
  *       {@link NullPointerException}.</li>
- *   <li>Configuration arguments ({@code minSize}, {@code maxSize}) must be ≥ 1; passing a
- *       value less than 1, throws {@link IllegalConfigurationException}. For {@code size},
- *       {@code maxSize} must additionally be ≥ {@code minSize}.</li>
+ *   <li>Configuration arguments: {@code maxSize} must be ≥ 1; {@code minSize} must be ≥ 0
+ *       (a {@code minSize} of {@code 0} imposes no lower bound, allowing an empty
+ *       collection/array). Passing a value outside its allowed range throws
+ *       {@link IllegalConfigurationException}. For {@code size}, {@code maxSize} must
+ *       additionally be ≥ {@code minSize}.</li>
  *   <li>Methods return the validated {@code value} unchanged, allowing inline assignment:
  *       <pre>this.tags = Sequences.notEmpty("tags", tags);</pre>
  *       Collection overloads preserve the concrete type via a bounded type parameter, so no
@@ -41,10 +43,13 @@ import java.util.function.Function;
  *   <li>{@code notNull}        — collection/array must not be null</li>
  *   <li>{@code noNullElements} — not null, no null elements (empty is allowed)</li>
  *   <li>{@code notEmpty}       — not null, not empty, no null elements</li>
- *   <li>{@code minSize}        — {@code notEmpty} + size ≥ minSize</li>
- *   <li>{@code maxSize}        — {@code notEmpty} + size ≤ maxSize</li>
- *   <li>{@code size}           — {@code notEmpty} + minSize ≤ size ≤ maxSize</li>
- *   <li>{@code noDuplicates}   — {@code notEmpty} + all elements unique</li>
+ *   <li>{@code minSize}        — not null, no null elements, size ≥ minSize (empty is allowed
+ *                                 when {@code minSize} is {@code 0})</li>
+ *   <li>{@code maxSize}        — not null, no null elements, size ≤ maxSize (empty is allowed)</li>
+ *   <li>{@code size}           — not null, no null elements, minSize ≤ size ≤ maxSize (empty is
+ *                                 allowed when {@code minSize} is {@code 0})</li>
+ *   <li>{@code noDuplicates}   — not null, no null elements, all elements unique (empty is
+ *                                 allowed — vacuously has no duplicates)</li>
  * </ul>
  *
  * <p>{@code optional*} variants pass a {@code null} value through without validation.
@@ -185,26 +190,26 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has at
-     * least {@code minSize} elements.
+     * Validates that {@code value} is not null, contains no null elements, and has at
+     * least {@code minSize} elements. An empty collection is valid when {@code minSize} is
+     * {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param <T>     The element type.
      * @param <C>     The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1.
+     * @throws IllegalConfigurationException     if {@code minSize} is negative.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains fewer than {@code minSize} elements.
      */
     public static <T, C extends Collection<T>> C minSize(String name, C value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        Throws.ifNegative(MIN_SIZE, minSize);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.size() < minSize) throw tooFew(name, minSize, value.size());
 
@@ -212,25 +217,25 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has at
-     * least {@code minSize} elements.
+     * Validates that {@code value} is not null, contains no null elements, and has at
+     * least {@code minSize} elements. An empty array is valid when {@code minSize} is
+     * {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param <T>     The element type.
      * @return The {@code value} unchanged.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1.
+     * @throws IllegalConfigurationException     if {@code minSize} is negative.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains fewer than {@code minSize} elements.
      */
     public static <T> T[] minSize(String name, T[] value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        Throws.ifNegative(MIN_SIZE, minSize);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.length < minSize) throw tooFew(name, minSize, value.length);
 
@@ -238,8 +243,8 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has at
-     * most {@code maxSize} elements.
+     * Validates that {@code value} is not null, contains no null elements, and has at
+     * most {@code maxSize} elements. An empty collection is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
@@ -250,14 +255,13 @@ public final class Sequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxSize} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains more than {@code maxSize} elements.
      */
     public static <T, C extends Collection<T>> C maxSize(String name, C value, int maxSize) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
 
@@ -265,8 +269,8 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has at
-     * most {@code maxSize} elements.
+     * Validates that {@code value} is not null, contains no null elements, and has at
+     * most {@code maxSize} elements. An empty array is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
@@ -276,14 +280,13 @@ public final class Sequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxSize} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains more than {@code maxSize} elements.
      */
     public static <T> T[] maxSize(String name, T[] value, int maxSize) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
 
@@ -291,29 +294,29 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has a
+     * Validates that {@code value} is not null, contains no null elements, and has a
      * number of elements within [{@code minSize}, {@code maxSize}], inclusive on both sides.
+     * An empty collection is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of elements allowed, inclusive; must be ≥ {@code minSize}.
      * @param <T>     The element type.
      * @param <C>     The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException     if {@code minSize} is negative, or {@code maxSize} is
      *                                           less than {@code minSize}.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value}'s size falls outside [{@code minSize}, {@code maxSize}].
      */
     public static <T, C extends Collection<T>> C size(String name, C value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.size() < minSize) throw tooFew(name, minSize, value.size());
         if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
@@ -322,28 +325,28 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and has a
+     * Validates that {@code value} is not null, contains no null elements, and has a
      * number of elements within [{@code minSize}, {@code maxSize}], inclusive on both sides.
+     * An empty array is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of elements allowed, inclusive; must be ≥ {@code minSize}.
      * @param <T>     The element type.
      * @return The {@code value} unchanged.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException     if {@code minSize} is negative, or {@code maxSize} is
      *                                           less than {@code minSize}.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value}'s size falls outside [{@code minSize}, {@code maxSize}].
      */
     public static <T> T[] size(String name, T[] value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
 
         if (value.length < minSize) throw tooFew(name, minSize, value.length);
         if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
@@ -352,8 +355,9 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and contains
-     * no duplicate elements (determined via {@link Object#equals(Object)}).
+     * Validates that {@code value} is not null, contains no null elements, and contains
+     * no duplicate elements (determined via {@link Object#equals(Object)}). An empty
+     * collection is always valid — it vacuously contains no duplicates.
      *
      * @param name  The name of the argument being validated, used in exception messages.
      * @param value The value to validate.
@@ -362,21 +366,21 @@ public final class Sequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException       if {@code name} is null or blank.
      * @throws NullValueException         if {@code value} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if {@code value} contains any duplicate element.
      */
     public static <T, C extends Collection<T>> C noDuplicates(String name, C value) {
         Throws.ifInvalidName(name);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
         throwIfContainsDuplicates(name, value);
 
         return value;
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and contains
-     * no duplicate elements (determined via {@link Object#equals(Object)}).
+     * Validates that {@code value} is not null, contains no null elements, and contains
+     * no duplicate elements (determined via {@link Object#equals(Object)}). An empty
+     * array is always valid — it vacuously contains no duplicates.
      *
      * @param name  The name of the argument being validated, used in exception messages.
      * @param value The value to validate.
@@ -384,21 +388,21 @@ public final class Sequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException       if {@code name} is null or blank.
      * @throws NullValueException         if {@code value} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if {@code value} contains any duplicate element.
      */
     public static <T> T[] noDuplicates(String name, T[] value) {
         Throws.ifInvalidName(name);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
         throwIfContainsDuplicates(name, value);
 
         return value;
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and contains
-     * no duplicate keys as determined by applying {@code keyExtractor} to each element.
+     * Validates that {@code value} is not null, contains no null elements, and contains
+     * no duplicate keys as determined by applying {@code keyExtractor} to each element. An
+     * empty collection is always valid — it vacuously contains no duplicate keys.
      *
      * <p>The duplicate check uses the extracted key's {@link Object#equals(Object)} and
      * {@link Object#hashCode()} methods. The first duplicate key found is included in the
@@ -412,22 +416,22 @@ public final class Sequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException       if {@code name} is null or blank, or if {@code keyExtractor} is null.
      * @throws NullValueException         if {@code value} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if any two elements produce the same key under {@code keyExtractor}.
      */
     public static <T, C extends Collection<T>> C noDuplicates(String name, C value, Function<? super T, ?> keyExtractor) {
         Throws.ifInvalidName(name);
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
         throwIfContainsDuplicateKeys(name, value, keyExtractor);
 
         return value;
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and contains
-     * no duplicate keys as determined by applying {@code keyExtractor} to each element.
+     * Validates that {@code value} is not null, contains no null elements, and contains
+     * no duplicate keys as determined by applying {@code keyExtractor} to each element. An
+     * empty array is always valid — it vacuously contains no duplicate keys.
      *
      * <p>The duplicate check uses the extracted key's {@link Object#equals(Object)} and
      * {@link Object#hashCode()} methods. The first duplicate key found is included in the
@@ -440,14 +444,13 @@ public final class Sequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException       if {@code name} is null or blank, or if {@code keyExtractor} is null.
      * @throws NullValueException         if {@code value} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if any two elements produce the same key under {@code keyExtractor}.
      */
     public static <T> T[] noDuplicates(String name, T[] value, Function<? super T, ?> keyExtractor) {
         Throws.ifInvalidName(name);
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
-        throwIfNullOrEmptyOrContainsNullElement(name, value);
+        throwIfNullOrContainsNullElement(name, value);
         throwIfContainsDuplicateKeys(name, value, keyExtractor);
 
         return value;
@@ -548,27 +551,27 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has at
-     * least {@code minSize} elements. A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and has at
+     * least {@code minSize} elements. A null {@code value} is considered valid and returned as
+     * {@code null}. An empty collection is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param <T>     The element type.
      * @param <C>     The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
+     * @throws IllegalConfigurationException     if {@code minSize} is negative.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains fewer than {@code minSize} elements.
      */
     public static <T, C extends Collection<T>> C optionalMinSize(String name, C value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.size() < minSize) throw tooFew(name, minSize, value.size());
         }
@@ -577,26 +580,26 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has at
-     * least {@code minSize} elements. A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and has at
+     * least {@code minSize} elements. A null {@code value} is considered valid and returned as
+     * {@code null}. An empty array is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param <T>     The element type.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
+     * @throws IllegalConfigurationException     if {@code minSize} is negative.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains fewer than {@code minSize} elements.
      */
     public static <T> T[] optionalMinSize(String name, T[] value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.length < minSize) throw tooFew(name, minSize, value.length);
         }
@@ -605,8 +608,9 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has at
-     * most {@code maxSize} elements. A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and has at
+     * most {@code maxSize} elements. A null {@code value} is considered valid and returned as
+     * {@code null}. An empty collection is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
@@ -616,7 +620,6 @@ public final class Sequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxSize} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains more than {@code maxSize} elements.
      */
@@ -625,7 +628,7 @@ public final class Sequences {
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
         }
@@ -634,8 +637,9 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has at
-     * most {@code maxSize} elements. A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and has at
+     * most {@code maxSize} elements. A null {@code value} is considered valid and returned as
+     * {@code null}. An empty array is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
@@ -644,7 +648,6 @@ public final class Sequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxSize} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value} contains more than {@code maxSize} elements.
      */
@@ -653,7 +656,7 @@ public final class Sequences {
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
         }
@@ -662,31 +665,31 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has a
+     * Validates that {@code value}, if present, contains no null elements and has a
      * number of elements within [{@code minSize}, {@code maxSize}], inclusive on both sides.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * A null {@code value} is considered valid and returned as {@code null}. An empty
+     * collection is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of elements allowed, inclusive; must be ≥ {@code minSize}.
      * @param <T>     The element type.
      * @param <C>     The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException     if {@code minSize} is negative, or {@code maxSize} is
      *                                           less than {@code minSize}.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value}'s size falls outside [{@code minSize}, {@code maxSize}].
      */
     public static <T, C extends Collection<T>> C optionalSize(String name, C value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.size() < minSize) throw tooFew(name, minSize, value.size());
             if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
@@ -696,30 +699,30 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and has a
+     * Validates that {@code value}, if present, contains no null elements and has a
      * number of elements within [{@code minSize}, {@code maxSize}], inclusive on both sides.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * A null {@code value} is considered valid and returned as {@code null}. An empty
+     * array is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of elements allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of elements allowed, inclusive; must be ≥ {@code minSize}.
      * @param <T>     The element type.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
-     * @throws IllegalConfigurationException     if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException     if {@code minSize} is negative, or {@code maxSize} is
      *                                           less than {@code minSize}.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws SequenceSizeOutsideRangeException if {@code value}'s size falls outside [{@code minSize}, {@code maxSize}].
      */
     public static <T> T[] optionalSize(String name, T[] value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
 
             if (value.length < minSize) throw tooFew(name, minSize, value.length);
             if (value.length > maxSize) throw tooMany(name, maxSize, value.length);
@@ -729,9 +732,10 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
+     * Validates that {@code value}, if present, contains no null elements and
      * contains no duplicate elements. A null {@code value} is considered valid and returned
-     * as {@code null}.
+     * as {@code null}. An empty collection is always valid — it vacuously contains no
+     * duplicates.
      *
      * @param name  The name of the argument being validated, used in exception messages.
      * @param value The value to validate, may be null.
@@ -739,7 +743,6 @@ public final class Sequences {
      * @param <C>   The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException       if {@code name} is null or blank.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if {@code value} contains any duplicate element.
      */
@@ -747,7 +750,7 @@ public final class Sequences {
         Throws.ifInvalidName(name);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
             throwIfContainsDuplicates(name, value);
         }
 
@@ -755,16 +758,16 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
+     * Validates that {@code value}, if present, contains no null elements and
      * contains no duplicate elements. A null {@code value} is considered valid and returned
-     * as {@code null}.
+     * as {@code null}. An empty array is always valid — it vacuously contains no
+     * duplicates.
      *
      * @param name  The name of the argument being validated, used in exception messages.
      * @param value The value to validate, may be null.
      * @param <T>   The element type.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException       if {@code name} is null or blank.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if {@code value} contains any duplicate element.
      */
@@ -772,7 +775,7 @@ public final class Sequences {
         Throws.ifInvalidName(name);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
             throwIfContainsDuplicates(name, value);
         }
 
@@ -780,9 +783,10 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
+     * Validates that {@code value}, if present, contains no null elements and
      * contains no duplicate keys as determined by applying {@code keyExtractor} to each element.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * A null {@code value} is considered valid and returned as {@code null}. An empty
+     * collection is always valid — it vacuously contains no duplicate keys.
      *
      * @param name         The name of the argument being validated, used in exception messages.
      * @param value        The value to validate, may be null.
@@ -791,7 +795,6 @@ public final class Sequences {
      * @param <C>          The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException       if {@code name} is null or blank, or if {@code keyExtractor} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if any two elements produce the same key under {@code keyExtractor}.
      */
@@ -800,7 +803,7 @@ public final class Sequences {
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
             throwIfContainsDuplicateKeys(name, value, keyExtractor);
         }
 
@@ -808,9 +811,10 @@ public final class Sequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
+     * Validates that {@code value}, if present, contains no null elements and
      * contains no duplicate keys as determined by applying {@code keyExtractor} to each element.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * A null {@code value} is considered valid and returned as {@code null}. An empty
+     * array is always valid — it vacuously contains no duplicate keys.
      *
      * @param name         The name of the argument being validated, used in exception messages.
      * @param value        The value to validate, may be null.
@@ -818,7 +822,6 @@ public final class Sequences {
      * @param <T>          The element type.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException       if {@code name} is null or blank, or if {@code keyExtractor} is null.
-     * @throws MissingElementsException   if {@code value} is empty.
      * @throws NullElementException       if {@code value} contains any null element.
      * @throws DuplicateElementsException if any two elements produce the same key under {@code keyExtractor}.
      */
@@ -827,7 +830,7 @@ public final class Sequences {
         Throws.ifNull(KEY_EXTRACTOR, keyExtractor);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullElement(name, value);
+            throwIfContainsNullElement(name, value);
             throwIfContainsDuplicateKeys(name, value, keyExtractor);
         }
 
@@ -860,6 +863,30 @@ public final class Sequences {
         if (null == value) throw nullValue(name);
 
         throwIfEmptyOrContainsNullElement(name, value);
+    }
+
+    private static <T> void throwIfContainsNullElement(String name, Collection<T> value) {
+        for (T element : value) {
+            if (null == element) throw nullElement(name);
+        }
+    }
+
+    private static <T> void throwIfContainsNullElement(String name, T[] value) {
+        for (T element : value) {
+            if (null == element) throw nullElement(name);
+        }
+    }
+
+    private static <T> void throwIfNullOrContainsNullElement(String name, Collection<T> value) {
+        if (null == value) throw nullValue(name);
+
+        throwIfContainsNullElement(name, value);
+    }
+
+    private static <T> void throwIfNullOrContainsNullElement(String name, T[] value) {
+        if (null == value) throw nullValue(name);
+
+        throwIfContainsNullElement(name, value);
     }
 
     private static <T> void throwIfContainsDuplicates(String name, Collection<T> value) {

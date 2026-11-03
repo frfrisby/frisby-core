@@ -302,12 +302,14 @@ List<String> tags = Sequences.notNull("tags", tags);
 List<String> tags = Sequences.noNullElements("tags", tags);
 List<String> tags = Sequences.notEmpty("tags", tags);
 
-// Size constraints
-List<String> tags = Sequences.minSize("tags", tags, 1);
-List<String> tags = Sequences.maxSize("tags", tags, 10);
-List<String> tags = Sequences.size("tags", tags, 1, 10);
+// Size constraints — an empty collection is valid unless the lower bound requires otherwise
+List<String> tags = Sequences.minSize("tags", tags, 0);   // empty is accepted (0 >= 0)
+List<String> tags = Sequences.minSize("tags", tags, 1);   // empty throws (0 < 1)
+List<String> tags = Sequences.maxSize("tags", tags, 10);  // empty is accepted; no lower bound
+List<String> tags = Sequences.size("tags", tags, 0, 10);  // empty is accepted (0 >= 0)
+List<String> tags = Sequences.size("tags", tags, 1, 10);  // empty throws (0 < 1)
 
-// Duplicate detection — uses equals() by default
+// Duplicate detection — uses equals() by default; an empty collection has no duplicates
 List<String> ids = Sequences.noDuplicates("ids", ids);
 
 // Duplicate detection with a key extractor
@@ -316,6 +318,11 @@ List<User> users = Sequences.noDuplicates("users", users, User::getId);
 // Array overload
 String[] tags = Sequences.notEmpty("tags", tags);
 ```
+
+Only `notEmpty` unconditionally rejects an empty collection/array. `minSize`/`size`
+reject empty only when the lower bound is `>= 1`; `maxSize`/`noDuplicates` have no lower
+bound, so empty always passes. If a value must never be empty, call `notEmpty()`
+explicitly — it is not implied by any size or duplicate method.
 
 ---
 
@@ -353,8 +360,12 @@ Validates `Map<K, V>` values.
 ```java
 Map<String, String> headers = Maps.notNull("headers", headers);
 Map<String, String> headers = Maps.notEmpty("headers", headers);
-Map<String, String> headers = Maps.size("headers", headers, 1, 50);
+Map<String, String> headers = Maps.size("headers", headers, 0, 50);  // empty accepted (0 >= 0)
+Map<String, String> headers = Maps.size("headers", headers, 1, 50);  // empty throws (0 < 1)
 ```
+
+As with `Sequences`, only `notEmpty` unconditionally rejects an empty map. `minSize`/
+`size` reject empty only when the lower bound is `>= 1`; `maxSize` has no lower bound.
 
 ---
 
@@ -364,28 +375,29 @@ All value-failure exceptions extend `IllegalArgumentException`. Every exception 
 carries a descriptive message identifying the argument by name and stating the constraint
 that was violated.
 
-| Exception                             | Thrown when                                               |
-|---------------------------------------|-----------------------------------------------------------|
-| `NullValueException`                  | value is null                                             |
-| `EmptyValueException`                 | string or collection is empty                             |
-| `BlankValueException`                 | string is blank                                           |
-| `StringLengthOutsideRangeException`   | string length fails a constraint                          |
-| `PatternMismatchException`            | string does not match a pattern                           |
-| `NumericValueOutsideRangeException`   | numeric value fails a constraint                          |
-| `DurationOutsideRangeException`       | Duration fails a constraint                               |
-| `PeriodOutsideRangeException`         | Period fails a sign constraint                            |
-| `InstantOutsideRangeException`        | Instant fails a constraint                                |
-| `LocalDateOutsideRangeException`      | LocalDate fails a constraint                              |
-| `LocalDateTimeOutsideRangeException`  | LocalDateTime fails a constraint                          |
-| `LocalTimeOutsideRangeException`      | LocalTime fails a constraint                              |
-| `OffsetDateTimeOutsideRangeException` | OffsetDateTime fails a constraint                         |
-| `OffsetTimeOutsideRangeException`     | OffsetTime fails a constraint                             |
-| `ZonedDateTimeOutsideRangeException`  | ZonedDateTime fails a constraint                          |
-| `DisallowedValueException`            | value is in a disallowed set                              |
-| `SequenceSizeOutsideRangeException`   | collection/array size fails a constraint                  |
-| `DuplicateElementsException`          | collection/array contains duplicates                      |
-| `MapSizeOutsideRangeException`        | map size fails a constraint                               |
-| `IllegalConfigurationException`       | a bound or configuration argument is invalid (API misuse) |
+| Exception                             | Thrown when                                                                                                                                                                      |
+|---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `NullValueException`                  | value is null                                                                                                                                                                    |
+| `EmptyValueException`                 | string is empty                                                                                                                                                                  |
+| `BlankValueException`                 | string is blank                                                                                                                                                                  |
+| `StringLengthOutsideRangeException`   | string length fails a constraint                                                                                                                                                 |
+| `PatternMismatchException`            | string does not match a pattern                                                                                                                                                  |
+| `NumericValueOutsideRangeException`   | numeric value fails a constraint                                                                                                                                                 |
+| `DurationOutsideRangeException`       | Duration fails a constraint                                                                                                                                                      |
+| `PeriodOutsideRangeException`         | Period fails a sign constraint                                                                                                                                                   |
+| `InstantOutsideRangeException`        | Instant fails a constraint                                                                                                                                                       |
+| `LocalDateOutsideRangeException`      | LocalDate fails a constraint                                                                                                                                                     |
+| `LocalDateTimeOutsideRangeException`  | LocalDateTime fails a constraint                                                                                                                                                 |
+| `LocalTimeOutsideRangeException`      | LocalTime fails a constraint                                                                                                                                                     |
+| `OffsetDateTimeOutsideRangeException` | OffsetDateTime fails a constraint                                                                                                                                                |
+| `OffsetTimeOutsideRangeException`     | OffsetTime fails a constraint                                                                                                                                                    |
+| `ZonedDateTimeOutsideRangeException`  | ZonedDateTime fails a constraint                                                                                                                                                 |
+| `DisallowedValueException`            | value is in a disallowed set                                                                                                                                                     |
+| `MissingElementsException`            | collection/array/map is empty (`notEmpty`/`optionalNotEmpty` only — size/duplicate methods only reject empty when their lower bound requires it, via the range exceptions below) |
+| `SequenceSizeOutsideRangeException`   | collection/array size fails a constraint                                                                                                                                         |
+| `DuplicateElementsException`          | collection/array contains duplicates                                                                                                                                             |
+| `MapSizeOutsideRangeException`        | map size fails a constraint                                                                                                                                                      |
+| `IllegalConfigurationException`       | a bound or configuration argument is invalid (API misuse)                                                                                                                        |
 
 `NullPointerException` is thrown (not `NullValueException`) when the `name` parameter
 itself is null or blank, or when a required bound argument is null. These indicate

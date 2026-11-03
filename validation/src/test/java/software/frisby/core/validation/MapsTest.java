@@ -119,9 +119,9 @@ class MapsTest {
         }
 
         @Test
-        void zeroMinSize_throwsIllegalConfigurationException() {
-            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.minSize("field", Map.of("k", "v"), 0));
-            assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+        void negativeMinSize_throwsIllegalConfigurationException() {
+            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.minSize("field", Map.of("k", "v"), -1));
+            assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
         }
 
         @Test
@@ -131,9 +131,15 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.minSize("field", new HashMap<>(), 1));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValueWithZeroMinSize_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.minSize("field", map, 0));
+        }
+
+        @Test
+        void emptyValueWithPositiveMinSize_throwsMapSizeOutsideRangeException() {
+            var ex = assertThrows(MapSizeOutsideRangeException.class, () -> Maps.minSize("field", new HashMap<>(), 1));
+            assertEquals("The 'field' value is invalid. The value must contain at least '1' entries but contained '0'.", ex.getMessage());
         }
 
         @Test
@@ -202,9 +208,9 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.maxSize("field", new HashMap<>(), 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.maxSize("field", map, 5));
         }
 
         @Test
@@ -261,9 +267,9 @@ class MapsTest {
         }
 
         @Test
-        void zeroMinSize_throwsIllegalConfigurationException() {
-            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.size("field", Map.of("k", "v"), 0, 3));
-            assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+        void negativeMinSize_throwsIllegalConfigurationException() {
+            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.size("field", Map.of("k", "v"), -1, 3));
+            assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
         }
 
         @Test
@@ -279,9 +285,15 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.size("field", new HashMap<>(), 1, 3));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValueWithZeroMinSize_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.size("field", map, 0, 3));
+        }
+
+        @Test
+        void emptyValueWithPositiveMinSize_throwsMapSizeOutsideRangeException() {
+            var ex = assertThrows(MapSizeOutsideRangeException.class, () -> Maps.size("field", new HashMap<>(), 1, 3));
+            assertEquals("The 'field' value is invalid. The value must contain at least '1' entries but contained '0'.", ex.getMessage());
         }
 
         @Test
@@ -402,9 +414,9 @@ class MapsTest {
         }
 
         @Test
-        void zeroMinSize_throwsIllegalConfigurationException() {
-            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.optionalMinSize("field", Map.of("k", "v"), 0));
-            assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+        void negativeMinSize_throwsIllegalConfigurationException() {
+            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.optionalMinSize("field", Map.of("k", "v"), -1));
+            assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
         }
 
         @Test
@@ -413,9 +425,15 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.optionalMinSize("field", new HashMap<>(), 1));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValueWithZeroMinSize_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.optionalMinSize("field", map, 0));
+        }
+
+        @Test
+        void emptyValueWithPositiveMinSize_throwsMapSizeOutsideRangeException() {
+            var ex = assertThrows(MapSizeOutsideRangeException.class, () -> Maps.optionalMinSize("field", new HashMap<>(), 1));
+            assertEquals("The 'field' value is invalid. The value must contain at least '1' entries but contained '0'.", ex.getMessage());
         }
 
         @Test
@@ -483,9 +501,9 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.optionalMaxSize("field", new HashMap<>(), 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.optionalMaxSize("field", map, 5));
         }
 
         @Test
@@ -542,9 +560,9 @@ class MapsTest {
         }
 
         @Test
-        void zeroMinSize_throwsIllegalConfigurationException() {
-            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.optionalSize("field", Map.of("k", "v"), 0, 3));
-            assertEquals("The 'minSize' value of '0' is invalid. The value must be greater than or equal to '1'.", ex.getMessage());
+        void negativeMinSize_throwsIllegalConfigurationException() {
+            var ex = assertThrows(IllegalConfigurationException.class, () -> Maps.optionalSize("field", Map.of("k", "v"), -1, 3));
+            assertEquals("The 'minSize' value of '-1' is invalid. The value must be greater than or equal to '0'.", ex.getMessage());
         }
 
         @Test
@@ -559,9 +577,15 @@ class MapsTest {
         }
 
         @Test
-        void emptyValue_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> Maps.optionalSize("field", new HashMap<>(), 1, 3));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValueWithZeroMinSize_returnsValue() {
+            var map = new HashMap<String, String>();
+            assertSame(map, Maps.optionalSize("field", map, 0, 3));
+        }
+
+        @Test
+        void emptyValueWithPositiveMinSize_throwsMapSizeOutsideRangeException() {
+            var ex = assertThrows(MapSizeOutsideRangeException.class, () -> Maps.optionalSize("field", new HashMap<>(), 1, 3));
+            assertEquals("The 'field' value is invalid. The value must contain at least '1' entries but contained '0'.", ex.getMessage());
         }
 
         @Test

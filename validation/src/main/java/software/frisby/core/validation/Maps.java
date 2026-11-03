@@ -11,9 +11,9 @@ import java.util.Map;
  *       used solely to produce meaningful exception messages. It must never be null or
  *       blank; passing an invalid {@code name} is an API misuse and throws
  *       {@link NullPointerException}.</li>
- *   <li>Configuration arguments ({@code minSize}, {@code maxSize}) must be ≥ 1; passing a
- *       value less than 1 throws {@link IllegalConfigurationException}. For {@code size},
- *       {@code maxSize} must additionally be ≥ {@code minSize}.</li>
+ *   <li>Configuration arguments {@code minSize} must be ≥ 0 and {@code maxSize} must be ≥ 1;
+ *       passing a value outside that range throws {@link IllegalConfigurationException}. For
+ *       {@code size}, {@code maxSize} must additionally be ≥ {@code minSize}.</li>
  *   <li>Methods return the validated {@code value} unchanged, allowing inline assignment:
  *       <pre>this.headers = Maps.notEmpty("headers", headers);</pre>
  *       The concrete map type is preserved via a bounded type parameter, so no cast is
@@ -26,7 +26,7 @@ import java.util.Map;
  *       {@link IllegalConfigurationException} (invalid size bound configuration) signal that
  *       the calling code is incorrect.</li>
  *   <li><b>Value failures</b> — {@link NullValueException} (null map),
- *       {@link MissingElementsException} (empty map),
+ *       {@link MissingElementsException} (empty map, {@code notEmpty} family only),
  *       {@link NullMapKeyException} (null key within the map),
  *       {@link NullMapValueException} (null value within the map), and
  *       {@link MapSizeOutsideRangeException} (entry count outside the allowed range) signal
@@ -37,9 +37,10 @@ import java.util.Map;
  * <ul>
  *   <li>{@code notNull}  — map must not be null</li>
  *   <li>{@code notEmpty} — not null, not empty, no null keys, no null values</li>
- *   <li>{@code minSize}  — {@code notEmpty} + entry count ≥ minSize</li>
- *   <li>{@code maxSize}  — {@code notEmpty} + entry count ≤ maxSize</li>
- *   <li>{@code size}     — {@code notEmpty} + minSize ≤ entry count ≤ maxSize</li>
+ *   <li>{@code minSize}  — not null, no null keys, no null values, entry count ≥ minSize</li>
+ *   <li>{@code maxSize}  — not null, no null keys, no null values, entry count ≤ maxSize</li>
+ *   <li>{@code size}     — not null, no null keys, no null values,
+ *                          minSize ≤ entry count ≤ maxSize</li>
  * </ul>
  *
  * <p>{@code optional*} variants pass a {@code null} value through without validation.
@@ -108,28 +109,28 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null keys or null values,
-     * and has at least {@code minSize} entries.
+     * Validates that {@code value} is not null, contains no null keys or null values,
+     * and has at least {@code minSize} entries. An empty map is valid when {@code minSize}
+     * is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 0.
      * @param <K>     The key type.
      * @param <V>     The value type.
      * @param <M>     The concrete map type; preserved in the return value.
      * @return The {@code value} unchanged.
      * @throws NullPointerException          if {@code name} is null or blank.
-     * @throws IllegalConfigurationException if {@code minSize} is less than 1.
+     * @throws IllegalConfigurationException if {@code minSize} is negative.
      * @throws NullValueException            if {@code value} is null.
-     * @throws MissingElementsException      if {@code value} is empty.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value} contains fewer than {@code minSize} entries.
      */
     public static <K, V, M extends Map<K, V>> M minSize(String name, M value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullKeyOrValue(name, value);
+        Throws.ifNegative(MIN_SIZE, minSize);
+        throwIfNullOrContainsNullKeyOrValue(name, value);
 
         if (value.size() < minSize) throw tooFew(name, minSize, value.size());
 
@@ -137,8 +138,8 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null keys or null values,
-     * and has at most {@code maxSize} entries.
+     * Validates that {@code value} is not null, contains no null keys or null values,
+     * and has at most {@code maxSize} entries. An empty map is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
@@ -150,7 +151,6 @@ public final class Maps {
      * @throws NullPointerException          if {@code name} is null or blank.
      * @throws IllegalConfigurationException if {@code maxSize} is less than 1.
      * @throws NullValueException            if {@code value} is null.
-     * @throws MissingElementsException      if {@code value} is empty.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value} contains more than {@code maxSize} entries.
@@ -158,7 +158,7 @@ public final class Maps {
     public static <K, V, M extends Map<K, V>> M maxSize(String name, M value, int maxSize) {
         Throws.ifInvalidName(name);
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
-        throwIfNullOrEmptyOrContainsNullKeyOrValue(name, value);
+        throwIfNullOrContainsNullKeyOrValue(name, value);
 
         if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
 
@@ -166,22 +166,22 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null keys or null values,
-     * and has a number of entries within [{@code minSize}, {@code maxSize}], inclusive on both sides.
+     * Validates that {@code value} is not null, contains no null keys or null values,
+     * and has a number of entries within [{@code minSize}, {@code maxSize}], inclusive on both
+     * sides. An empty map is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
-     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of entries allowed, inclusive; must be ≥ {@code minSize}.
      * @param <K>     The key type.
      * @param <V>     The value type.
      * @param <M>     The concrete map type; preserved in the return value.
      * @return The {@code value} unchanged.
      * @throws NullPointerException          if {@code name} is null or blank.
-     * @throws IllegalConfigurationException if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException if {@code minSize} is negative, or {@code maxSize} is
      *                                       less than {@code minSize}.
      * @throws NullValueException            if {@code value} is null.
-     * @throws MissingElementsException      if {@code value} is empty.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value}'s entry count falls outside
@@ -189,9 +189,9 @@ public final class Maps {
      */
     public static <K, V, M extends Map<K, V>> M size(String name, M value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
-        throwIfNullOrEmptyOrContainsNullKeyOrValue(name, value);
+        throwIfNullOrContainsNullKeyOrValue(name, value);
 
         if (value.size() < minSize) throw tooFew(name, minSize, value.size());
         if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
@@ -225,30 +225,29 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null keys or null values,
-     * and has at least {@code minSize} entries. A null {@code value} is considered valid and
-     * returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null keys or null values, and
+     * has at least {@code minSize} entries. A null {@code value} is considered valid and
+     * returned as {@code null}. An empty map is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 0.
      * @param <K>     The key type.
      * @param <V>     The value type.
      * @param <M>     The concrete map type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException          if {@code name} is null or blank.
-     * @throws IllegalConfigurationException if {@code minSize} is less than 1.
-     * @throws MissingElementsException      if {@code value} is empty.
+     * @throws IllegalConfigurationException if {@code minSize} is negative.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value} contains fewer than {@code minSize} entries.
      */
     public static <K, V, M extends Map<K, V>> M optionalMinSize(String name, M value, int minSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullKeyOrValue(name, value);
+            throwIfContainsNullKeyOrValue(name, value);
 
             if (value.size() < minSize) throw tooFew(name, minSize, value.size());
         }
@@ -257,9 +256,9 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null keys or null values,
-     * and has at most {@code maxSize} entries. A null {@code value} is considered valid and
-     * returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null keys or null values, and
+     * has at most {@code maxSize} entries. A null {@code value} is considered valid and
+     * returned as {@code null}. An empty map is always valid.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
@@ -270,7 +269,6 @@ public final class Maps {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException          if {@code name} is null or blank.
      * @throws IllegalConfigurationException if {@code maxSize} is less than 1.
-     * @throws MissingElementsException      if {@code value} is empty.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value} contains more than {@code maxSize} entries.
@@ -280,7 +278,7 @@ public final class Maps {
         Throws.ifLessThanOne(MAX_SIZE, maxSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullKeyOrValue(name, value);
+            throwIfContainsNullKeyOrValue(name, value);
 
             if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
         }
@@ -289,22 +287,22 @@ public final class Maps {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null keys or null values,
-     * and has a number of entries within [{@code minSize}, {@code maxSize}], inclusive on both sides.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null keys or null values, and
+     * has a number of entries within [{@code minSize}, {@code maxSize}], inclusive on both sides.
+     * A null {@code value} is considered valid and returned as {@code null}. An empty map
+     * is valid when {@code minSize} is {@code 0}.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
-     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 1.
+     * @param minSize The minimum number of entries allowed, inclusive; must be ≥ 0.
      * @param maxSize The maximum number of entries allowed, inclusive; must be ≥ {@code minSize}.
      * @param <K>     The key type.
      * @param <V>     The value type.
      * @param <M>     The concrete map type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException          if {@code name} is null or blank.
-     * @throws IllegalConfigurationException if {@code minSize} is less than 1, or {@code maxSize} is
+     * @throws IllegalConfigurationException if {@code minSize} is negative, or {@code maxSize} is
      *                                       less than {@code minSize}.
-     * @throws MissingElementsException      if {@code value} is empty.
      * @throws NullMapKeyException           if {@code value} contains any null key.
      * @throws NullMapValueException         if {@code value} contains any null value.
      * @throws MapSizeOutsideRangeException  if {@code value}'s entry count falls outside
@@ -312,11 +310,11 @@ public final class Maps {
      */
     public static <K, V, M extends Map<K, V>> M optionalSize(String name, M value, int minSize, int maxSize) {
         Throws.ifInvalidName(name);
-        Throws.ifLessThanOne(MIN_SIZE, minSize);
+        Throws.ifNegative(MIN_SIZE, minSize);
         Throws.ifLessThan(MAX_SIZE, maxSize, MIN_SIZE, minSize);
 
         if (null != value) {
-            throwIfEmptyOrContainsNullKeyOrValue(name, value);
+            throwIfContainsNullKeyOrValue(name, value);
 
             if (value.size() < minSize) throw tooFew(name, minSize, value.size());
             if (value.size() > maxSize) throw tooMany(name, maxSize, value.size());
@@ -334,6 +332,19 @@ public final class Maps {
     private static <K, V> void throwIfEmptyOrContainsNullKeyOrValue(String name, Map<K, V> value) {
         if (value.isEmpty()) throw empty(name);
 
+        for (var entry : value.entrySet()) {
+            if (null == entry.getKey()) throw nullKey(name);
+            if (null == entry.getValue()) throw nullMapValue(name);
+        }
+    }
+
+    private static <K, V> void throwIfNullOrContainsNullKeyOrValue(String name, Map<K, V> value) {
+        if (null == value) throw nullValue(name);
+
+        throwIfContainsNullKeyOrValue(name, value);
+    }
+
+    private static <K, V> void throwIfContainsNullKeyOrValue(String name, Map<K, V> value) {
         for (var entry : value.entrySet()) {
             if (null == entry.getKey()) throw nullKey(name);
             if (null == entry.getValue()) throw nullMapValue(name);

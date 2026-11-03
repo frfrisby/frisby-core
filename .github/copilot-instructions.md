@@ -1308,16 +1308,20 @@ Key conventions:
 - Declare `FieldGroup` instances as `private static final`.
 - When a method accepts a `Collection<T>` or `T[]` parameter that must be non-null,
   non-empty, and contain no null elements, validate with a single `Sequences.notEmpty()`
-  call (or the appropriate size method).  Do **not** use a manual null check on the
-  container followed by a per-element loop — `Sequences` handles all three failure modes
-  atomically and throws the correct exception type for each:
-  `NullValueException` (null container), `MissingElementsException` (empty container),
-  `NullElementException` (null element).
+  call (or `minSize()`/`size()` with a lower bound `>= 1`, which rejects empty as a side
+  effect of the size check).  Do **not** use a manual null check on the container
+  followed by a per-element loop — `Sequences.notEmpty()` handles all three failure
+  modes atomically and throws the correct exception type for each: `NullValueException`
+  (null container), `MissingElementsException` (empty container), `NullElementException`
+  (null element).  Note that `maxSize()`, `noDuplicates()`, and `minSize()`/`size()` with
+  a lower bound of `0` do **not** reject an empty container — only `notEmpty()` and a
+  `minSize`/`size` lower bound `>= 1` do.
 - When a method accepts a `Map<K, V>` parameter that must be non-null and non-empty,
-  validate with `Maps.notEmpty()` (or the appropriate size method).  Do **not** use
-  `Values.notNull()` on a map — `Maps.notEmpty()` atomically rejects: null map
-  (`NullValueException`), empty map (`MissingElementsException`), null keys
-  (`NullMapKeyException`), and null values (`NullMapValueException`).
+  validate with `Maps.notEmpty()` (or `minSize()`/`size()` with a lower bound `>= 1`).
+  Do **not** use `Values.notNull()` on a map — `Maps.notEmpty()` atomically rejects: null
+  map (`NullValueException`), empty map (`MissingElementsException`), null keys
+  (`NullMapKeyException`), and null values (`NullMapValueException`).  `Maps.maxSize()`
+  and a lower bound of `0` do not reject an empty map.
 - See `docs/ai/validation.md` → *Validator Selection Guide* and *Anti-patterns* for
   the full decision guide and known pitfalls.
 

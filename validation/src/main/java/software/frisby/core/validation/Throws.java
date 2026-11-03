@@ -32,6 +32,18 @@ final class Throws {
         }
     }
 
+    static void ifNegative(String name, long value) {
+        if (value < 0) {
+            throw new IllegalConfigurationException(
+                    String.format(
+                            "The '%s' value of '%d' is invalid. The value must be greater than or equal to '0'.",
+                            name,
+                            value
+                    )
+            );
+        }
+    }
+
     static void ifLessThan(String name, long value, String otherName, long other) {
         if (value < other) {
             throw new IllegalConfigurationException(
