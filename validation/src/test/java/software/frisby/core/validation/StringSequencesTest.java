@@ -452,9 +452,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyCollection_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.maxLength("field", List.of(), 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, StringSequences.maxLength("field", list, 5));
             }
 
             @Test
@@ -509,9 +509,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyArray_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.maxLength("field", new String[0], 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.maxLength("field", array, 5));
             }
 
             @Test
@@ -567,9 +567,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyCollection_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.minLength("field", List.of(), 3));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, StringSequences.minLength("field", list, 3));
             }
 
             @Test
@@ -624,9 +624,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyArray_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.minLength("field", new String[0], 3));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.minLength("field", array, 3));
             }
 
             @Test
@@ -688,9 +688,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyCollection_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.length("field", List.of(), 2, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, StringSequences.length("field", list, 2, 5));
             }
 
             @Test
@@ -757,9 +757,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyArray_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.length("field", new String[0], 2, 5));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.length("field", array, 2, 5));
             }
 
             @Test
@@ -821,9 +821,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyCollection_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.matches("field", List.of(), LOWERCASE));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var list = List.<String>of();
+                assertSame(list, StringSequences.matches("field", list, LOWERCASE));
             }
 
             @Test
@@ -872,9 +872,9 @@ class StringSequencesTest {
             }
 
             @Test
-            void emptyArray_throwsMissingElementsException() {
-                var ex = assertThrows(MissingElementsException.class, () -> StringSequences.matches("field", new String[0], LOWERCASE));
-                assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+            void emptyValue_returnsValue() {
+                var array = new String[0];
+                assertSame(array, StringSequences.matches("field", array, LOWERCASE));
             }
 
             @Test
@@ -1757,15 +1757,15 @@ class StringSequencesTest {
         }
 
         @Test
-        void emptyCollection_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMaxLength("field", List.of(), 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var list = List.<String>of();
+            assertSame(list, StringSequences.optionalMaxLength("field", list, 5));
         }
 
         @Test
-        void emptyArray_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMaxLength("field", new String[0], 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_array_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalMaxLength("field", array, 5));
         }
 
         @Test
@@ -1818,15 +1818,15 @@ class StringSequencesTest {
         }
 
         @Test
-        void emptyCollection_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMinLength("field", List.of(), 3));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var list = List.<String>of();
+            assertSame(list, StringSequences.optionalMinLength("field", list, 3));
         }
 
         @Test
-        void emptyArray_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMinLength("field", new String[0], 3));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_array_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalMinLength("field", array, 3));
         }
 
         @Test
@@ -1879,15 +1879,15 @@ class StringSequencesTest {
         }
 
         @Test
-        void emptyCollection_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalLength("field", List.of(), 2, 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var list = List.<String>of();
+            assertSame(list, StringSequences.optionalLength("field", list, 2, 5));
         }
 
         @Test
-        void emptyArray_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalLength("field", new String[0], 2, 5));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_array_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalLength("field", array, 2, 5));
         }
 
         @Test
@@ -1952,15 +1952,15 @@ class StringSequencesTest {
         }
 
         @Test
-        void emptyCollection_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMatches("field", List.of(), LOWERCASE));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_returnsValue() {
+            var list = List.<String>of();
+            assertSame(list, StringSequences.optionalMatches("field", list, LOWERCASE));
         }
 
         @Test
-        void emptyArray_throwsMissingElementsException() {
-            var ex = assertThrows(MissingElementsException.class, () -> StringSequences.optionalMatches("field", new String[0], LOWERCASE));
-            assertEquals(EMPTY_VALUE_MSG, ex.getMessage());
+        void emptyValue_array_returnsValue() {
+            var array = new String[0];
+            assertSame(array, StringSequences.optionalMatches("field", array, LOWERCASE));
         }
 
         @Test
