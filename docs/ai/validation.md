@@ -356,12 +356,16 @@ Sequences.optionalNoDuplicates("ids", ids);
 Sequences.optionalNoDuplicates("users", users, User::getId);
 
 // StringSequences — validates each String element within the collection/array.
-// notEmpty / notBlank / maxLength etc. reject an empty container.
+// notEmpty / notBlank reject an empty container by design (their name is the contract).
+// maxLength / minLength / length / matches validate per-element constraints only —
+// an empty container trivially satisfies them and is accepted.
 // noEmptyElements / noBlankElements accept an empty container but validate non-empty ones.
 StringSequences.notEmpty("tags", tags);                        // not null, not empty, elements not empty
 StringSequences.notBlank("tags", tags);                        // not null, not empty, elements not blank
 StringSequences.noEmptyElements("tags", tags);                 // not null, empty OK, elements not empty
 StringSequences.noBlankElements("tags", tags);                 // not null, empty OK, elements not blank
+StringSequences.maxLength("tags", tags, 64);                   // not null, empty OK, elements <= 64 code points
+StringSequences.matches("codes", codes, CODE_PATTERN);         // not null, empty OK, elements match pattern
 StringSequences.notBlankWithMaxLength("tags", tags, 64);
 StringSequences.notBlankWithMatches("codes", codes, CODE_PATTERN);
 StringSequences.optionalNoEmptyElements("tags", tags);         // null OK, empty OK, elements not empty
@@ -418,7 +422,12 @@ empty container always passes.
 
 ### Throws — StringSequences
 
-Every method first applies the full `notEmpty` check on the container, then validates each string element. All methods throw `NullPointerException` if `name` is null or blank.
+`notEmpty`, `notBlank`, and the `notBlankWith*` composites unconditionally reject an empty
+container — container non-emptiness is part of their named contract, exactly parallel to
+`Sequences.notEmpty()`. `maxLength`, `minLength`, `length`, and `matches` validate only a
+per-element constraint (length or pattern) that has no relationship to container size, so
+an empty container trivially satisfies them and is accepted. All methods throw
+`NullPointerException` if `name` is null or blank.
 
 | Method family           | Container failures                                                       | Per-element failures                                       | `IllegalConfigurationException` |
 |-------------------------|--------------------------------------------------------------------------|------------------------------------------------------------|---------------------------------|
@@ -426,10 +435,10 @@ Every method first applies the full `notEmpty` check on the container, then vali
 | `noEmptyElements`       | `NullValueException`, `NullElementException`                             | `EmptyValueException`                                      | —                               |
 | `notBlank`              | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`                                      | —                               |
 | `noBlankElements`       | `NullValueException`, `NullElementException`                             | `BlankValueException`                                      | —                               |
-| `maxLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | maxItemLength < 1               |
-| `minLength`             | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | minItemLength < 1               |
-| `length`                | `NullValueException`, `MissingElementsException`, `NullElementException` | `StringLengthOutsideRangeException`                        | bound < 1, or max < min         |
-| `matches`               | `NullValueException`, `MissingElementsException`, `NullElementException` | `PatternMismatchException`                                 | pattern is null                 |
+| `maxLength`             | `NullValueException`, `NullElementException` (empty is always valid)     | `StringLengthOutsideRangeException`                        | maxItemLength < 1               |
+| `minLength`             | `NullValueException`, `NullElementException` (empty is always valid)     | `StringLengthOutsideRangeException`                        | minItemLength < 1               |
+| `length`                | `NullValueException`, `NullElementException` (empty is always valid)     | `StringLengthOutsideRangeException`                        | bound < 1, or max < min         |
+| `matches`               | `NullValueException`, `NullElementException` (empty is always valid)     | `PatternMismatchException`                                 | pattern is null                 |
 | `notBlankWithMaxLength` | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `StringLengthOutsideRangeException` | maxItemLength < 1               |
 | `notBlankWithMatches`   | `NullValueException`, `MissingElementsException`, `NullElementException` | `BlankValueException`, `PatternMismatchException`          | pattern is null                 |
 | `optional*` variants    | — (null passes through)                                                  | same as non-optional if non-null                           | same bound checks always apply  |

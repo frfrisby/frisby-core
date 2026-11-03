@@ -202,13 +202,13 @@ structure as `Numbers`.
 
 | Class             | Type             | Range family | Clock-relative family |
 |-------------------|------------------|:------------:|:---------------------:|
-| `Instants`        | `Instant`        |      ✓       |           ✓           |
-| `LocalDates`      | `LocalDate`      |      ✓       |           ✓           |
-| `LocalDateTimes`  | `LocalDateTime`  |      ✓       |           ✓           |
-| `LocalTimes`      | `LocalTime`      |      ✓       |           —           |
-| `OffsetDateTimes` | `OffsetDateTime` |      ✓       |           ✓           |
-| `OffsetTimes`     | `OffsetTime`     |      ✓       |           —           |
-| `ZonedDateTimes`  | `ZonedDateTime`  |      ✓       |           ✓           |
+| `Instants`        | `Instant`        |      ✓      |          ✓           |
+| `LocalDates`      | `LocalDate`      |      ✓      |          ✓           |
+| `LocalDateTimes`  | `LocalDateTime`  |      ✓      |          ✓           |
+| `LocalTimes`      | `LocalTime`      |      ✓      |           —           |
+| `OffsetDateTimes` | `OffsetDateTime` |      ✓      |          ✓           |
+| `OffsetTimes`     | `OffsetTime`     |      ✓      |           —           |
+| `ZonedDateTimes`  | `ZonedDateTime`  |      ✓      |          ✓           |
 
 ### Range constraints
 
@@ -331,18 +331,23 @@ explicitly — it is not implied by any size or duplicate method.
 **Class:** `StringSequences`
 
 Validates `Collection<String>` and `String[]` values where every element is a `String`.
-Every method first checks the container (not null, not empty, no null elements at the
-container level), then validates each string element.
+Each method either enforces container non-emptiness as part of its named contract
+(`notEmpty`, `notBlank`, and the `notBlankWith*` composites), or validates a per-element
+constraint only — length or pattern — in which case an empty container trivially
+satisfies the constraint and is accepted (`maxLength`, `minLength`, `length`, `matches`,
+`noEmptyElements`, `noBlankElements`). All methods check for null elements at the
+container level regardless of which category they fall into.
 
 ```java
 // Reject empty container + validate elements
 List<String> tags = StringSequences.notEmpty("tags", tags);   // elements not empty
 List<String> tags = StringSequences.notBlank("tags", tags);   // elements not blank
-List<String> tags = StringSequences.maxLength("tags", tags, 64);
 
 // Allow empty container + validate elements (when non-empty)
 List<String> tags = StringSequences.noEmptyElements("tags", tags);  // not null, empty OK, elements not empty
 List<String> tags = StringSequences.noBlankElements("tags", tags);  // not null, empty OK, elements not blank
+List<String> tags = StringSequences.maxLength("tags", tags, 64);    // not null, empty OK, elements <= 64 code points
+List<String> tags = StringSequences.matches("codes", codes, CODE_PATTERN); // not null, empty OK, elements match pattern
 
 // Composites — reject empty container, validate multiple element constraints in one pass
 List<String> tags = StringSequences.notBlankWithMaxLength("tags", tags, 64);

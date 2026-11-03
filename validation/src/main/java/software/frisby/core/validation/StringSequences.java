@@ -595,8 +595,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length exceeds {@code maxItemLength} Unicode code points.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length exceeds {@code maxItemLength} Unicode code points. An empty
+     * collection is valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -606,7 +607,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxItemLength} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      */
@@ -615,7 +615,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.isEmpty()) throw empty(name);
 
         int index = 0;
 
@@ -633,8 +632,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length exceeds {@code maxItemLength} Unicode code points.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length exceeds {@code maxItemLength} Unicode code points. An empty
+     * array is valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -643,7 +643,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxItemLength} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      */
@@ -652,7 +651,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.length == 0) throw empty(name);
 
         int index = 0;
 
@@ -670,9 +668,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length exceeds {@code maxItemLength} Unicode code points.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length exceeds {@code maxItemLength} Unicode code points. A null
+     * {@code value} is considered valid and returned as {@code null}. An empty collection is
+     * also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -681,7 +680,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxItemLength} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      */
@@ -690,8 +688,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
 
         if (null != value) {
-            if (value.isEmpty()) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -709,9 +705,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length exceeds {@code maxItemLength} Unicode code points.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length exceeds {@code maxItemLength} Unicode code points. A null
+     * {@code value} is considered valid and returned as {@code null}. An empty array is
+     * also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -719,7 +716,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code maxItemLength} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element exceeds {@code maxItemLength} code points.
      */
@@ -728,8 +724,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MAX_ITEM_LENGTH, maxItemLength);
 
         if (null != value) {
-            if (value.length == 0) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -747,8 +741,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length is less than {@code minItemLength} Unicode code points.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length is less than {@code minItemLength} Unicode code points. An empty
+     * collection is valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -758,7 +753,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element has fewer than {@code minItemLength} code points.
      */
@@ -767,7 +761,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.isEmpty()) throw empty(name);
 
         int index = 0;
 
@@ -785,8 +778,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length is less than {@code minItemLength} Unicode code points.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length is less than {@code minItemLength} Unicode code points. An empty
+     * array is valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -795,7 +789,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element has fewer than {@code minItemLength} code points.
      */
@@ -804,7 +797,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.length == 0) throw empty(name);
 
         int index = 0;
 
@@ -822,9 +814,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length is less than {@code minItemLength} Unicode code points.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length is less than {@code minItemLength} Unicode code points. A null
+     * {@code value} is considered valid and returned as {@code null}. An empty collection is
+     * also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -833,7 +826,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element has fewer than {@code minItemLength} code points.
      */
@@ -842,8 +834,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
 
         if (null != value) {
-            if (value.isEmpty()) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -861,9 +851,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length is less than {@code minItemLength} Unicode code points.
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length is less than {@code minItemLength} Unicode code points. A null
+     * {@code value} is considered valid and returned as {@code null}. An empty array is
+     * also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -871,7 +862,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element has fewer than {@code minItemLength} code points.
      */
@@ -880,8 +870,6 @@ public final class StringSequences {
         Throws.ifLessThanOne(MIN_ITEM_LENGTH, minItemLength);
 
         if (null != value) {
-            if (value.length == 0) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -899,9 +887,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]
-     * Unicode code points, inclusive.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]
+     * Unicode code points, inclusive. An empty collection is valid — it trivially satisfies
+     * the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -913,7 +902,6 @@ public final class StringSequences {
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1, or
      *                                           {@code maxItemLength} is less than {@code minItemLength}.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
@@ -923,7 +911,6 @@ public final class StringSequences {
         Throws.ifLessThan(MAX_ITEM_LENGTH, maxItemLength, MIN_ITEM_LENGTH, minItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.isEmpty()) throw empty(name);
 
         int index = 0;
 
@@ -942,9 +929,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]
-     * Unicode code points, inclusive.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]
+     * Unicode code points, inclusive. An empty array is valid — it trivially satisfies the
+     * per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate.
@@ -955,7 +943,6 @@ public final class StringSequences {
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1, or
      *                                           {@code maxItemLength} is less than {@code minItemLength}.
      * @throws NullValueException                if {@code value} is null.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
@@ -965,7 +952,6 @@ public final class StringSequences {
         Throws.ifLessThan(MAX_ITEM_LENGTH, maxItemLength, MIN_ITEM_LENGTH, minItemLength);
 
         if (null == value) throw nullValue(name);
-        if (value.length == 0) throw empty(name);
 
         int index = 0;
 
@@ -984,9 +970,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}].
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]. A
+     * null {@code value} is considered valid and returned as {@code null}. An empty
+     * collection is also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -997,7 +984,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1, or
      *                                           {@code maxItemLength} is less than {@code minItemLength}.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
@@ -1007,8 +993,6 @@ public final class StringSequences {
         Throws.ifLessThan(MAX_ITEM_LENGTH, maxItemLength, MIN_ITEM_LENGTH, minItemLength);
 
         if (null != value) {
-            if (value.isEmpty()) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -1027,9 +1011,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}].
-     * A null {@code value} is considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements whose length falls outside [{@code minItemLength}, {@code maxItemLength}]. A
+     * null {@code value} is considered valid and returned as {@code null}. An empty array is
+     * also valid — it trivially satisfies the per-element length constraint.
      *
      * @param name          The name of the argument being validated, used in exception messages.
      * @param value         The value to validate, may be null.
@@ -1039,7 +1024,6 @@ public final class StringSequences {
      * @throws NullPointerException              if {@code name} is null or blank.
      * @throws IllegalConfigurationException     if {@code minItemLength} is less than 1, or
      *                                           {@code maxItemLength} is less than {@code minItemLength}.
-     * @throws MissingElementsException          if {@code value} is empty.
      * @throws NullElementException              if {@code value} contains any null element.
      * @throws StringLengthOutsideRangeException if any element's length falls outside the specified range.
      */
@@ -1049,8 +1033,6 @@ public final class StringSequences {
         Throws.ifLessThan(MAX_ITEM_LENGTH, maxItemLength, MIN_ITEM_LENGTH, minItemLength);
 
         if (null != value) {
-            if (value.length == 0) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -1069,8 +1051,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements that fail to match {@code pattern} in their entirety.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements that fail to match {@code pattern} in their entirety. An empty collection is
+     * valid — it trivially satisfies the per-element pattern constraint.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
@@ -1079,7 +1062,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException     if {@code name} is null or blank, or if {@code pattern} is null.
      * @throws NullValueException       if {@code value} is null.
-     * @throws MissingElementsException if {@code value} is empty.
      * @throws NullElementException     if {@code value} contains any null element.
      * @throws PatternMismatchException if any element does not match {@code pattern}.
      */
@@ -1088,7 +1070,6 @@ public final class StringSequences {
         Throws.ifNull(PATTERN, pattern);
 
         if (null == value) throw nullValue(name);
-        if (value.isEmpty()) throw empty(name);
 
         int index = 0;
 
@@ -1103,8 +1084,9 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value} is not null, not empty, contains no null elements, and
-     * contains no elements that fail to match {@code pattern} in their entirety.
+     * Validates that {@code value} is not null, contains no null elements, and contains no
+     * elements that fail to match {@code pattern} in their entirety. An empty array is
+     * valid — it trivially satisfies the per-element pattern constraint.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate.
@@ -1112,7 +1094,6 @@ public final class StringSequences {
      * @return The {@code value} unchanged.
      * @throws NullPointerException     if {@code name} is null or blank, or if {@code pattern} is null.
      * @throws NullValueException       if {@code value} is null.
-     * @throws MissingElementsException if {@code value} is empty.
      * @throws NullElementException     if {@code value} contains any null element.
      * @throws PatternMismatchException if any element does not match {@code pattern}.
      */
@@ -1121,7 +1102,6 @@ public final class StringSequences {
         Throws.ifNull(PATTERN, pattern);
 
         if (null == value) throw nullValue(name);
-        if (value.length == 0) throw empty(name);
 
         int index = 0;
 
@@ -1136,9 +1116,10 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements that fail to match {@code pattern}. A null {@code value} is
-     * considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements that fail to match {@code pattern}. A null {@code value} is considered valid
+     * and returned as {@code null}. An empty collection is also valid — it trivially
+     * satisfies the per-element pattern constraint.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
@@ -1146,7 +1127,6 @@ public final class StringSequences {
      * @param <C>     The concrete collection type; preserved in the return value.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException     if {@code name} is null or blank, or if {@code pattern} is null.
-     * @throws MissingElementsException if {@code value} is empty.
      * @throws NullElementException     if {@code value} contains any null element.
      * @throws PatternMismatchException if any element does not match {@code pattern}.
      */
@@ -1155,8 +1135,6 @@ public final class StringSequences {
         Throws.ifNull(PATTERN, pattern);
 
         if (null != value) {
-            if (value.isEmpty()) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
@@ -1171,16 +1149,16 @@ public final class StringSequences {
     }
 
     /**
-     * Validates that {@code value}, if present, is not empty, contains no null elements, and
-     * contains no elements that fail to match {@code pattern}. A null {@code value} is
-     * considered valid and returned as {@code null}.
+     * Validates that {@code value}, if present, contains no null elements and contains no
+     * elements that fail to match {@code pattern}. A null {@code value} is considered valid
+     * and returned as {@code null}. An empty array is also valid — it trivially satisfies the
+     * per-element pattern constraint.
      *
      * @param name    The name of the argument being validated, used in exception messages.
      * @param value   The value to validate, may be null.
      * @param pattern The pattern each element must match in its entirety; must not be null.
      * @return The {@code value} unchanged, or {@code null} if {@code value} is null.
      * @throws NullPointerException     if {@code name} is null or blank, or if {@code pattern} is null.
-     * @throws MissingElementsException if {@code value} is empty.
      * @throws NullElementException     if {@code value} contains any null element.
      * @throws PatternMismatchException if any element does not match {@code pattern}.
      */
@@ -1189,8 +1167,6 @@ public final class StringSequences {
         Throws.ifNull(PATTERN, pattern);
 
         if (null != value) {
-            if (value.length == 0) throw empty(name);
-
             int index = 0;
 
             for (String element : value) {
